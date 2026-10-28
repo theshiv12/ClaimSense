@@ -1,0 +1,42 @@
+{
+  "planId": "star-fho",
+  "policyStartDate": "2025-06-01",
+  "policyEndDate": "2026-05-31",
+  "firstInceptionDate": "2025-06-01",
+  "sumInsuredPaise": 30000000,
+  "sumInsuredUsedPaise": 0,
+  "ageAtEntry": 45,
+  "admissionDate": "2026-03-15",
+  "dischargeDate": "2026-03-15",
+  "diagnosis": "Senile cataract, right eye",
+  "icd10": "H25.1",
+  "isAccident": false,
+  "ped": {
+    "exists": false,
+    "condition": null,
+    "firstDiagnosedDate": null,
+    "disclosed": null
+  },
+  "room": {
+    "category": "shared",
+    "rentPerDayPaise": 300000,
+    "days": 0
+  },
+  "bill": {
+    "totalPaise": 4000000,
+    "lineItems": [
+      {
+        "head": "surgeon",
+        "amountPaise": 2000000
+      },
+      {
+        "head": "implants",
+        "amountPaise": 1500000
+      },
+      {
+        "head": "pharmacy",
+        "amountPaise": 500000
+      }
+    ]
+  }
+}

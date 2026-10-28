@@ -1,0 +1,14 @@
+{
+  "_arithmetic": "Cataract is on the 3(2) list; admission month 9 (2025-06-01 -> 2026-03-15) < 24: R3 fail, payable 0. If eligible: 2000000 + 1500000 + 500000 = 4000000 (room within cap, no co-pay, under SI). The 2(E) cataract sublimit is not modelled.",
+  "verdict": "at_risk",
+  "claimedPaise": 4000000,
+  "nonPayablePaise": 0,
+  "payablePaise": 0,
+  "payableIfEligiblePaise": 4000000,
+  "outOfPocketPaise": 4000000,
+  "results": {
+    "R3": {
+      "outcome": "fail"
+    }
+  }
+}

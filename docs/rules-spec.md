@@ -141,3 +141,18 @@ use plan T, so they are unaffected.
   needsReview: true, note }`; anything half-filled is rejected.
 - `roomRent.kind: 'unknown'` (drafts only) is for a missing or garbled room-rent table.
 - `uin` / `wordingVersion` may be null with a top-level `notes` entry; `verifiedBy` is always `null`.
+
+## Engine decisions (28 Oct 2026, with TC-R1..R8, TC-ENG, TC-VERDICT, TC-CASE)
+
+1. R4 checks only the PED waiting period. R5 owns non-disclosure: an undisclosed PED fails R5 while
+   continuous cover is under `moratorium.months`, and passes from that date (inclusive).
+2. If any of R1–R5 is `unknown` (and none fails), `payablePaise` is 0; `payableIfEligiblePaise` is shown.
+3. When one of R6–R8 is `unknown`, the running amount passes through unchanged and the verdict is
+   `likely_partial`.
+4. The room head is paid at min(room line item, cap × days).
+5. Room category `icu` is capped by `icuCapPaise`; null means no cap.
+6. R3 matches a listed condition by `icd10` prefix, or by a case-insensitive keyword substring of `diagnosis`.
+7. Admission before `firstInceptionDate` fails R2 with reason `R2_BEFORE_INCEPTION`.
+8. An empty bill (or claimed 0) makes R6 `unknown`, so the verdict is `likely_partial`.
+9. Rule unit tests use the synthetic plan T (36-month PED wait, 60-month moratorium). The real config
+   follows the PED/moratorium decision on the Star FHO draft.

@@ -1,0 +1,42 @@
+{
+  "planId": "star-fho",
+  "policyStartDate": "2026-10-01",
+  "policyEndDate": "2027-09-30",
+  "firstInceptionDate": "2026-10-01",
+  "sumInsuredPaise": 30000000,
+  "sumInsuredUsedPaise": 0,
+  "ageAtEntry": 35,
+  "admissionDate": "2026-10-20",
+  "dischargeDate": "2026-10-22",
+  "diagnosis": "Acute gastroenteritis",
+  "icd10": "A09",
+  "isAccident": false,
+  "ped": {
+    "exists": false,
+    "condition": null,
+    "firstDiagnosedDate": null,
+    "disclosed": null
+  },
+  "room": {
+    "category": "shared",
+    "rentPerDayPaise": 300000,
+    "days": 2
+  },
+  "bill": {
+    "totalPaise": 1000000,
+    "lineItems": [
+      {
+        "head": "room",
+        "amountPaise": 600000
+      },
+      {
+        "head": "pharmacy",
+        "amountPaise": 200000
+      },
+      {
+        "head": "diagnostics",
+        "amountPaise": 200000
+      }
+    ]
+  }
+}

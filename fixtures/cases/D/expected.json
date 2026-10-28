@@ -1,0 +1,23 @@
+{
+  "_arithmetic": "Cover 53 months, appendicitis not listed, no PED. Room 400000 x 3 = 1200000, rent <= 500000 cap: no R6. 1200000 + 4000000 + 1500000 + 800000 + 500000 = 8000000. Age 40 < 61: no co-pay. 8000000 <= 30000000. Payable = claimed.",
+  "verdict": "likely_payable",
+  "claimedPaise": 8000000,
+  "nonPayablePaise": 0,
+  "payablePaise": 8000000,
+  "payableIfEligiblePaise": 8000000,
+  "outOfPocketPaise": 0,
+  "results": {
+    "R6": {
+      "outcome": "pass",
+      "deductionPaise": 0
+    },
+    "R7": {
+      "outcome": "pass",
+      "deductionPaise": 0
+    },
+    "R8": {
+      "outcome": "pass",
+      "deductionPaise": 0
+    }
+  }
+}

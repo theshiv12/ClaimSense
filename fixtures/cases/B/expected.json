@@ -1,0 +1,23 @@
+{
+  "_arithmetic": "docs/rules-spec.md Case B. Non-payables 960000. R6 room 3500000 - 500000 x 5 = 1000000; associated (750000 + 3000000 + 1360000) = 5110000 x 5/7 = 3650000 exactly, -1460000; R6 total 2460000. Payable 2500000 + 3650000 + 14430000 = 20580000. R7 52 < 61: 0. R8 20580000 <= 30000000: 0. Out of pocket 24000000 - 20580000 = 3420000.",
+  "verdict": "likely_partial",
+  "claimedPaise": 24000000,
+  "nonPayablePaise": 960000,
+  "payablePaise": 20580000,
+  "payableIfEligiblePaise": 20580000,
+  "outOfPocketPaise": 3420000,
+  "results": {
+    "R6": {
+      "outcome": "deduction",
+      "deductionPaise": 2460000
+    },
+    "R7": {
+      "outcome": "pass",
+      "deductionPaise": 0
+    },
+    "R8": {
+      "outcome": "pass",
+      "deductionPaise": 0
+    }
+  }
+}

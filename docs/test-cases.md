@@ -70,6 +70,83 @@ entry in top-level `notes`; `verifiedBy` is always `null` in a draft; values are
 never a whole section, and the section's clause carries the flag and note. The loader keeps the strict
 `PlanConfigSchema`, so a draft can never be loaded.
 
+## Rules engine R1–R8, waterfall, verdict, cases (approved 28 Oct 2026)
+
+Rule, engine and verdict tests use the synthetic plan **T** (`packages/rules/test/factories.ts`), built
+from the rules-spec starting values: initial wait 30 days (accidents exempt); specific-disease wait
+24 months (accidents exempt; cataract `H25`, joint replacement `M17`); PED 36 months; moratorium 60 months;
+room cap `fixed_per_day` 500000, no ICU cap; excluded heads implants, pharmacy, diagnostics; non-payable
+consumables; co-pay 2000 bps from age at entry 61. Only TC-CASE-* read `config/plans/star-fho.json`.
+`I` = first inception 2025-01-10. Amounts in paise. TC-R3-01..08 above are part of this set.
+
+| ID | Scenario | Facts that matter | Plan | Expected | Spec ref |
+|---|---|---|---|---|---|
+| TC-R1-01 | Day before start | policy 2026-03-12..2027-03-11; adm 2026-03-11 | T | fail | R1 |
+| TC-R1-02 | On start | adm 2026-03-12 | T | pass (inclusive) | R1 |
+| TC-R1-03 | On end | adm 2027-03-11 | T | pass (inclusive) | R1 |
+| TC-R1-04 | Day after end | adm 2027-03-12 | T | fail | R1 |
+| TC-R1-05 | Missing | policyEndDate null | T | unknown, missing `policy_end_date` | R1 |
+| TC-R2-01 | Day 29 | adm 2025-02-08, no accident | T | fail, cites `initialWait.clause` | Boundaries: days |
+| TC-R2-02 | Day 30 | adm 2025-02-09 | T | pass | Boundaries: days |
+| TC-R2-03 | Day 31 | adm 2025-02-10 | T | pass | R2 |
+| TC-R2-04 | Accident inside wait | day 5, isAccident true | T | pass | R2 |
+| TC-R2-05 | Accident, plan doesn't exempt | day 5, isAccident true | T, `accidentExempt: false` | fail | plan difference |
+| TC-R2-06 | Accident unknown inside wait | day 5, isAccident null | T | unknown | R2 |
+| TC-R2-07 | Accident unknown after wait | day 31, isAccident null | T | pass | R2 |
+| TC-R2-08 | Missing inception | firstInceptionDate null | T | unknown | R2 |
+| TC-R3-09 | Month 23 | cataract, adm 2026-12-10 | T | fail | Boundaries: months |
+| TC-R3-10 | Month 25 | cataract, adm 2027-02-10 | T | pass | R3 |
+| TC-R3-11 | Month-end clamp, day before | I 2024-02-29, adm 2026-02-27 | T | fail | Boundaries: month-end |
+| TC-R3-12 | Month-end clamp, on the date | I 2024-02-29, adm 2026-02-28 | T | pass | Boundaries: month-end |
+| TC-R3-13 | Keyword match only | "Total knee joint replacement", icd10 null, month 14 | T | fail | Q6 |
+| TC-R4-01 | Month 35 | PED diagnosed 2024-06-01; adm 2027-12-10 | T | fail, cites `pedWait.clause` | Boundaries |
+| TC-R4-02 | Month 36 | adm 2028-01-10 | T | pass | Boundaries |
+| TC-R4-03 | Month 37 | adm 2028-02-10 | T | pass | R4 |
+| TC-R4-04 | PED diagnosed after inception | diagnosed 2025-06-01, month 5 | T | pass | R4 |
+| TC-R4-05 | No PED | exists false | T | pass | R4 |
+| TC-R4-06 | PED unknown | exists null | T | unknown | R4 |
+| TC-R4-07 | PED date unknown inside wait | exists true, date null, month 20 | T | unknown | R4 |
+| TC-R4-08 | Plan difference | month 40 (2028-05-10) | T vs T with 48 months | pass vs fail | V.19 wording says 48 |
+| TC-R5-01 | Month 59, PED not disclosed | adm 2029-12-10 | T | fail | R5, Q1 |
+| TC-R5-02 | Month 60 | adm 2030-01-10 | T | pass | R5, Q1 |
+| TC-R5-03 | Month 61 | adm 2030-02-10 | T | pass | R5, Q1 |
+| TC-R5-04 | PED disclosed | disclosed true, month 40 | T | pass, applicable false | R5 |
+| TC-R5-05 | Disclosure unknown | disclosed null, month 40 | T | pass, applicable false | R5 missing → not applicable |
+| TC-R6-01 | Rent at cap | rent 500000 × 1; room 500000 | T | pass, 0 | R6 |
+| TC-R6-02 | 1 paise over | rent 500001 × 1; room 500001; nursing 100000 | T | deduction 2 | R6, Rounding |
+| TC-R6-03 | Rounding row | rent 700000 × 1; room 700000; nursing 1000 | T | deduction 200286 | Rounding |
+| TC-R6-04 | Excluded heads in full | rent 700000 × 1; room 700000; implants 1000000; pharmacy 50000; diagnostics 30000 | T | deduction 200000 | R6 |
+| TC-R6-05 | Case B room numbers | Case B without consumables | T | deduction 2460000 | Case B |
+| TC-R6-06 | Rent missing | rent null | T | unknown | R6 |
+| TC-R6-07 | Days missing | days null | T | unknown | R6 |
+| TC-R6-08 | No cap | rent 700000 | T, `kind: 'none'` | pass, applicable false | plan difference |
+| TC-R7-01 | Age 60 | running 20580000 | T | pass, 0 | R7 |
+| TC-R7-02 | Age 61 | running 20580000 | T | deduction 4116000 | R7 |
+| TC-R7-03 | Rounding row | age 61, running 1234567 | T | deduction 246913 | Rounding |
+| TC-R7-04 | Age missing | ageAtEntry null | T | unknown | R7 |
+| TC-R7-05 | No co-pay | age 70 | T, `tiers: []` | pass, 0 | plan difference |
+| TC-R8-01 | At SI | SI 30000000, used 0, running 30000000 | T | pass, 0 | R8 |
+| TC-R8-02 | 1 paise over | running 30000001 | T | deduction 1 | R8 |
+| TC-R8-03 | Partly used, at limit | used 10000000, running 20000000 | T | pass | R8 |
+| TC-R8-04 | Partly used, 1 over | running 20000001 | T | deduction 1 | R8 |
+| TC-R8-05 | SI missing | sumInsuredPaise null | T | unknown | R8 |
+| TC-R8-06 | SI used missing | sumInsuredUsedPaise null | T | unknown | R8 |
+| TC-ENG-01 | Waterfall order | Case B bill, age 61, SI 15000000 | T | 24000000 → −960000 → R6 −2460000 → R7 −4116000 → R8 −1464000 = 15000000; out of pocket 9000000 | Order |
+| TC-ENG-02 | Non-payables removed, not proportioned | Case B | T | nonPayablePaise 960000; R6 base 23040000 | Order |
+| TC-ENG-03 | Eligibility fail → 0 | Case B, adm I + 10 days | T | payable 0; payableIfEligible 20580000; out of pocket 24000000 | Order |
+| TC-ENG-04 | Shape | Case B | T | 8 results R1..R8; clauses from the plan; waterfall R6, R7, R8; parses as `Estimate` | EstimateSchema |
+| TC-ENG-05 | No non-payable heads | Case B | T, `heads: []` | nonPayablePaise 0; R6 base 24000000 | plan difference |
+| TC-VERDICT-01 | Eligible, payable = claimed | Case D | T | likely_payable | Verdict |
+| TC-VERDICT-02 | Eligible, payable < claimed | Case B | T | likely_partial | Verdict |
+| TC-VERDICT-03 | Full amount but R6 unknown | Case D, rent null | T | likely_partial | Verdict, Q3 |
+| TC-VERDICT-04 | R4 unknown | Case D, ped.exists null | T | at_risk | Verdict |
+| TC-VERDICT-05 | R2 fail | Case A | T | at_risk | Verdict |
+| TC-CASE-A | Inside initial wait | `fixtures/cases/A` | star-fho | claimed 1000000; payable 0; payableIfEligible 1000000; out of pocket 1000000; at_risk (R2 fail) | README |
+| TC-CASE-B | Knee replacement, Single AC | `fixtures/cases/B` | star-fho | claimed 24000000; non-payables 960000; R6 2460000; payable 20580000; out of pocket 3420000; likely_partial | Case B |
+| TC-CASE-C | Cataract inside 24 months | `fixtures/cases/C` | star-fho | claimed 4000000; payable 0; payableIfEligible 4000000; at_risk (R3 fail) | README |
+| TC-CASE-D | Appendicitis within cap | `fixtures/cases/D` | star-fho | claimed = payable = 8000000; out of pocket 0; likely_payable | README |
+
+**Decisions taken with this table** (also in `docs/rules-spec.md`): see "Engine decisions (28 Oct 2026)".
 ## Shared schemas, part 2: facts, extraction, room tiers, loadable plans, remedies (autopilot, 29 Oct 2026)
 
 Written by the autopilot run (`AUTOPILOT.md`), not yet approved by a human. See ADR-007.

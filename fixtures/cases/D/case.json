@@ -1,0 +1,50 @@
+{
+  "planId": "star-fho",
+  "policyStartDate": "2026-04-01",
+  "policyEndDate": "2027-03-31",
+  "firstInceptionDate": "2022-04-01",
+  "sumInsuredPaise": 30000000,
+  "sumInsuredUsedPaise": 0,
+  "ageAtEntry": 40,
+  "admissionDate": "2026-09-10",
+  "dischargeDate": "2026-09-13",
+  "diagnosis": "Acute appendicitis",
+  "icd10": "K35.8",
+  "isAccident": false,
+  "ped": {
+    "exists": false,
+    "condition": null,
+    "firstDiagnosedDate": null,
+    "disclosed": null
+  },
+  "room": {
+    "category": "shared",
+    "rentPerDayPaise": 400000,
+    "days": 3
+  },
+  "bill": {
+    "totalPaise": 8000000,
+    "lineItems": [
+      {
+        "head": "room",
+        "amountPaise": 1200000
+      },
+      {
+        "head": "surgeon",
+        "amountPaise": 4000000
+      },
+      {
+        "head": "ot",
+        "amountPaise": 1500000
+      },
+      {
+        "head": "pharmacy",
+        "amountPaise": 800000
+      },
+      {
+        "head": "diagnostics",
+        "amountPaise": 500000
+      }
+    ]
+  }
+}
