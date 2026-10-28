@@ -1,0 +1,8 @@
+# Replace YOUR_GITHUB_USERNAME before merging.
+*                    @YOUR_GITHUB_USERNAME
+/CLAUDE.md           @YOUR_GITHUB_USERNAME
+**/CLAUDE.md         @YOUR_GITHUB_USERNAME
+/.claude/            @YOUR_GITHUB_USERNAME
+/.github/            @YOUR_GITHUB_USERNAME
+/docs/ai-*.md        @YOUR_GITHUB_USERNAME
+/config/plans/       @YOUR_GITHUB_USERNAME
