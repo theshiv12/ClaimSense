@@ -126,3 +126,14 @@ Starting values for building the config, **not test expectations**: tests read `
   `outOfPocketPaise = claimedPaise − payablePaise` can be explained line by line.
 - `RuleResult`: `deductionPaise > 0` **if and only if** `outcome === 'deduction'`; `missingFacts` is
   non-empty **if and only if** `outcome === 'unknown'`. The schema rejects anything else.
+
+## Draft plan configs (28 Oct 2026, with TC-SH-06..10)
+
+- `config/plans/drafts/*.json` parse with `DraftPlanConfigSchema`; `config/plans/*.json` with the strict
+  `PlanConfigSchema`. A draft can never satisfy the strict schema while any value is `null`.
+- `null` = the wording is silent; `[]` = the wording says there are none.
+- A null value needs its section's clause to have `needsReview: true` and a non-empty `note`. A clause
+  that is not in the wording at all is `{ clauseId: null, page: null, quote: null, source: null,
+  needsReview: true, note }`; anything half-filled is rejected.
+- `roomRent.kind: 'unknown'` (drafts only) is for a missing or garbled room-rent table.
+- `uin` / `wordingVersion` may be null with a top-level `notes` entry; `verifiedBy` is always `null`.

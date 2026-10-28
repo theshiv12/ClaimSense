@@ -53,3 +53,19 @@ These IDs replace the `TC-SMOKE-*` cases in `docs/setup.md` (superseded NestJS p
 `RoomCategory` is `general | shared | single | deluxe | suite | icu`; `ClauseRef` has optional
 `needsReview`/`note` (drafts only); `Estimate` has `nonPayablePaise`; the RuleResult invariants are
 enforced by the schema; `ErrorCode` adds `INTERNAL_ERROR`. See `docs/rules-spec.md`, "Schema decisions".
+
+## Draft plan configs: `DraftPlanConfigSchema` (approved 28 Oct 2026)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SH-06 | A fully extracted plan is a valid draft | The TC-SH-03 synthetic plan with `verifiedBy: null` (a draft is never verified) | Parse with `DraftPlanConfigSchema` | Accepted, output equals input. The same plan with `verifiedBy: 'test'` is rejected | Unit |
+| TC-SH-07 | A gap is allowed when it is flagged | `pedWait.months: null` with a not-stated clause (`clauseId`/`page`/`quote`/`source` null, `needsReview: true`, note) | Parse with the draft and strict schemas | Draft accepts, strict rejects. Also accepted: `roomRent.kind: 'unknown'` with a flagged clause; `conditions: null` under a found clause flagged with a note; `[]` for a list the wording says is empty; `uin: null` with a top-level `notes` entry | Unit |
+| TC-SH-08 | A gap must be flagged | As TC-SH-07 but with the flag missing | Parse with the draft schema | Rejected: `needsReview` missing; `note` missing or `""`; a null value under a found clause without `needsReview`; `kind: 'unknown'` with an unflagged clause; `uin: null` with no `notes` | Unit |
+| TC-SH-09 | No half-filled clause refs | A ref with a quote but `page: null`; a ref with `page: 12` and a quote under 20 chars | Parse with `DraftClauseRefSchema` and inside a draft | Both rejected: a ref is fully found or fully not stated | Unit |
+| TC-SH-10 | Nullability doesn't loosen ranges | Draft with co-pay 10001 bps; `initialWait.days` −1; unknown `BillHead`; `optionsPaise: [1.5]` | Parse with the draft schema | Each rejected | Unit |
+
+**Decisions taken with this table:** `null` means the wording is silent, `[]` means the wording says none;
+`roomRent.kind: 'unknown'` exists in drafts only; `uin`/`wordingVersion` may be null in a draft with an
+entry in top-level `notes`; `verifiedBy` is always `null` in a draft; values are nullable one at a time,
+never a whole section, and the section's clause carries the flag and note. The loader keeps the strict
+`PlanConfigSchema`, so a draft can never be loaded.
