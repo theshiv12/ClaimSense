@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.next/
+.vercel/
+coverage/
+*.log
+*.tsbuildinfo
+next-env.d.ts
+
+# env: only the example is committed
+.env
+.env.*
+!.env.example
+
+# personal / local AI config
+CLAUDE.local.md
+.claude/settings.local.json
+
+# the audit prompt and its reports stay local
+AI_AUDIT_PROMPT.md
+ai-audit/
+
+# test output
+playwright-report/
+test-results/

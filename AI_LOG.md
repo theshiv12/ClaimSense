@@ -1,0 +1,21 @@
+# AI log
+
+What the AI got wrong (or nearly got wrong), how it was caught, and what changed so it
+doesn't happen again. Newest first. Add an entry every time; small ones count.
+
+| Date | Phase | What happened | How it was caught | What changed |
+|---|---|---|---|---|
+| 2026-10-28 | Context | The AI kit kept stale lines from the superseded NestJS plan: HTTP status codes (401/400) in the `tdd` skill and the reviewer checklist, FR ids and a sample case "B2" and conversation evals in the QA agent, rule values (moratorium months, co-pay %/age) in the CLAUDE.md glossary against golden rule 2, and "check-ai-config runs in CI" when no CI workflow existed | Read-through review of `CLAUDE.md`, `.claude/` and `docs/` before the first commit | Stale lines fixed; `docs/setup.md` marked reference-only in the CLAUDE.md table; ADR-002 restored; check-ai-config added to the PR #2 CI prompt |
+| 2026-10-27 | Design / spec | The Figma screens and both guides showed the twin-sharing what-if as "₹2,30,400 of ₹2,40,000"; the bill shrinks with a cheaper room, so it must be ₹2,17,900 of ₹2,27,500 | Re-did Case B by hand while writing `docs/rules-spec.md` | Case B arithmetic written out head by head in the spec; tests must use it, never values copied from screens or code |
+| 2026-10-27 | Context | The kit assumed NestJS + Claude API + Azure Blob; the build is one Next.js app on free tiers | Re-planned for a one-night build | `CLAUDE.md`, skills and agents rewritten; ADR-005, ADR-006 |
+| 2026-10-20 | Define | A policy wording found online was Star FHO **V.19 (2023)** with a **48-month** PED wait, while the 2024 IRDAI Master Circular caps it at 36 months. Using "the rule" instead of "the wording" would have given wrong verdicts. | Reading the actual wording PDF instead of relying on the summary of the regulation. | Every plan config carries its wording version and UIN; plan values come only from the wording (`plan-config-extractor` skill, CLAUDE.md golden rule 2). |
+| 2026-10-20 | Define | A news article's survey figures didn't add up: headline "over 50%" vs 33% + 36% = 69% in the body; delay buckets summed to 67%. | Checked the arithmetic before using the numbers in the PRD. | Survey numbers are labelled "self-reported signal", never used as a headline fact. |
+| 2026-10-20 | Define | First feature list had 23 features. The hackathon guide weights idea at 10% and engineering + AI practice at 90%. | Human read the participant guide and shared it; AI re-planned against the scoring. | Scope cut to one journey (upload → facts → rules → verdict → fix-it conversation); the rest moved to a roadmap. |
+| 2026-10-17 | Define | A widely shared claim, "25% of rejections are waiting-period violations", had no traceable primary source. | Tried to find the original source before citing it; none found. | Only figures with a primary or named source go into docs. |
+| 2026-10-17 | Define | Aggregator sites gave three different FY25 claim settlement ratios for the same insurer (82.31%, 91.3%, 99.06%). | Compared several sources for the same number. | Insurer rejection rates, if used, come only from the insurers' own NL-37 / NL-48 filings. |
+| 2026-10-17 | Define | Sources disagreed on the ombudsman claim cap (Rs 30 lakh vs Rs 50 lakh) and the specific-disease waiting cap (24 vs 36 months). | Cross-checking two or more sources per regulatory fact. | Both marked "verify before use"; ClaimSense reads waiting periods from each plan's wording, not from a general rule. |
+
+## Entry template
+
+| YYYY-MM-DD | Define / Design / Build / Test / Review / Document | What the AI produced and why it was wrong | Test, review, human check, agent… | Rule added to CLAUDE.md, skill updated, test added… |
+
