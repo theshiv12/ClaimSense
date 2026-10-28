@@ -28,3 +28,13 @@ Given for all rows: Star Family Health Optima, policy first started 10 Jan 2025,
 | TC-R3-06 | R3 | Diagnosis missing | Any date | Unknown, never pass | Unit |
 | TC-R3-07 | R3 | Ported: 12 months on old policy + 13 months on this one | Admission now | Pass (25 months continuous) | Unit |
 | TC-R3-08 | R3 | Same facts as TC-R3-01 on plan 2 | Admission at 14 months | Follows plan 2's own list and period | Unit |
+
+## Scaffold smoke tests (PR #2)
+
+These IDs replace the `TC-SMOKE-*` cases in `docs/setup.md` (superseded NestJS plan).
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SMOKE-01 | `packages/shared` loads and validates money | `PaiseSchema` | Parse 100, 1.5 and -1 | 100 is accepted; 1.5 and -1 are rejected (money is integer paise) | Unit |
+| TC-SMOKE-02 | `packages/rules` loads and resolves `@claimsense/shared` | The rules package | Import `RULE_IDS` and `PaiseSchema` | `RULE_IDS` is R1…R8 in order; `PaiseSchema` parses 0 | Unit |
+| TC-SMOKE-03 | `apps/web` renders under Vitest | The home page | Render it to static HTML | It has an `<h1>` containing "ClaimSense" | Unit |

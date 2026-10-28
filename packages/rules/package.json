@@ -1,0 +1,22 @@
+{
+  "name": "@claimsense/rules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "cases": "vitest run cases --passWithNoTests"
+  },
+  "dependencies": {
+    "@claimsense/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "5.0.4",
+    "vitest": "5.0.4"
+  }
+}

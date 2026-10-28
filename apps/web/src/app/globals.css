@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/* Design tokens from Figma (see apps/web/CLAUDE.md). Use these, not raw hex, in components. */
+@theme {
+  --color-teal: #0e7a66;
+  --color-ink: #12211e;
+  --color-muted: #4a5b56;
+  --color-bg: #f6f7f5;
+  --color-border: #dde3df;
+  --color-pass-bg: #e3f2ee;
+  --color-pass-fg: #095c4d;
+  --color-warn-bg: #fff1de;
+  --color-warn-fg: #8a4a06;
+  --color-risk-bg: #fdecea;
+  --color-risk-fg: #8f1d14;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
