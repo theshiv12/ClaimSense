@@ -38,3 +38,18 @@ These IDs replace the `TC-SMOKE-*` cases in `docs/setup.md` (superseded NestJS p
 | TC-SMOKE-01 | `packages/shared` loads and validates money | `PaiseSchema` | Parse 100, 1.5 and -1 | 100 is accepted; 1.5 and -1 are rejected (money is integer paise) | Unit |
 | TC-SMOKE-02 | `packages/rules` loads and resolves `@claimsense/shared` | The rules package | Import `RULE_IDS` and `PaiseSchema` | `RULE_IDS` is R1…R8 in order; `PaiseSchema` parses 0 | Unit |
 | TC-SMOKE-03 | `apps/web` renders under Vitest | The home page | Render it to static HTML | It has an `<h1>` containing "ClaimSense" | Unit |
+
+## Shared schemas: `packages/shared` (approved 28 Oct 2026)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SH-01 | Money, percentages and dates have one exact form (CLAUDE.md coding standards) | `PaiseSchema`, `BpsSchema`, `IsoDateSchema` | Parse each value | Paise: 0 and 24000000 pass; 1.5, −1, `"100"` fail. Bps: 0, 2000, 10000 pass; −1, 10001, 12.5 fail. IsoDate: `2026-11-18`, `2028-02-29` pass; `2026-02-29`, `2026-11-18T00:00:00Z`, `18/11/2026` fail | Unit |
+| TC-SH-02 | Every plan value traces to a clause (golden rule 2) | `ClauseRefSchema` | Parse a valid ref and broken variants | `{ clauseId: '3(2)', page: 12, quote: ≥ 20 chars, source: 'wording' }` passes; `'regulation'` passes; optional `needsReview`/`note` pass. Quote < 20 chars, page 0, `source: 'memory'`, missing `clauseId` fail | Unit |
+| TC-SH-03 | Plan config holds every R1–R8 value plus non-payables, each with its clause | A complete synthetic plan (made-up values) | Parse it, then mutate one field at a time | Fixture passes. Fail: no `nonPayableHeads`; unknown `roomRent.kind`; `fixed_per_day` with fractional `capPaise`; co-pay tier 10001 bps; `initialWait` without clause; unknown head in `excludedHeads` | Unit |
+| TC-SH-04 | Unknown is a legal fact value: null, never guessed (golden rule 4) | `ClaimFactsSchema` | Parse all-null facts, Case B, then bad variants | All-null (empty `lineItems`) and Case B pass. Fail: rent 7000.5 paise; admission `18-11-2026`; line item head `food`; missing `ped` object | Unit |
+| TC-SH-05 | Results are internally consistent; errors are a closed set | `RuleResultSchema`, `EstimateSchema`, `ErrorCode` | Parse valid and broken values | RuleResult: `unknown` + `missingFacts: ['admission_date']` passes; `unknown` + empty `missingFacts` fails; `pass` + `deductionPaise: 100` fails; `deduction` + `deductionPaise: 0` fails. Estimate: Case B (24000000 claimed, 20580000 payable, 3420000 out of pocket, 960000 non-payable, `likely_partial`, 8 results) passes; 7 results fails. ErrorCode: every code in `docs/api.md` plus `INTERNAL_ERROR` passes; `FORBIDDEN` fails | Unit |
+
+**Decisions taken with this table:** `nonPayableHeads` is `{ heads: BillHead[], clause: ClauseRef }`;
+`RoomCategory` is `general | shared | single | deluxe | suite | icu`; `ClauseRef` has optional
+`needsReview`/`note` (drafts only); `Estimate` has `nonPayablePaise`; the RuleResult invariants are
+enforced by the schema; `ErrorCode` adds `INTERNAL_ERROR`. See `docs/rules-spec.md`, "Schema decisions".

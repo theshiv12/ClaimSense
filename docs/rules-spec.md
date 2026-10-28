@@ -113,3 +113,16 @@ Starting values for building the config, **not test expectations**: tests read `
 | Excluded heads | implants, pharmacy, diagnostics (**unverified**, so `headsVerified: false`) | clause 2(A) / circular |
 | Non-payable heads | consumables | IRDAI non-payable items list |
 | Co-pay | 20% (2000 bps) if age at entry ≥ 61 | **verify** |
+
+## Schema decisions (28 Oct 2026, with TC-SH-01..05)
+
+- `plan.nonPayableHeads` is `{ heads: BillHead[], clause: ClauseRef }`. The IRDAI list is cited with
+  `source: 'regulation'`.
+- `RoomCategory`: `general | shared | single | deluxe | suite | icu`. "Single AC" → `single`,
+  "twin sharing" → `shared`.
+- `ClauseRef.needsReview` / `ClauseRef.note` are optional and only for drafts in `config/plans/drafts/`.
+  A plan loaded by the app must not have `needsReview` set (the loader enforces this in PR #3).
+- `Estimate.nonPayablePaise` records the non-payables removed before R6 (Case B: 9,60,000 paise), so
+  `outOfPocketPaise = claimedPaise − payablePaise` can be explained line by line.
+- `RuleResult`: `deductionPaise > 0` **if and only if** `outcome === 'deduction'`; `missingFacts` is
+  non-empty **if and only if** `outcome === 'unknown'`. The schema rejects anything else.
