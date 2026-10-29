@@ -69,3 +69,16 @@ enforced by the schema; `ErrorCode` adds `INTERNAL_ERROR`. See `docs/rules-spec.
 entry in top-level `notes`; `verifiedBy` is always `null` in a draft; values are nullable one at a time,
 never a whole section, and the section's clause carries the flag and note. The loader keeps the strict
 `PlanConfigSchema`, so a draft can never be loaded.
+
+## Shared schemas, part 2: facts, extraction, room tiers, loadable plans, remedies (autopilot, 29 Oct 2026)
+
+Written by the autopilot run (`AUTOPILOT.md`), not yet approved by a human. See ADR-007.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SH-11 | Every fact is traceable (golden rule 3) | `FactSchema` | Parse a document fact, a user-stated fact and broken variants | Document fact with quote, page, `documentId`, `verification: 'exact'` passes; user-stated fact with no document passes. Fail: `source: 'document'` without `documentId`; `status: 'found'` with `value: null`; a date key with value `18/11/2026`; a money key with 1.5; a boolean key with `"yes"`; `bill_line_item` with head `none` | Unit |
+| TC-SH-12 | Model output is flat and all-required (ADR-003) | `LlmExtractionSchema` and its JSON schema | Parse a valid extraction, one with a missing field, one with an extra key; build `z.toJSONSchema` | Valid passes; missing `sourceQuote` fails; unknown `key` fails; the JSON schema lists every item property under `required` and has no `anyOf`/`oneOf` | Unit |
+| TC-SH-13 | Room cap can depend on the sum insured (Star FHO 2(A)) | `roomRent.kind: 'by_sum_insured'` | Parse tiers | Per-day and room-category tiers pass. Fail: no tiers; a per-day tier with fractional paise; an unknown room category | Unit |
+| TC-SH-14 | A plan with an unreviewed value is never loaded (rules-spec "Schema decisions") | `LoadablePlanConfigSchema` | Parse a plan, then the same plan with one `needsReview: true` | First passes, second fails | Unit |
+| TC-SH-15 | Every committed plan and the remedy catalog parse | `config/plans/*.json`, `config/remedies.json` | Parse each file | Every plan parses with `LoadablePlanConfigSchema`; remedies parse with `RemediesCatalogSchema`; each of R1–R8 has 2–3 remedies for each outcome it can return besides `pass` | Unit |
+| TC-SH-16 | Remedies never help hide or change medical facts (golden rule 10) | `config/remedies.json` | Scan every title and body | No remedy says "hide", "conceal", "back-date"/"backdate", "change the diagnosis", "don't disclose" or "approved" | Unit |
