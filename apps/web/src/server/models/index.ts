@@ -77,7 +77,8 @@ const estimateSchema = new Schema(
     estimate: { type: Schema.Types.Mixed, required: true },
     expiresAt: ttl,
   },
-  { timestamps: true },
+  // minimize: false keeps empty objects (a RuleResult's `params: {}`); without it the saved estimate fails EstimateSchema.
+  { timestamps: true, minimize: false },
 );
 export const EstimateModel = model('Estimate', estimateSchema);
 
