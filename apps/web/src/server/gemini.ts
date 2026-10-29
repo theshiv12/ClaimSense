@@ -25,11 +25,16 @@ export const EXTRACTION_PROMPT = `Extract the facts from the attached document. 
 // Gemini rejects schemas whose bounds make "too many states" (live 400, 29 Oct 2026), so the copy sent
 // drops numeric and length bounds. They are still enforced: the output is parsed with the full Zod schema.
 const UNSERVED = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'minItems', 'maxItems']);
-const servable = (node: unknown): unknown =>
+// A `properties` object maps field names to schemas, so its keys are never dropped, only its values cleaned.
+const servable = (node: unknown, isNameMap = false): unknown =>
   Array.isArray(node)
-    ? node.map(servable)
+    ? node.map((n) => servable(n))
     : typeof node === 'object' && node !== null
-      ? Object.fromEntries(Object.entries(node).filter(([k]) => !UNSERVED.has(k)).map(([k, v]) => [k, servable(v)]))
+      ? Object.fromEntries(
+          Object.entries(node)
+            .filter(([k]) => isNameMap || !UNSERVED.has(k))
+            .map(([k, v]) => [k, servable(v, !isNameMap && k === 'properties')]),
+        )
       : node;
 
 export const RESPONSE_SCHEMA = servable(z.toJSONSchema(LlmExtractionSchema)) as Record<string, unknown>;

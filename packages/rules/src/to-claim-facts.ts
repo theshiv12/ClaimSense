@@ -21,15 +21,18 @@ const topRanked = (list: Fact[]) => {
   return list.filter((f) => RANK[f.source] === top);
 };
 
-/** One value per key. Document facts that disagree, with no user fact to settle them, are unknown. */
-const pick = (list: Fact[]): Fact['value'] => {
+/** The facts behind a key's value: the latest user fact, or agreeing documents. Disagreeing documents give none. */
+const chosenFor = (list: Fact[]): Fact[] => {
   const top = topRanked(list);
-  if (top[0]!.source !== 'document') return top.at(-1)!.value;
-  return top.every((f) => f.value === top[0]!.value) ? top[0]!.value : null;
+  if (top[0]!.source !== 'document') return [top.at(-1)!];
+  return top.every((f) => f.value === top[0]!.value) ? top : [];
 };
 
-/** Line items per head from the best-ranked source; one head from two documents → bill unknown. */
-const lineItems = (usable: Fact[]): ClaimFacts['bill']['lineItems'] => {
+/** One value per key. Document facts that disagree, with no user fact to settle them, are unknown. */
+const pick = (list: Fact[]): Fact['value'] => chosenFor(list)[0]?.value ?? null;
+
+/** Line-item facts per head from the best-ranked source; one head from two documents → none (bill unknown). */
+const lineItemFacts = (usable: Fact[]): Fact[] => {
   const byHead = groupBy(
     usable.filter((f) => f.key === 'bill_line_item' && f.head !== 'none' && typeof f.value === 'number'),
     (f) => f.head,
@@ -37,8 +40,11 @@ const lineItems = (usable: Fact[]): ClaimFacts['bill']['lineItems'] => {
   const chosen = [...byHead.values()].map(topRanked);
   const conflict = chosen.some((top) => top[0]!.source === 'document' && new Set(top.map((f) => f.documentId)).size > 1);
   if (conflict) return [];
-  return usable.filter((f) => chosen.some((top) => top.includes(f))).map((f) => ({ head: f.head, amountPaise: f.value as number }));
+  return usable.filter((f) => chosen.some((top) => top.includes(f)));
 };
+
+const lineItems = (usable: Fact[]): ClaimFacts['bill']['lineItems'] =>
+  lineItemFacts(usable).map((f) => ({ head: f.head, amountPaise: f.value as number }));
 
 /** Turns stored facts into engine input (docs/rules-spec.md "Usable facts"). */
 export const toClaimFacts = (facts: Fact[], planId: string): ClaimFacts => {
@@ -77,5 +83,10 @@ export const toClaimFacts = (facts: Fact[], planId: string): ClaimFacts => {
   };
 };
 
-/** The facts `toClaimFacts` actually used, for evidence shown to the user. */
-export const selectedFacts = (_facts: Fact[]): Fact[] => [];
+/** The facts `toClaimFacts` actually used (same merge rules), in input order: evidence shown to the user cites only these. */
+export const selectedFacts = (facts: Fact[]): Fact[] => {
+  const usable = facts.filter(isUsable);
+  const byKey = groupBy(usable.filter((f) => f.key !== 'bill_line_item'), (f) => f.key);
+  const chosen = new Set([...[...byKey.values()].flatMap(chosenFor), ...lineItemFacts(usable)]);
+  return facts.filter((f) => chosen.has(f));
+};

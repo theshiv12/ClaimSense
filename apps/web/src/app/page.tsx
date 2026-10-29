@@ -48,9 +48,11 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
         </div>
 
         {sample ? (
-          <Card className="space-y-5 p-7">
+          <section aria-labelledby="sample-estimate" className="space-y-5 rounded-xl border border-border bg-white p-7">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Sample estimate · knee replacement</p>
+              <h2 id="sample-estimate" className="text-xs font-semibold uppercase tracking-wider text-muted">
+                Sample estimate<span className="sr-only"> </span><span aria-hidden> · knee replacement</span>
+              </h2>
               <VerdictChip verdict={sample.estimate.verdict} />
             </div>
             <div>
@@ -72,8 +74,9 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
                 “{short(sample.room.clause.quote)}” · Clause {sample.room.clause.clauseId}
               </blockquote>
             ) : null}
-            <p className="text-xs text-muted">Made-up documents, real rules. Only your insurer decides.</p>
-          </Card>
+            <p className="text-xs text-muted">Made-up documents. The plan values are still waiting for a human check against the policy wording.</p>
+            <Disclaimer />
+          </section>
         ) : null}
       </section>
 

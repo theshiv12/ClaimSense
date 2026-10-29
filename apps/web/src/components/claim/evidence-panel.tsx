@@ -1,17 +1,12 @@
-import type { FactKey, RuleResult } from '@claimsense/shared';
+import type { RuleResult } from '@claimsense/shared';
+import type { EvidenceLine } from '@/lib/evidence';
 import { explain, FACT_LABELS, RULE_TITLES } from '@/lib/labels';
 
-export interface EvidenceLine {
-  key: FactKey;
-  quote: string;
-  page: number | null;
-  usable: boolean;
-}
-
-/** Why a check came out this way: the plan clause and the lines from the user's own documents (Figma 04). */
-export function EvidencePanel({ result, lines }: { result: RuleResult; lines: EvidenceLine[] }) {
+/** Why a check came out this way: the plan clause and the document lines the engine used (Figma 04; see lib/evidence). */
+export function EvidencePanel({ result, lines }: { result: RuleResult; lines: (EvidenceLine & { usable?: boolean })[] }) {
   const { clause } = result;
-  const shown = lines.filter((l) => l.usable);
+  // The server already sends only facts the engine used; a line marked unusable is still never shown.
+  const shown = lines.filter((l) => l.usable !== false);
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-ink">Evidence · {RULE_TITLES[result.ruleId]}</h3>

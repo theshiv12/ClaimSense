@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ClaimRow } from '@/components/claim/claim-row';
+import { ClaimsTable } from '@/components/claim/claims-table';
 import { DeleteMyDataButton } from '@/components/claim/delete-buttons';
 import { Disclaimer } from '@/components/claim/disclaimer';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { inputClass } from '@/components/ui/field';
 import { claimStats, filterClaims, type ClaimFilter } from '@/lib/claim-stats';
 import { formatInr } from '@/lib/format';
 import { VERDICT_LABELS } from '@/lib/labels';
@@ -20,12 +19,10 @@ export default async function ClaimsPage({ searchParams }: PageProps<'/claims'>)
   if (!user) redirect('/login?next=/claims');
   const sp = await searchParams;
   const status = asFilter(sp.status);
-  const q = typeof sp.q === 'string' ? sp.q.slice(0, 100) : '';
   const claims = await claimSummaries(user.id);
   const stats = claimStats(claims);
-  const shown = filterClaims(claims, status, q);
+  const shown = filterClaims(claims, status, '');
   const count = (f: ClaimFilter) => (f === 'all' ? stats.checks : stats.byVerdict[f]);
-  const href = (f: ClaimFilter) => `/claims?${new URLSearchParams({ ...(f === 'all' ? {} : { status: f }), ...(q ? { q } : {}) }).toString()}`;
   const tiles = [
     ['Checks', String(stats.checks), 'kept for 7 days each'],
     ['Estimated payout', formatInr(stats.payablePaise), `across ${stats.checked} checked ${stats.checked === 1 ? 'claim' : 'claims'}`],
@@ -53,50 +50,24 @@ export default async function ClaimsPage({ searchParams }: PageProps<'/claims'>)
       </div>
       {stats.checked > 0 ? <Disclaimer /> : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Filter by status" className="flex flex-wrap gap-1 rounded-xl bg-border/50 p-1 text-sm">
-          {FILTERS.map((f) => (
-            <Link
-              key={f}
-              href={href(f)}
-              aria-current={f === status ? 'page' : undefined}
-              className={`rounded-lg px-3 py-1.5 ${f === status ? 'border border-border bg-white font-semibold text-ink' : 'text-muted hover:text-ink'}`}
-            >
-              {f === 'all' ? 'All' : VERDICT_LABELS[f].label} <span className="text-xs">{count(f)}</span>
-            </Link>
-          ))}
-        </nav>
-        <form action="/claims" className="w-full sm:w-80">
-          {status !== 'all' ? <input type="hidden" name="status" value={status} /> : null}
-          <label htmlFor="claim-search" className="sr-only">Search by person or treatment</label>
-          <input id="claim-search" name="q" defaultValue={q} placeholder="Search by person or treatment" className={inputClass} />
-        </form>
-      </div>
-
-      <Card flush className="overflow-x-auto">
-        {shown.length === 0 ? (
-          <p className="p-5 text-sm text-muted">{claims.length === 0 ? 'No checks yet.' : 'No checks match.'}</p>
-        ) : (
-          <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wider text-muted">
-              <tr>
-                <th scope="col" className="px-5 py-3 font-semibold">Claim</th>
-                <th scope="col" className="px-3 py-3 font-semibold">Insurer · plan</th>
-                <th scope="col" className="px-3 py-3 font-semibold">Checked</th>
-                <th scope="col" className="px-3 py-3 font-semibold">Estimate</th>
-                <th scope="col" className="px-3 py-3 font-semibold">Status</th>
-                <th scope="col" className="px-3 py-3 font-semibold">Your data</th>
-                <th scope="col" className="px-5 py-3"><span className="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((c) => (
-                <ClaimRow key={c.id} claim={c} />
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
+      <ClaimsTable
+        claims={shown}
+        status={status}
+        filters={
+          <nav aria-label="Filter by status" className="flex flex-wrap gap-1 rounded-xl bg-border/50 p-1 text-sm">
+            {FILTERS.map((f) => (
+              <Link
+                key={f}
+                href={f === 'all' ? '/claims' : `/claims?status=${f}`}
+                aria-current={f === status ? 'page' : undefined}
+                className={`rounded-lg px-3 py-1.5 ${f === status ? 'border border-border bg-white font-semibold text-ink' : 'text-muted hover:text-ink'}`}
+              >
+                {f === 'all' ? 'All' : VERDICT_LABELS[f].label} <span className="text-xs">{count(f)}</span>
+              </Link>
+            ))}
+          </nav>
+        }
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted">

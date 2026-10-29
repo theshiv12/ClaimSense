@@ -14,11 +14,11 @@ const str = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v.trim() 
 const RELATIONS = [['self', 'Me'], ['parent', 'Parent'], ['spouse', 'Spouse'], ['child', 'Child'], ['other', 'Someone else']] as const;
 
 /** A checkbox drawn as a switch (Figma 02). The label stays a real <label>, so it is keyboard and screen-reader friendly. */
-function Toggle({ name, defaultChecked, title, children }: { name: string; defaultChecked?: boolean; title: string; children: React.ReactNode }) {
+function Toggle({ name, defaultChecked, required, title, children }: { name: string; defaultChecked?: boolean; required?: boolean; title: string; children: React.ReactNode }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 text-sm">
       <span className="relative mt-0.5 h-6 w-10 shrink-0">
-        <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer absolute inset-0 z-10 cursor-pointer opacity-0" />
+        <input type="checkbox" role="switch" aria-required={required ? true : undefined} name={name} defaultChecked={defaultChecked} className="peer absolute inset-0 z-10 cursor-pointer opacity-0" />
         <span
           aria-hidden
           className="absolute inset-0 rounded-full bg-border transition after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:bg-teal peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal"
@@ -76,7 +76,7 @@ export function NewClaimForm({ plans }: { plans: { planId: string; name: string 
           Your documents are read by Google Gemini (free tier) to extract facts, so the data leaves India. Google may use it to
           improve its products, and people may review it. Nothing is shared with your insurer.
         </p>
-        <Toggle name="analysis" title="Read my documents to estimate this claim (required).">
+        <Toggle name="analysis" required title="Read my documents to estimate this claim (required).">
           This is a demo: upload only the sample or made-up documents. The file itself is never stored; only the facts read from it are.
         </Toggle>
         <Toggle name="retention" defaultChecked title="Keep my check for 7 days">

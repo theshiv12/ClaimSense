@@ -1,7 +1,7 @@
 import 'server-only';
 import { estimate as runEngine, isUsable, toClaimFacts } from '@claimsense/rules';
 import { EstimateSchema, type Estimate, type Remedy, type RuleId } from '@claimsense/shared';
-import type { EvidenceLine } from '@/components/claim/evidence-panel';
+import { evidenceFor, type EvidenceLine } from '@/lib/evidence';
 import type { ClaimListItem } from '@/lib/claim-stats';
 import type { StoredFactView } from '@/lib/fact-view';
 import { EstimateModel } from './models';
@@ -32,16 +32,11 @@ export const estimateView = async (userId: string, claimId: string) => {
   const forResults: Remedy[] = estimate.results.flatMap((r) =>
     r.outcome === 'pass' ? [] : remedies.remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
   );
-  // The document lines behind each check that did not pass (Figma 04 evidence panel). Bill lines: the room only.
+  // The document lines behind each check that did not pass (Figma 04 evidence panel).
   const evidence: Partial<Record<RuleId, EvidenceLine[]>> = {};
-  for (const r of estimate.results) {
-    if (r.outcome === 'pass') continue;
-    evidence[r.ruleId] = facts
-      .filter((f) => r.usedFacts.includes(f.key) && f.source === 'document' && f.sourceQuote)
-      .filter((f) => f.key !== 'bill_line_item' || f.head === 'room' || f.head === 'icu')
-      .map((f) => ({ key: f.key, quote: f.sourceQuote ?? '', page: f.page, usable: isUsable(f) }));
-  }
-  return { claim, plan, estimate, remedies: forResults, evidence };
+  for (const r of estimate.results) if (r.outcome !== 'pass') evidence[r.ruleId] = evidenceFor(r, facts);
+  const needsYou = facts.filter((f) => f.status === 'found' && !isUsable(f)).length;
+  return { claim, plan, estimate, remedies: forResults, evidence, needsYou };
 };
 
 export interface ClaimSummary extends ClaimListItem {

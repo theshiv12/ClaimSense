@@ -37,12 +37,12 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
   if (!user) redirect(`/login?next=/claims/${id}`);
   const view = await estimateView(user.id, id);
   if (!view) notFound();
-  const { claim, plan, estimate, remedies, evidence } = view;
+  const { claim, plan, estimate, remedies, evidence, needsYou } = view;
   const notPassed = estimate.results.filter((r) => r.outcome !== 'pass');
   const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
     <>
-      <ClaimBar step="estimate" claimId={id} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}${sample}`}>
+      <ClaimBar step="estimate" claimId={id} pendingFacts={needsYou} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}${sample}`}>
         <DeleteMyDataButton />
       </ClaimBar>
       <main className="mx-auto grid max-w-[1440px] gap-5 px-4 py-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_420px]">
