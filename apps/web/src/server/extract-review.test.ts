@@ -83,7 +83,8 @@ describe('uploadAndExtract (review fixes)', () => {
     expect((await uploadAndExtract(form(claimId, docFixture('caseB-schedule-SAMPLE.pdf')))).ok).toBe(true);
     const userId = String((await Claim.findById(claimId).lean())!.userId);
     const facts = await listFacts(userId, claimId);
-    expect(facts[0]).toMatchObject({ value: 990_000_000, verification: 'none' });
+    // ₹99,00,00,000 = 990000000 rupees × 100 = 99000000000 paise.
+    expect(facts[0]).toMatchObject({ value: 99_000_000_000, verification: 'none' });
     expect(toClaimFacts(facts, 'star-fho').sumInsuredPaise).toBeNull();
   });
 

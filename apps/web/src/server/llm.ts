@@ -27,4 +27,8 @@ export const setLlmForTests = (llm: LlmClient | null) => {
   override = llm;
 };
 
-export const getLlm = async (): Promise<LlmClient> => override ?? (await import('./gemini')).geminiFromEnv();
+export const getLlm = async (): Promise<LlmClient> => {
+  if (override) return override;
+  if (process.env.VITEST) throw new Error('Tests must use FakeLlm (setLlmForTests); live Gemini is never called in tests');
+  return (await import('./gemini')).geminiFromEnv();
+};

@@ -11,7 +11,7 @@ import { getLlm, LlmError, type LlmMimeType } from '../llm';
 import { Claim, ExtractionUsage, FactModel } from '../models';
 import { normalizeValue } from '../normalize';
 import { readPdfPages } from '../pdf-text';
-import { verifyQuote } from '../quote-verify';
+import { valueInQuote, verifyQuote } from '../quote-verify';
 import { findClaim, toStoredFact } from '../scope';
 
 const InputSchema = z.object({ claimId: z.string().min(1).max(64), file: z.instanceof(File) });
@@ -34,7 +34,22 @@ const takeQuota = async (userId: Types.ObjectId) => {
     { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) } },
     { upsert: true, returnDocument: 'after' },
   ).lean();
-  return (doc?.count ?? 1) <= env().AI_DAILY_EXTRACTIONS_PER_USER;
+  const ok = (doc?.count ?? 1) <= env().AI_DAILY_EXTRACTIONS_PER_USER;
+  const refund = () => ExtractionUsage.updateOne({ userId, day }, { $inc: { count: -1 } });
+  if (!ok) await refund();
+  return { ok, refund };
+};
+
+/** Reserves one of the claim's document slots atomically, so parallel uploads cannot pass the limit. */
+const takeSlot = async (claimId: Types.ObjectId, userId: Types.ObjectId, max: number) => {
+  const r = await Claim.updateOne({ _id: claimId, userId, documentCount: { $lt: max } }, { $inc: { documentCount: 1 } });
+  return { ok: r.modifiedCount === 1, release: () => Claim.updateOne({ _id: claimId, userId }, { $inc: { documentCount: -1 } }) };
+};
+
+/** The quote must be on its page, and the value must be readable from the quote (golden rules 3–4). */
+const verification = (f: LlmFact, value: Fact['value'], pages: string[] | null): Fact['verification'] => {
+  const v = verifyQuote(f.sourceQuote, pages, f.page);
+  return (v === 'exact' || v === 'fuzzy') && !valueInQuote(f.key, value, f.sourceQuote) ? 'none' : v;
 };
 
 const toFact = (f: LlmFact, documentId: string, pages: string[] | null, flagged: boolean): Fact => {
@@ -52,7 +67,7 @@ const toFact = (f: LlmFact, documentId: string, pages: string[] | null, flagged:
     sourceQuote: found && f.sourceQuote.trim() ? f.sourceQuote.trim() : null,
     page: hasRef ? f.page : null,
     confidence: f.confidence,
-    verification: status === 'found' && !flagged ? verifyQuote(f.sourceQuote, pages) : 'none',
+    verification: status === 'found' && !flagged ? verification(f, value, pages) : 'none',
     confirmedByUser: false,
   };
 };
@@ -69,15 +84,32 @@ const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async
   const bytes = new Uint8Array(await file.arrayBuffer());
   const mimeType = sniff(bytes);
   if (!mimeType) return fail('FILE_TYPE_NOT_ALLOWED');
-  if (claim.documentCount >= e.MAX_FILES_PER_CLAIM) return fail('DOCUMENT_LIMIT_REACHED');
+  const slot = await takeSlot(claim._id, claim.userId, e.MAX_FILES_PER_CLAIM);
+  if (!slot.ok) return fail('DOCUMENT_LIMIT_REACHED');
+  let saved = false;
+  try {
+    const result = await extractAndSave(claim, bytes, mimeType);
+    saved = true;
+    return result;
+  } finally {
+    if (!saved) await slot.release();
+  }
+});
 
+const extractAndSave = async (
+  claim: { _id: Types.ObjectId; userId: Types.ObjectId; expiresAt: Date },
+  bytes: Uint8Array,
+  mimeType: LlmMimeType,
+) => {
   const pages = mimeType === 'application/pdf' ? await readPdfPages(bytes) : null;
-  if (!(await takeQuota(claim.userId))) return fail('AI_QUOTA_EXCEEDED');
+  const quota = await takeQuota(claim.userId);
+  if (!quota.ok) return fail('AI_QUOTA_EXCEEDED');
 
   let raw: unknown;
   try {
     raw = await (await getLlm()).extract({ bytes, mimeType });
   } catch (err) {
+    await quota.refund(); // the model did not run, so the user keeps the try
     return fail(err instanceof LlmError ? err.code : 'LLM_UNAVAILABLE');
   }
   const parsed = LlmExtractionSchema.safeParse(raw);
@@ -88,7 +120,7 @@ const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async
   const facts = parsed.data.facts.map((f) => FactSchema.safeParse(toFact(f, documentId, pages, flagged)));
   const valid = facts.flatMap((r) => (r.success ? [r.data] : []));
   const docs = await FactModel.insertMany(valid.map((f) => ({ ...f, userId: claim.userId, claimId: claim._id, expiresAt: claim.expiresAt })));
-  await Claim.updateOne({ _id: claim._id, userId: claim.userId }, { $inc: { documentCount: 1, factsVersion: 1 } });
+  await Claim.updateOne({ _id: claim._id, userId: claim.userId }, { $inc: { factsVersion: 1 } });
 
   const warnings = [
     ...(flagged ? ['DOCUMENT_HAS_INSTRUCTIONS'] : []),
@@ -104,7 +136,7 @@ const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async
     needsYou: stored.filter((f) => f.status === 'found' && !isUsable(f)).length,
     warnings,
   };
-});
+};
 
 // 'use server' files may export only async functions.
 export async function uploadAndExtract(form: FormData) {

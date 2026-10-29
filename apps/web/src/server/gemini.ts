@@ -76,6 +76,15 @@ export const createGeminiLlm = (o: { create: InteractionsCreate; model: string; 
   },
 });
 
+const TIMEOUT_MS = 60_000;
+
+/** A hung call becomes a 503, so the fallback model gets its one try and the action still returns. */
+const withTimeout = <T>(p: Promise<T>): Promise<T> =>
+  Promise.race([
+    p,
+    new Promise<never>((_, reject) => setTimeout(() => reject(Object.assign(new Error('timeout'), { status: 503 })), TIMEOUT_MS).unref()),
+  ]);
+
 let cached: LlmClient | undefined;
 
 export const geminiFromEnv = (): LlmClient => {
@@ -83,7 +92,7 @@ export const geminiFromEnv = (): LlmClient => {
     const e = env();
     const ai = new GoogleGenAI({ apiKey: e.GEMINI_API_KEY });
     const create: InteractionsCreate = async (req) => {
-      const r = await ai.interactions.create({ ...req, stream: false } as Parameters<typeof ai.interactions.create>[0]);
+      const r = await withTimeout(ai.interactions.create({ ...req, stream: false } as Parameters<typeof ai.interactions.create>[0]));
       return 'output_text' in r ? { output_text: r.output_text } : {};
     };
     cached = createGeminiLlm({ create, model: e.GEMINI_MODEL_EXTRACT, fallbackModel: e.GEMINI_MODEL_FALLBACK });

@@ -18,9 +18,9 @@ const iso = (y: number, m: number, d: number) => {
 const toDate = (t: string): string | null => {
   let m = /(\d{4})-(\d{2})-(\d{2})/.exec(t);
   if (m) return iso(+m[1]!, +m[2]!, +m[3]!);
-  m = /(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/.exec(t); // Indian order: day/month/year
+  m = /(?<!\d)(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?!\d)/.exec(t); // Indian order: day/month/year
   if (m) return iso(+m[3]!, +m[2]!, +m[1]!);
-  m = /(\d{1,2})(?:st|nd|rd|th)?[\s-]+([a-z]{3})[a-z]*\.?,?[\s-]+(\d{4})/i.exec(t);
+  m = /(?<!\d)(\d{1,2})(?:st|nd|rd|th)?[\s-]+([a-z]{3})[a-z]*\.?,?[\s-]+(\d{4})/i.exec(t);
   if (m) {
     const month = MONTHS.indexOf(m[2]!.toLowerCase());
     return month < 0 ? null : iso(+m[3]!, month + 1, +m[1]!);
@@ -30,7 +30,7 @@ const toDate = (t: string): string | null => {
 
 const toPaise = (t: string): number | null => {
   const s = t.toLowerCase().replace(/,/g, '');
-  const scaled = /(\d+(?:\.\d+)?)\s*(lakh|lac|crore|cr)\b/.exec(s);
+  const scaled = /(\d+(?:\.\d+)?)\s*(lakhs?|lacs?|crores?|cr)\b/.exec(s);
   if (scaled) return Math.round(parseFloat(scaled[1]!) * (scaled[2]!.startsWith('c') ? 1e7 : 1e5) * 100);
   const m = /\d+(?:\.\d{1,2})?/.exec(s);
   return m ? Math.round(parseFloat(m[0]) * 100) : null;
@@ -48,8 +48,8 @@ const toRoom = (t: string): string | null => {
   if (/\b(icu|iccu|intensive)/.test(s)) return 'icu';
   if (/suite/.test(s)) return 'suite';
   if (/deluxe/.test(s)) return 'deluxe';
+  if (/(twin|shar|semi|double)/.test(s)) return 'shared'; // before 'private': "semi-private" is shared
   if (/\b(single|private)/.test(s)) return 'single';
-  if (/(twin|shar|semi|double)/.test(s)) return 'shared';
   if (/(general|ward|common)/.test(s)) return 'general';
   return null;
 };

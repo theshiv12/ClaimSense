@@ -107,6 +107,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
   the original instead of being added to it.
 - Login takes the same time for an unknown email (dummy-hash verify); rate-limit attempts are
   recorded before the check, never after.
+- A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - AI-assisted commits end with `Co-Authored-By: Claude <noreply@anthropic.com>`.
 - Keep this file under 200 lines. Detail belongs in `docs/`.
 
