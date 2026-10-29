@@ -292,3 +292,11 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-UI-07 | FactRow | an unverified document fact; a verified one | render, click Confirm | "Please check" vs "Verified" with icon; quote and page shown; Confirm calls the action with claim and fact ids | UI |
 | TC-UI-08 | Waiting-period results put medical advice first (review fix) | R2, R3, R4 `fail` inside a wait | render CheckRow | the line "Medical advice comes first" is shown | UI |
 | TC-AUTH-13 | A signed-in user opening a sample keeps their session (review fix) | signed-up user | `startSample('B')` | same user, same session; the sample claim is theirs | API |
+
+## End to end (Playwright, autopilot, 29 Oct 2026)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-E2E-01 | Demo journey | fresh browser, in-memory DB | sample B → twin sharing ₹4,500 → Delete my data | ₹2,05,800 of ₹2,40,000, likely partly paid, −₹24,600, disclaimer, never "approved"; ₹2,17,900 of ₹2,27,500, you pay ₹9,600; after delete the claim URL needs a login | E2E |
+| TC-E2E-02 | Own claim, no AI | new account | new check (consent first) → add sum insured by hand → estimate | consent error keeps the form; ₹3,00,000 shown; estimate At risk with Unknown checks | E2E |
+| TC-E2E-03 | Ownership in the browser | second account | open the first account's claim URL | HTTP 404 page | E2E |
