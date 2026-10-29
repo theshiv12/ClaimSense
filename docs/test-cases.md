@@ -276,3 +276,17 @@ Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and 
 | TC-EXT-11 | Document limit holds in parallel (review fix) | claim at 7 documents | two uploads at once | one ok, one `DOCUMENT_LIMIT_REACHED`; count 8 | API |
 | TC-EXT-12 | A real quote with a different value is not verified (review fix) | FakeLlm: quote "Sum Insured (Rs.) 3,00,000", valueText "99,00,00,000" | upload Case B schedule | fact verification `none`; engine sees SI unknown | API |
 | TC-EXT-13 | A failed model call gives the slot and quota back (review fix) | FakeLlm throws `LLM_UNAVAILABLE` | upload | documentCount unchanged; usage count unchanged | API |
+
+## UI components (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. Vitest + Testing Library (jsdom); what the user sees.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-01 | Indian ₹ format | 20580000, 24000000, 960000, 20579999, 0 paise | `formatInr` | ₹2,05,800 · ₹2,40,000 · ₹9,600 · ₹2,05,799.99 · ₹0 | Unit |
+| TC-UI-02 | PayoutBar widths | Case B: claimed 24000000, payable 20580000 | render | payable segment 85.75% wide, you-pay segment 14.25%; text "₹2,05,800 of ₹2,40,000"; labelled for screen readers | UI |
+| TC-UI-03 | PayoutBar edge cases | payable 0; claimed 0 | render | 0% / 100%; claimed 0 shows no bar and no NaN | UI |
+| TC-UI-04 | CheckRow states | one result per outcome | render | each shows an icon **and** the word Pass / Deduction / Fail / Unknown; clause id shown; deduction amount in ₹; unknown lists what is missing; never the word "approved" | UI |
+| TC-UI-05 | RoomSimulator | Case B claim, simulate stub returns the twin-sharing estimate | choose "Twin sharing", ₹4,500/day, submit | stub called with `shared`, 450000 paise; shows "₹2,17,900 of ₹2,27,500", "you pay ₹9,600", "saves ₹24,600" and "Assumes other charges stay the same" | UI |
+| TC-UI-06 | RoomSimulator errors | stub returns `{ ok: false }`; rent field empty | submit | an error message; the stub is not called with an empty rent | UI |
+| TC-UI-07 | FactRow | an unverified document fact; a verified one | render, click Confirm | "Please check" vs "Verified" with icon; quote and page shown; Confirm calls the action with claim and fact ids | UI |
