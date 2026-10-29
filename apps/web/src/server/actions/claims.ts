@@ -7,7 +7,7 @@ import { fail, userAction } from '../action';
 import { endSession } from '../auth';
 import { claimExpiry } from '../expiry';
 import { userFact } from '../facts';
-import { Claim, EstimateModel, FactModel, Session, User } from '../models';
+import { Claim, EstimateModel, ExtractionUsage, FactModel, Session, User } from '../models';
 import { getPlan } from '../plans';
 import { findClaim } from '../scope';
 
@@ -47,6 +47,7 @@ const deleteMeAction = userAction('deleteMe', z.unknown(), async (user) => {
     FactModel.deleteMany({ userId }),
     EstimateModel.deleteMany({ userId }),
     Claim.deleteMany({ userId }),
+    ExtractionUsage.deleteMany({ userId }),
   ]);
   await endSession();
   await Session.deleteMany({ userId });

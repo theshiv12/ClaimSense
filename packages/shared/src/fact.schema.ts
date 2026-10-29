@@ -42,7 +42,7 @@ export const FACT_VALUE_SCHEMAS = {
 /** The normalised value type of one fact key. */
 export type FactValueOf<K extends FactKey> = z.infer<(typeof FACT_VALUE_SCHEMAS)[K]>;
 
-export const FactValueSchema = z.union([z.string(), z.number(), z.boolean()]).nullable();
+export const FactValueSchema = z.union([z.string().max(500), z.number(), z.boolean()]).nullable();
 export type FactValue = z.infer<typeof FactValueSchema>;
 
 /** One traceable fact (golden rule 3). `head` is 'none' except for bill line items. */

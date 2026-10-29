@@ -31,6 +31,9 @@ export const Session = model('Session', sessionSchema);
 const loginAttemptSchema = new Schema({ emailHash: { type: String, required: true, index: true }, expiresAt: ttl });
 export const LoginAttempt = model('LoginAttempt', loginAttemptSchema);
 
+const sampleStartSchema = new Schema({ ipHash: { type: String, required: true, index: true }, expiresAt: ttl });
+export const SampleStart = model('SampleStart', sampleStartSchema);
+
 const claimSchema = new Schema(
   {
     userId: owner,
