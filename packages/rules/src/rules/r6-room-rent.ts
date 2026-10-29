@@ -46,6 +46,8 @@ export const r6RoomRent: AmountRule = (f, plan, runningPaise) => {
   const { rentPerDayPaise: rent, days } = f.room;
   if (rent === null || days === null) return unknown(b, missing([['room_rent_per_day', rent], ['room_days', days]]));
 
+  // Engine decision 11: an ICU line needs the category to know which cap applies.
+  if (f.room.category === null && f.bill.lineItems.some((i) => i.head === 'icu')) return unknown(b, ['room_category']);
   const cap = capFor(f, roomRent);
   if (cap.kind === 'none') return pass(b, 'R6_NO_CAP_FOR_ROOM');
   if (cap.kind === 'unknown') return unknown(b, [cap.missing], 'R6_NO_TIER_FOR_SUM_INSURED');
@@ -54,7 +56,8 @@ export const r6RoomRent: AmountRule = (f, plan, runningPaise) => {
     if (category === null) return unknown(b, ['room_category']);
     return CATEGORY_RANK[category] <= CATEGORY_RANK[cap.maxCategory]
       ? pass(b, 'R6_ROOM_WITHIN_CATEGORY', { maxCategory: cap.maxCategory })
-      : unknown(b, ['room_category'], 'R6_ABOVE_ELIGIBLE_CATEGORY');
+      : // Engine decision 12: the eligible room's rent is what is missing; ask about the room again.
+        unknown(b, ['room_category'], 'R6_ABOVE_ELIGIBLE_CATEGORY');
   }
 
   const capPaise = cap.capPaise;

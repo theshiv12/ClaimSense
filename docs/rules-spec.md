@@ -157,3 +157,12 @@ use plan T, so they are unaffected.
 8. An empty bill (or claimed 0) makes R6 `unknown`, so the verdict is `likely_partial`.
 9. Rule unit tests use the synthetic plan T (36-month PED wait, 60-month moratorium). The real config
    follows the PED/moratorium decision on the Star FHO draft.
+10. (29 Oct 2026, review fix) A stated bill total above the usable line items adds an `other` line for the
+    difference, so it is counted in the claim, but R6 is `unknown` (`R6_UNITEMISED_AMOUNT`): its head is unknown.
+11. An `icu` line with no room category makes R6 `unknown` (missing `room_category`).
+12. A room above a category-only tier (Star FHO SI ≥ ₹5 lakh, "Single Standard A/C Room") makes R6 `unknown`
+    with reason `R6_ABOVE_ELIGIBLE_CATEGORY`; the eligible room's rent is not a fact we hold.
+13. Repeated facts: for one key, user-corrected > user-stated > document; two usable document facts that
+    disagree are `unknown`. Line items are chosen per head the same way; one head found in two documents
+    with no user fact makes the line items empty (bill unknown) rather than counting it twice.
+14. Dates use our own `addDays` / `addMonths` (same clamping as date-fns), to keep the package dependency-free.

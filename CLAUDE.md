@@ -103,6 +103,8 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - When the AI gets something wrong, add a line to `AI_LOG.md` and, if it can recur, a rule here.
 - Only a human clears `needsReview` on a plan clause. If the AI promotes a draft, it lists every open
   item in the plan's `pendingHumanReview` and says so in the PR.
+- Repeated facts need an explicit merge rule: conflicting values are unknown, and a correction replaces
+  the original instead of being added to it.
 - AI-assisted commits end with `Co-Authored-By: Claude <noreply@anthropic.com>`.
 - Keep this file under 200 lines. Detail belongs in `docs/`.
 
