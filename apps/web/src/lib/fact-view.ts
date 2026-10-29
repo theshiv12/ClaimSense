@@ -8,3 +8,12 @@ export type WireFact = Fact & { id: string };
 export type StoredFactView = WireFact & { usable: boolean };
 
 export const toView = (f: WireFact): StoredFactView => ({ ...f, usable: isUsable(f) });
+
+export interface DocumentSummary {
+  id: string;
+  n: number;
+  found: number;
+  toConfirm: number;
+}
+
+export const documentSummaries = (_facts: StoredFactView[]): DocumentSummary[] => [];
