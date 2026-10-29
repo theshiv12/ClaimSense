@@ -160,3 +160,27 @@ Written by the autopilot run (`AUTOPILOT.md`), not yet approved by a human. See 
 | TC-SH-15 | Every committed plan and the remedy catalog parse | `config/plans/*.json`, `config/remedies.json` | Parse each file | Every plan parses with `LoadablePlanConfigSchema`; remedies parse with `RemediesCatalogSchema`; each of R1–R8 has 2–3 remedies for each outcome it can return besides `pass` | Unit |
 | TC-SH-16 | Remedies never help hide or change medical facts (golden rule 10) | `config/remedies.json` | Scan every title and body | No remedy says "hide", "conceal", "back-date"/"backdate", "change the diagnosis", "don't disclose" or "approved" | Unit |
 | TC-SH-17 | Review fixes (code-reviewer, Phase A) | Fact, plan and remedy schemas | Parse broken variants | Fail: a found document fact with no `sourceQuote` or `page`; a user-stated fact with `verification: 'exact'`; room tiers not in ascending `minSumInsuredPaise`; a loadable plan with `needsReview: false` present; two remedies with the same id | Unit |
+
+## Rules engine, part 2: room tiers, toClaimFacts, room simulator (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. Plan T variants as noted; amounts in paise.
+
+| ID | Scenario | Facts that matter | Plan | Expected | Spec ref |
+|---|---|---|---|---|---|
+| TC-R6-09 | SI tier ₹3 lakh = Case B | Case B room lines, SI 30000000 | T with tiers 1L→200000, 3L→500000, 5L→single | deduction 2460000 | ADR-007 |
+| TC-R6-10 | SI tier ₹2 lakh | SI 20000000; rent 300000 × 1; room 300000; nursing 30000 | same | room 100000 + nursing 30000 − floor(30000 × 2/3) = 10000 → 110000 | ADR-007 |
+| TC-R6-11 | Category tier, room allowed | SI 50000000; single 700000 × 1 | same | pass, 0 | ADR-007 |
+| TC-R6-12 | Category tier, room above | SI 50000000; deluxe 900000 × 1 | same | unknown, missing `room_category` | ADR-007 |
+| TC-R6-13 | Tier needs SI | SI null | same | unknown, missing `sum_insured` | ADR-007 |
+| TC-R6-14 | SI below every tier | SI 5000000 | same | unknown, missing `sum_insured` | ADR-007 |
+| TC-R6-15 | ICU with no ICU cap | category icu, rent 2000000 | T (fixed, `icuCapPaise` null) | pass, 0 | Engine decision 5 |
+| TC-R6-16 | % of SI per day | SI 30000000, 100 bps → 300000/day; rent 400000 × 1; room 400000 | T with `pct_of_si_per_day` 100 | deduction 100000; SI null → unknown | R6 |
+| TC-TCF-01 | Verified fact is usable | found, exact, high | n/a | value used | Usable facts |
+| TC-TCF-02 | Unverified or low confidence → null | verification none; or fuzzy + low | n/a | null | Usable facts |
+| TC-TCF-03 | Confirmed or user-stated is usable | verification none + confirmedByUser; source user-stated | n/a | value used | Usable facts |
+| TC-TCF-04 | User correction wins | document fact + user-corrected fact, same key | n/a | user-corrected value | Usable facts |
+| TC-TCF-05 | Line items | 3 usable `bill_line_item` facts, 1 unusable | n/a | 3 line items; totalPaise from `bill_total` | Usable facts |
+| TC-TCF-06 | Nothing known | no facts | n/a | every field null, empty line items | Usable facts |
+| TC-SIM-01 | Twin sharing ₹4,500/day on Case B | Case B, shared 450000 | T | claimed 22750000; payable 21790000; out of pocket 960000 | Case B simulator |
+| TC-SIM-02 | Simulator does not change the input | Case B | T | original facts unchanged | Case B simulator |
+| TC-SIM-03 | Simulator with unknown days | Case B, days null | T | R6 unknown, likely_partial | R6 |
