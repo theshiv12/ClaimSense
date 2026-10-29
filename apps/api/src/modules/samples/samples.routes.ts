@@ -1,6 +1,7 @@
 import { StartSampleInputSchema } from '@claimsense/shared';
 import { Router } from 'express';
 import { handler, parse } from '../../core/http';
+import { clientIp } from '../../core/client-ip';
 import { sessionPort } from '../../core/session';
 import { startSample } from './samples.service';
 
@@ -10,6 +11,6 @@ export const samplesRoutes = Router()
     '/:caseId',
     handler('startSample', (req, res) => {
       const { caseId } = parse(StartSampleInputSchema, { caseId: req.params.caseId });
-      return startSample(caseId, req.user ?? null, req.ip ?? 'unknown', sessionPort(req, res));
+      return startSample(caseId, req.user ?? null, clientIp(req), sessionPort(req, res));
     }),
   );

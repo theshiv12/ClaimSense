@@ -117,6 +117,8 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
   recorded before the check, never after.
 - Docs never claim a human check that is still pending.
 - GET routes and page renders never create sessions; samples and mutations are POST/PATCH/DELETE API calls.
+- A page with a bad or undecodable id shows 404; test helpers never encode a different contract than `docs/api.md`.
+- Per-IP limits use the client IP the web proxy vouches for (`X-CS-Client-IP` + `PROXY_SECRET`), never `X-Forwarded-For`.
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - Evidence shown for a check uses the facts the engine selected (`selectedFacts`), never every fact with that key.
 - Search terms and health details never go into URLs.

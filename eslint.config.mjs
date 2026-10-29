@@ -15,7 +15,7 @@ const MONGOOSE = {
   message: 'Only apps/api uses mongoose; the web app calls the REST API (ADR-009).',
 };
 const API_INTERNALS = {
-  group: ['**/apps/api/**', '@claimsense/api', '@claimsense/api/*'],
+  group: ['**/apps/api/**', '**/api/src/**', '**/api/test/**', '@claimsense/api', '@claimsense/api/*'],
   message: 'The web app talks to the API over HTTP only (src/lib/api), never by importing its code.',
 };
 

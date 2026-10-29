@@ -74,4 +74,4 @@ jobs:
       image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v7
-      - run: semgrep scan --config p/typescript --config p/nodejsscan --config p/secrets --error --exclude node_modules --exclude 'apps/web/test/fixtures'
+      - run: semgrep scan --config p/typescript --config p/nodejsscan --config p/secrets --error --exclude node_modules --exclude 'apps/api/test/fixtures'

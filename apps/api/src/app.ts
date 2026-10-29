@@ -51,6 +51,8 @@ export const createApp = () => {
   // Express knows an error handler by its four parameters, so `next` stays although it is unused.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    // A path Express cannot decode (bad %-encoding) is a malformed id: 404, never 500 (golden rule 5).
+    if (err instanceof URIError) return sendError(res, 'NOT_FOUND');
     if (err instanceof SyntaxError || (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.parse.failed')) return sendError(res, 'VALIDATION_FAILED');
     if (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.too.large') return sendError(res, 'VALIDATION_FAILED');
     logInternal('request', err);

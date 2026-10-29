@@ -32,6 +32,7 @@ export const apiPage = async <T>(path: string, loginNext: string): Promise<T> =>
   const r = await apiGet<T>(path);
   if (r.ok) return r.data;
   if (r.code === 'AUTH_REQUIRED') redirect(`/login?next=${encodeURIComponent(loginNext)}`);
-  if (r.code === 'NOT_FOUND' || r.code === 'PLAN_NOT_FOUND') notFound();
+  // A page's only API inputs are ids from its own path, so a malformed one is a missing page (golden rule 5).
+  if (r.code === 'NOT_FOUND' || r.code === 'PLAN_NOT_FOUND' || r.code === 'VALIDATION_FAILED') notFound();
   throw new Error(`API ${r.code}`);
 };

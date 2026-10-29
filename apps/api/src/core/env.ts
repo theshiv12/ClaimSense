@@ -15,10 +15,15 @@ const EnvSchema = z.object({
   MAX_FILES_PER_CLAIM: z.coerce.number().int().positive().default(8),
   AI_DAILY_EXTRACTIONS_PER_USER: z.coerce.number().int().nonnegative().default(6),
   PORT: z.coerce.number().int().positive().default(4000),
-  /** The web app's origin: the only one allowed to send writes (core/origin.ts). */
-  WEB_ORIGIN: z.url().default('http://localhost:3000'),
+  /** The web app's origin: the only one allowed to send writes (core/origin.ts). Normalised, so a trailing slash is fine. */
+  WEB_ORIGIN: z.url().default('http://localhost:3000').transform((u) => new URL(u).origin),
   /** Express `trust proxy`: 'true', 'false', a hop count, or names like 'loopback' (README, deploy). */
   TRUST_PROXY: z.string().min(1).default('loopback'),
+  /**
+   * Shared with the web app's proxy, which sends the client IP it saw in X-CS-Client-IP with this key
+   * (core/client-ip.ts). Unset: the per-IP limit uses the socket address (or trust proxy).
+   */
+  PROXY_SECRET: z.string().min(16).optional(),
 });
 export type Env = z.infer<typeof EnvSchema>;
 

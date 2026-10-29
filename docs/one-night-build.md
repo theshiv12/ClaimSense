@@ -111,7 +111,7 @@ Plan first (plan mode). Scaffold a pnpm 12 workspace: apps/web (Next.js App Rout
 src dir; apps/web already has CLAUDE.md, so scaffold into a temp folder and move the files in), packages/shared (zod 4), packages/rules (pure TS). TypeScript pinned ~6.0.2 via pnpm
 overrides. Vitest in all three; rules coverage thresholds 100/100/100/95. Root scripts: dev,
 build, lint, typecheck, test, test:cov, cases. ESLint flat config: packages/rules may not import
-node:*, fs, next, mongoose or @google/genai; only apps/web/src/server/gemini.ts may import
+node:*, fs, next, mongoose or @google/genai; only apps/api/src/integrations/gemini.ts may import
 @google/genai. Add .github/workflows/ci.yml: gitleaks, install, lint, typecheck, test:cov, build,
 node scripts/check-ai-config.mjs.
 Add one smoke test per package. Show me the plan before writing files.
@@ -166,7 +166,7 @@ coverage is 100/95, and the PR is merged.
 **Time-box: 45 minutes for auth.** If it isn't green by 02:15, keep guest sessions only and move on.
 
 ```text
-Test cases first (show me, then red commit, then green): in apps/web/src/server, Mongoose models
+Test cases first (show me, then red commit, then green): in apps/api (was apps/web/src/server before ADR-009), Mongoose models
 User, Session, Claim, Fact, Estimate; every owned model has userId and an expiresAt TTL index
 (expireAfterSeconds 0). scope.ts: all queries take userId; a malformed or foreign id returns null
 → the page shows 404. auth.ts: signup (argon2id via @node-rs/argon2, email lowercased, unique),
@@ -179,7 +179,7 @@ removes all A's rows, malformed id → 404).
 ### Phase 5 · 02:30–04:00 · Upload, extraction, quote check (PR #5)
 
 **Before starting this phase, record one real Gemini response for the Case B schedule PDF** with a tiny
-script (one call). Save it as `apps/web/test/fixtures/gemini/case-b-schedule.json`. Check it contains
+script (one call). Save it as `apps/api/test/fixtures/gemini/case-b-schedule.json`. Check it contains
 no real personal data.
 
 ```text

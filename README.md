@@ -63,10 +63,14 @@ Two parts (ADR-009):
    - Build: `pnpm install && pnpm --filter @claimsense/api build`.
    - Start: `node apps/api/dist/server.js`.
    - Variables: every key in `apps/api/.env.example`, with `MONGODB_DB=claimsense`, `WEB_ORIGIN` set to the
-     web URL, and `TRUST_PROXY` set to the host's proxy hop count (usually `1`).
+     web URL, and a long random `PROXY_SECRET`. Leave `TRUST_PROXY=loopback`.
+   - Why: the chain is browser → Vercel → Next proxy → the API host's own proxy → Express. A hop count
+     would land on Vercel's address (shared by every visitor), and Next keeps a client-sent
+     `X-Forwarded-For`. So the per-IP sample limit uses the client IP the Next proxy sends in
+     `X-CS-Client-IP`, trusted only with the matching `PROXY_SECRET` (`apps/api/src/core/client-ip.ts`).
    - Atlas network access must allow the host (`0.0.0.0/0` with a long password if it has no fixed IP).
 2. **Web** (`apps/web`) on Vercel, with the root directory `apps/web`.
-   - Set `API_ORIGIN` to the API's URL, then redeploy.
+   - Set `API_ORIGIN` to the API's URL and the same `PROXY_SECRET`, then redeploy.
    - The browser only ever talks to the web domain; `/api/*` is proxied.
 
 ## Stack

@@ -241,7 +241,7 @@ cookies faked in memory. "A" and "B" are two signed-up users.
 ## Extraction: pdf-text, quote-verify, normalise, gemini, uploadAndExtract (autopilot, 29 Oct 2026)
 
 Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and hand-written fixtures in
-`apps/web/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
+`apps/api/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
 
 | ID | Requirement | Given | When | Then | Type |
 |---|---|---|---|---|---|
