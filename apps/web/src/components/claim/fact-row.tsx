@@ -41,28 +41,29 @@ export function FactRow({ claimId, fact: initial, actions, onChange }: { claimId
     onChange?.(next);
   };
 
+  const needsCheck = !fact.usable && !fact.confirmedByUser && fact.value !== null;
   return (
-    <li className="space-y-2 border-b border-border py-3 last:border-b-0">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-xs text-muted">{label}</p>
-          <p className="text-sm font-semibold text-ink">{fact.status === 'found' || fact.value !== null ? formatFactValue(fact.key, fact.value) : fact.status === 'illegible' ? 'Could not read' : 'Not found'}</p>
+    <li className={`border-b border-border px-5 py-3 last:border-b-0 ${needsCheck ? 'bg-warn-bg/40' : ''}`}>
+      <div className="grid items-center gap-x-4 gap-y-1 sm:grid-cols-[150px_minmax(0,1fr)_auto]">
+        <p className="text-sm text-muted">{label}</p>
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-base font-semibold text-ink">{fact.status === 'found' || fact.value !== null ? formatFactValue(fact.key, fact.value) : fact.status === 'illegible' ? 'Could not read' : 'Not found'}</p>
+          {fact.sourceQuote && fact.page ? <Quote text={fact.sourceQuote} where={`your document, page ${fact.page}`} /> : null}
         </div>
         <div className="flex items-center gap-2">
-          {badge(fact)}
-          {!fact.usable && !fact.confirmedByUser && fact.value !== null ? (
+          {needsCheck ? (
             <Button variant="secondary" aria-label={`Confirm ${label}`} onClick={() => void actions.confirm({ claimId, factId: fact.id }).then(done)}>
               Confirm
             </Button>
           ) : null}
+          {badge(fact)}
           <Button variant="ghost" aria-label={`Edit ${label}`} aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
             Edit
           </Button>
         </div>
       </div>
-      {fact.sourceQuote && fact.page ? <Quote text={fact.sourceQuote} where={`your document, page ${fact.page}`} /> : null}
       {editing ? (
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="mt-2 flex flex-wrap items-end gap-2">
           <div className="min-w-48 flex-1">
             <label htmlFor={`${id}-edit`} className="sr-only">{`New value for ${label}`}</label>
             <FactValueInput id={`${id}-edit`} factKey={fact.key} value={text} onChange={setText} />
@@ -78,7 +79,7 @@ export function FactRow({ claimId, fact: initial, actions, onChange }: { claimId
           </Button>
         </div>
       ) : null}
-      {error ? <ErrorText>{error}</ErrorText> : null}
+      {error ? <div className="mt-2"><ErrorText>{error}</ErrorText></div> : null}
     </li>
   );
 }

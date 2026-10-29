@@ -45,7 +45,7 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
       <ClaimBar step="estimate" claimId={id} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}${sample}`}>
         <DeleteMyDataButton />
       </ClaimBar>
-      <main className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <main className="mx-auto grid max-w-[1440px] gap-5 px-4 py-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_420px]">
         <h1 className="sr-only">Estimate</h1>
         <div className="space-y-5">
           <Card className="space-y-6 sm:p-7">

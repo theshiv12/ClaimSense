@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { ClaimBar } from '@/components/claim/claim-bar';
 import { FactsBoard } from '@/components/claim/facts-board';
 import { currentUser } from '@/server/auth';
 import { uploadAndExtract } from '@/server/actions/extract';
@@ -14,16 +15,15 @@ export default async function FactsPage({ params }: PageProps<'/claims/[id]/fact
   if (!claim) notFound();
   const facts = await factsView(user.id, id);
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <div>
-        <p className="text-sm text-muted">For {claim.subject?.relation} · {claim.subject?.treatment}</p>
-        <h1 className="text-2xl font-bold text-ink">Your facts</h1>
-      </div>
-      <FactsBoard
-        claimId={id}
-        initial={facts}
-        actions={{ confirm: confirmFact, edit: editFact, add: addFact, upload: uploadAndExtract }}
-      />
-    </main>
+    <>
+      <ClaimBar step="facts" claimId={id} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}`} />
+      <main className="mx-auto max-w-[1440px] px-4 py-6 sm:px-10">
+        <FactsBoard
+          claimId={id}
+          initial={facts}
+          actions={{ confirm: confirmFact, edit: editFact, add: addFact, upload: uploadAndExtract }}
+        />
+      </main>
+    </>
   );
 }

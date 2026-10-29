@@ -2,9 +2,11 @@ import 'server-only';
 import { estimate as runEngine, isUsable, toClaimFacts } from '@claimsense/rules';
 import { EstimateSchema, type Estimate, type Remedy, type RuleId } from '@claimsense/shared';
 import type { EvidenceLine } from '@/components/claim/evidence-panel';
+import type { ClaimListItem } from '@/lib/claim-stats';
 import type { StoredFactView } from '@/lib/fact-view';
 import { EstimateModel } from './models';
 import { getPlan, remedies } from './plans';
+import { SAMPLES } from './samples';
 import { findClaim, latestEstimate, listClaims, listFacts } from './scope';
 
 // Read paths for server components. Every call is owner-scoped through scope.ts (golden rule 5).
@@ -42,15 +44,12 @@ export const estimateView = async (userId: string, claimId: string) => {
   return { claim, plan, estimate, remedies: forResults, evidence };
 };
 
-export interface ClaimSummary {
-  id: string;
-  treatment: string;
-  relation: string;
+export interface ClaimSummary extends ClaimListItem {
   createdAt: string;
+  expiresAt: string;
   sampleCaseId: string | null;
-  verdict: Estimate['verdict'] | null;
-  payablePaise: number | null;
-  claimedPaise: number | null;
+  planName: string;
+  wordingVersion: string;
 }
 
 export const claimSummaries = async (userId: string): Promise<ClaimSummary[]> => {
@@ -66,11 +65,23 @@ export const claimSummaries = async (userId: string): Promise<ClaimSummary[]> =>
         treatment: c.subject?.treatment ?? '',
         relation: c.subject?.relation ?? '',
         createdAt: c.createdAt.toISOString().slice(0, 10),
+        expiresAt: c.expiresAt.toISOString().slice(0, 10),
         sampleCaseId: c.sampleCaseId ?? null,
+        planName: getPlan(c.planId)?.planName ?? c.planId,
+        wordingVersion: getPlan(c.planId)?.wordingVersion ?? '',
         verdict: est?.verdict ?? null,
         payablePaise: est?.payablePaise ?? null,
         claimedPaise: est?.claimedPaise ?? null,
+        outOfPocketPaise: est?.outOfPocketPaise ?? null,
       };
     }),
   );
+};
+
+/** Sample B run through the engine, for the landing page card: the numbers are never typed in by hand. */
+export const sampleEstimateView = () => {
+  const plan = getPlan(SAMPLES.B.facts.planId);
+  if (!plan) return null;
+  const estimate = runEngine(SAMPLES.B.facts, plan, 0);
+  return { estimate, room: estimate.results.find((r) => r.ruleId === 'R6') ?? null };
 };
