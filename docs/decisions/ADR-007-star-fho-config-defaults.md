@@ -21,7 +21,9 @@ autopilot prompt says to pick the safest default and continue.
    (p4): pharmacy, consumables, implants (incl. medical devices), diagnostics. `headsVerified: false`.
 5. **ICD-10 prefixes** for the 24-month list were added by the AI (the wording has none). Keywords are
    copied from the wording.
-6. A loaded plan must not have `needsReview` anywhere (`LoadablePlanConfigSchema`). `verifiedBy` says the
+6. To let the app run, the autopilot **removed the draft's `needsReview` flags without verifying them**.
+   Every open item is listed in `pendingHumanReview` in the plan file; a human must check each before the demo.
+7. A loaded plan must not have `needsReview` anywhere (`LoadablePlanConfigSchema`). `verifiedBy` says the
    AI promoted the file and a human still has to check it.
 
 **Consequences:** Case B (SI ₹3 lakh) uses the ₹5,000/day cap and gives ₹2,05,800 as in the spec.

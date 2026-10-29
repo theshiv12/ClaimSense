@@ -60,6 +60,10 @@ export const FactSchema = z
   .superRefine((f, ctx) => {
     if (f.source === 'document' && f.documentId === null)
       ctx.addIssue({ code: 'custom', path: ['documentId'], message: 'A document fact needs its documentId' });
+    if (f.source === 'document' && f.status === 'found' && (!f.sourceQuote || f.page === null))
+      ctx.addIssue({ code: 'custom', path: ['sourceQuote'], message: 'A found document fact needs its quote and page' });
+    if (f.source !== 'document' && f.verification !== 'none')
+      ctx.addIssue({ code: 'custom', path: ['verification'], message: 'Only document facts have a quote to verify' });
     if (f.status === 'found' && f.value === null)
       ctx.addIssue({ code: 'custom', path: ['value'], message: 'A found fact needs a value' });
     if (f.value !== null && !FACT_VALUE_SCHEMAS[f.key].safeParse(f.value).success)

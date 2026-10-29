@@ -114,6 +114,10 @@ Starting values for building the config, **not test expectations**: tests read `
 | Non-payable heads | consumables | IRDAI non-payable items list |
 | Co-pay | 20% (2000 bps) if age at entry ≥ 61 | **verify** |
 
+**Autopilot decision (ADR-007, 29 Oct 2026, pending human sign-off):** `config/plans/star-fho.json` uses the
+V.19 wording values: PED 48 months, moratorium 96 months, room cap by sum insured (2(A) table). Rule tests
+use plan T, so they are unaffected.
+
 ## Schema decisions (28 Oct 2026, with TC-SH-01..05)
 
 - `plan.nonPayableHeads` is `{ heads: BillHead[], clause: ClauseRef }`. The IRDAI list is cited with

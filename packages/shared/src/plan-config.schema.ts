@@ -24,6 +24,14 @@ export const RoomRentTierSchema = z.object({
 });
 export type RoomRentTier = z.infer<typeof RoomRentTierSchema>;
 
+/** At least one tier, in strictly ascending minSumInsuredPaise, so the engine picks the right row. */
+export const RoomRentTiersSchema = z
+  .array(RoomRentTierSchema)
+  .min(1)
+  .refine((t) => t.every((tier, i) => i === 0 || tier.minSumInsuredPaise > (t[i - 1]?.minSumInsuredPaise ?? -1)), {
+    message: 'Room rent tiers must be in strictly ascending minSumInsuredPaise',
+  });
+
 export const PlanConfigSchema = z.object({
   planId: z.string(),
   insurer: z.string(),
@@ -64,7 +72,7 @@ export const PlanConfigSchema = z.object({
     }),
     z.object({
       kind: z.literal('by_sum_insured'),
-      tiers: z.array(RoomRentTierSchema).min(1),
+      tiers: RoomRentTiersSchema,
       icuCapPaise: PaiseSchema.nullable(),
       clause: ClauseRefSchema,
     }),
@@ -88,9 +96,9 @@ const hasReviewFlag = (value: unknown): boolean =>
   Array.isArray(value)
     ? value.some(hasReviewFlag)
     : typeof value === 'object' && value !== null &&
-      Object.entries(value).some(([k, v]) => (k === 'needsReview' && v === true) || hasReviewFlag(v));
+      Object.entries(value).some(([k, v]) => k === 'needsReview' || hasReviewFlag(v));
 
 /** What the app loads from config/plans: the strict schema, and no clause still flagged for review. */
 export const LoadablePlanConfigSchema = PlanConfigSchema.refine((plan) => !hasReviewFlag(plan), {
-  message: 'A loaded plan must not have needsReview set on any clause',
+  message: 'A loaded plan must not have needsReview on any clause; only a human clears it',
 });

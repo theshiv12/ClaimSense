@@ -7,7 +7,7 @@
   "rulesAsOf": "2026-10-28",
   "verifiedBy": "autopilot-ai-2026-10-29 (human sign-off pending, ADR-007)",
   "notes": [
-    "Promoted from drafts/ by the autopilot run on 2026-10-29 (ADR-007). PED 48 months and moratorium 96 months follow the V.19 wording, not the IRDAI 2024 circular; ICD-10 prefixes and the room-rent tiers were added by the AI and need a human check.",
+    "Promoted from drafts/ by the autopilot run on 2026-10-29 (ADR-007) so the app and pnpm cases can run. The autopilot removed the draft's needsReview flags to do this; it did NOT verify them. A human must re-check every item in pendingHumanReview before the demo.",
     "Source: 01-FHO-Insurance-policy-wordings.pdf (16 pages, footer 'POL / FHO / V.19 / 2023'). Quotes copied from the PDF text with the 'ﬁ' ligature written as 'fi'.",
     "Not in the schema, recorded for review: 2(H) pre-hospitalisation 'for a period not exceeding 60 days prior to the date of hospitalization' (p5); 2(I) post-hospitalisation 'for a period of 90 days from the date of discharge' (p5).",
     "Not in the schema: Automatic Restoration of Sum Insured '3 times at 100% each time' for SI Rs.3,00,000/- and above (p7); 2(W) Recharge Benefit 'once for the remaining policy period' (p7).",
@@ -32,7 +32,7 @@
       "page": 10,
       "quote": "Expenses related to the treatment of the following listed Conditions, surgeries/treatments shall be excluded until the expiry of 24 months of continuous coverage after the date of inception of the first policy with us. This exclusion shall not be applicable for claims arising due to an accident",
       "source": "wording",
-      "note": "Code Excl 02, list f(1)-f(14). The wording gives no ICD-10 codes, so icd10Prefixes are empty and a human must add them. Keywords are phrases copied from each list item. Part c: if a listed condition is also a PED, the longer wait applies. ICD-10 prefixes added by the autopilot (not in the wording); keywords are from the wording."
+      "note": "Code Excl 02, list f(1)-f(14). Keywords are phrases copied from each list item ('fistula' narrowed to 'fistula in ano'). The wording gives no ICD-10 codes: the prefixes here were added by the autopilot for unambiguous conditions only and need a human check. Known over-match: f8 keywords ignore '(other than due to Cancer)', which can only make R3 stricter, never more generous. Part c: if a listed condition is also a PED, the longer wait applies."
     },
     "conditions": [
       {
@@ -57,12 +57,7 @@
       {
         "id": "f2-benign-lumps",
         "label": "Subcutaneous Benign Lumps, Sebaceous cyst, Dermoid cyst, Mucous cyst lip / cheek, Carpal Tunnel Syndrome, Trigger Finger, Lipoma, Neurofibroma, Fibroadenoma, Ganglion and similar pathology",
-        "icd10Prefixes": [
-          "D17",
-          "L72",
-          "G56.0",
-          "M65.3"
-        ],
+        "icd10Prefixes": [],
         "keywords": [
           "subcutaneous benign lumps",
           "sebaceous cyst",
@@ -80,10 +75,8 @@
         "id": "f3-tendon-ligament-bone-joint",
         "label": "All treatments (Conservative, Operative treatment) and all types of intervention for Diseases related to Tendon, Ligament, Fascia, Bones and Joint Including Arthroscopy and Arthroplasty / Joint Replacement [other than caused by accident].",
         "icd10Prefixes": [
-          "M17",
           "M16",
-          "M23",
-          "M24"
+          "M17"
         ],
         "keywords": [
           "tendon",
@@ -98,10 +91,7 @@
       {
         "id": "f4-disc-vertebral",
         "label": "All types of treatment for Degenerative disc and Vertebral diseases including Replacement of bones and joints and Degenerative diseases of the Musculo-skeletal system, Prolapse of Intervertebral Disc (other than caused by accident),",
-        "icd10Prefixes": [
-          "M50",
-          "M51"
-        ],
+        "icd10Prefixes": [],
         "keywords": [
           "degenerative disc",
           "vertebral diseases",
@@ -115,7 +105,6 @@
         "label": "All treatments (conservative, interventional, laparoscopic and open) related to Hepato-pancreato-biliary diseases including Gall bladder and Pancreatic calculi. All types of management for Kidney calculi and Genitourinary tract calculi.",
         "icd10Prefixes": [
           "K80",
-          "K86",
           "N20",
           "N21"
         ],
@@ -157,15 +146,7 @@
       {
         "id": "f8-gynaecological",
         "label": "All treatments (conservative, interventional, laparoscopic and open) related to all Diseases of Cervix, Uterus, Fallopian tubes, Ovaries (other than due to Cancer), Uterine Bleeding, Pelvic Inflammatory Diseases",
-        "icd10Prefixes": [
-          "N70",
-          "N71",
-          "N72",
-          "N80",
-          "N83",
-          "N92",
-          "D25"
-        ],
+        "icd10Prefixes": [],
         "keywords": [
           "cervix",
           "uterus",
@@ -207,17 +188,16 @@
         "label": "Fistula, Fissure in Ano, Hemorrhoids, Pilonidal Sinus and Fistula, Rectal Prolapse, Stress Incontinence",
         "icd10Prefixes": [
           "K60",
-          "K62.3",
           "K64",
           "L05"
         ],
         "keywords": [
-          "fistula",
           "fissure in ano",
           "hemorrhoids",
           "pilonidal sinus",
           "rectal prolapse",
-          "stress incontinence"
+          "stress incontinence",
+          "fistula in ano"
         ]
       },
       {
@@ -234,9 +214,7 @@
       {
         "id": "f13-transplant",
         "label": "All types of transplant and related surgeries.",
-        "icd10Prefixes": [
-          "Z94"
-        ],
+        "icd10Prefixes": [],
         "keywords": [
           "transplant"
         ]
@@ -244,11 +222,7 @@
       {
         "id": "f14-congenital-internal",
         "label": "Congenital Internal disease / defect - (except for coverage 2(M))",
-        "icd10Prefixes": [
-          "Q2",
-          "Q3",
-          "Q4"
-        ],
+        "icd10Prefixes": [],
         "keywords": [
           "congenital internal disease",
           "congenital internal defect"
@@ -336,7 +310,7 @@
       "page": 11,
       "quote": "Other Excluded Expenses as detailed in the website www.starhealth.in",
       "source": "wording",
-      "note": "The wording points to a list on the insurer website (the IRDAI non-payable items list). Only consumables are modelled; the 1 Specific Definitions text on p4 also separates pharmacy and consumables from associated medical expenses."
+      "note": "The quote points to a list on the insurer website; it does not itself name consumables. 'consumables' follows the IRDAI non-payable items list (rules-spec), with no verbatim quote on file. Pending human review."
     }
   },
   "coPay": {
@@ -371,7 +345,16 @@
       "page": 5,
       "quote": "Room, Boarding, Nursing Expenses all inclusive as provided by the Hospital / Nursing Home as per the limits given below;",
       "source": "wording",
-      "note": "No clause lists the sum insured options. Values are the rows of the 2(A) table (Rs.1,00,000/- to Rs.25,00,000/-), converted to paise; the 2(E) and 2(L) tables have the same rows."
+      "note": "No clause lists the sum insured options. Values are the 'Sum Insured (Rs.)' rows of the 2(A) table on p5 (Rs.1,00,000/- to Rs.25,00,000/-), whose text layer is garbled, so the quote is the 2(A) heading. Confirm against the policy schedule."
     }
-  }
+  },
+  "pendingHumanReview": [
+    "pedWait.months (48, wording) vs 36 (IRDAI 2024)",
+    "moratorium.months (96, wording) vs 60 (IRDAI 2024)",
+    "specificDiseaseWait.conditions[*].icd10Prefixes (AI-added)",
+    "roomRent.tiers (read from the rendered 2(A) table)",
+    "proportionateDeduction.excludedHeads ('medical devices' mapped to implants)",
+    "nonPayableHeads (no verbatim quote naming consumables)",
+    "sumInsured.optionsPaise (2(A) table rows)"
+  ]
 }

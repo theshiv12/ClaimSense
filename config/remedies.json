@@ -1,48 +1,257 @@
 {
   "version": 2,
   "remedies": [
-    { "id": "r1-fail-renewal", "ruleId": "R1", "outcome": "fail", "title": "Check the policy dates on your schedule", "body": "The admission date falls outside the policy period we read. If you renewed, upload the latest schedule: a renewal paid within the grace period keeps cover continuous." },
-    { "id": "r1-fail-insurer", "ruleId": "R1", "outcome": "fail", "title": "Ask the insurer or TPA to confirm cover", "body": "Call the number on your health card and ask whether the policy is in force on the planned admission date. Ask them to note the call reference." },
-    { "id": "r1-unknown-schedule", "ruleId": "R1", "outcome": "unknown", "title": "Add the policy start and end dates", "body": "Upload your policy schedule, or type the start and end dates exactly as printed on it, so the policy period can be checked." },
-    { "id": "r1-unknown-admission", "ruleId": "R1", "outcome": "unknown", "title": "Add the planned admission date", "body": "Enter the admission date from the hospital estimate or the doctor's advice so it can be compared with the policy period." },
-
-    { "id": "r2-fail-accident", "ruleId": "R2", "outcome": "fail", "title": "Tell the insurer if this is due to an accident", "body": "The initial waiting period does not apply to claims arising from an accident. If the treatment is because of an accident, say so truthfully with the supporting medical records." },
-    { "id": "r2-fail-porting", "ruleId": "R2", "outcome": "fail", "title": "Check whether earlier cover counts", "body": "If you ported or migrated from another policy without a break, your first inception date is the earlier policy's start date. Upload the porting or previous policy documents." },
-    { "id": "r2-fail-plan", "ruleId": "R2", "outcome": "fail", "title": "Plan non-urgent treatment after the waiting period", "body": "If your doctor says the treatment can safely wait, the waiting period ends on the date shown in this check. Medical advice comes first; never delay emergency care." },
-    { "id": "r2-unknown-inception", "ruleId": "R2", "outcome": "unknown", "title": "Add the first inception date", "body": "The schedule usually prints 'Date of first inception' or 'Continuous cover since'. Upload it or type the date so the waiting period can be checked." },
-    { "id": "r2-unknown-accident", "ruleId": "R2", "outcome": "unknown", "title": "Say whether the treatment is due to an accident", "body": "Inside the waiting period, only accident claims are covered. Answer the accident question on the facts screen as it really happened." },
-
-    { "id": "r3-fail-accident", "ruleId": "R3", "outcome": "fail", "title": "Tell the insurer if the condition is due to an accident", "body": "The specific-disease waiting period does not apply to claims arising from an accident. If that is what happened, give the medical records that show it." },
-    { "id": "r3-fail-porting", "ruleId": "R3", "outcome": "fail", "title": "Check whether earlier cover counts", "body": "Continuous cover from a previous policy you ported or migrated from counts towards this waiting period. Upload the previous policy schedule." },
-    { "id": "r3-fail-plan", "ruleId": "R3", "outcome": "fail", "title": "Ask your doctor whether the treatment can wait", "body": "Planned procedures on the waiting-period list are covered once the period ends, on the date shown here. Follow your doctor's advice about timing." },
-    { "id": "r3-unknown-diagnosis", "ruleId": "R3", "outcome": "unknown", "title": "Add the diagnosis or planned procedure", "body": "Upload the hospital estimate or the doctor's advice note, or type the diagnosis as written by the doctor, so it can be compared with the waiting-period list." },
-    { "id": "r3-unknown-inception", "ruleId": "R3", "outcome": "unknown", "title": "Add the first inception date", "body": "The waiting period counts from the first policy with continuous cover. Add that date from your schedule." },
-
-    { "id": "r4-fail-disclosed", "ruleId": "R4", "outcome": "fail", "title": "Check the PED waiting period end date", "body": "Claims for a pre-existing disease are covered once the waiting period on your schedule ends. The date is shown in this check; plan non-urgent care with your doctor." },
-    { "id": "r4-fail-diagnosis-date", "ruleId": "R4", "outcome": "fail", "title": "Check when the condition was first diagnosed", "body": "If your medical records show the condition was first diagnosed after the policy started, it is not a pre-existing disease. Correct the date on the facts screen only if your records show it." },
-    { "id": "r4-fail-porting", "ruleId": "R4", "outcome": "fail", "title": "Check whether earlier cover counts", "body": "Time on a previous policy you ported or migrated from counts towards the PED waiting period. Upload the previous policy schedule." },
-    { "id": "r4-unknown-ped", "ruleId": "R4", "outcome": "unknown", "title": "Answer the pre-existing disease question", "body": "Say whether the person had this condition, or symptoms of it, before the policy started, and when it was first diagnosed, exactly as your medical records show." },
-    { "id": "r4-unknown-schedule", "ruleId": "R4", "outcome": "unknown", "title": "Check the schedule for declared conditions", "body": "Many schedules list declared pre-existing diseases. Upload the schedule so the facts can be read from it." },
-
-    { "id": "r5-fail-declare", "ruleId": "R5", "outcome": "fail", "title": "Talk to the insurer about the undisclosed condition", "body": "A condition that existed before the policy and was not declared can lead to a rejection. Speak to the insurer or your agent before admission and give full, accurate medical history." },
-    { "id": "r5-fail-moratorium", "ruleId": "R5", "outcome": "fail", "title": "Know when the moratorium starts", "body": "After the moratorium period of continuous cover shown in this check, a claim can be contested only for proven fraud. This check shows the date it begins." },
-    { "id": "r5-fail-help", "ruleId": "R5", "outcome": "fail", "title": "Get independent help", "body": "If a claim is rejected, write to the insurer's grievance officer, then use Bima Bharosa or the Insurance Ombudsman. Keep copies of every document." },
-
-    { "id": "r6-deduction-room", "ruleId": "R6", "outcome": "deduction", "title": "Choose a room within your policy's limit", "body": "A room above the limit also cuts associated charges in proportion. Try the room simulator: a room within the cap removes this deduction. Ask the hospital for its room tariff." },
-    { "id": "r6-deduction-billing", "ruleId": "R6", "outcome": "deduction", "title": "Ask whether the hospital uses room-based billing", "body": "The wording says proportionate deduction is not applied to expenses for which the hospital does not bill differently by room category. Ask the hospital billing desk in writing." },
-    { "id": "r6-deduction-upgrade", "ruleId": "R6", "outcome": "deduction", "title": "Check for a higher sum insured or room upgrade at renewal", "body": "The room limit depends on your sum insured. At renewal, compare a higher sum insured or a plan without a room cap; this does not help the current admission." },
-    { "id": "r6-unknown-rent", "ruleId": "R6", "outcome": "unknown", "title": "Add the room rent per day and number of days", "body": "Upload the hospital estimate, or type the room category, rent per day and expected days, so the room limit can be checked." },
-    { "id": "r6-unknown-bill", "ruleId": "R6", "outcome": "unknown", "title": "Ask the hospital for an itemised estimate", "body": "An estimate split into room, nursing, surgeon, OT, implants, pharmacy and diagnostics lets the room-rent rule be applied line by line." },
-
-    { "id": "r7-deduction-plan", "ruleId": "R7", "outcome": "deduction", "title": "Budget for the co-payment", "body": "This policy has a co-payment for this person's age at entry. It applies to every claim; plan for it before admission." },
-    { "id": "r7-deduction-other-cover", "ruleId": "R7", "outcome": "deduction", "title": "Check other cover you may have", "body": "An employer group policy or another personal policy may cover the co-payment part. Tell both insurers about each other, as their claim forms ask." },
-    { "id": "r7-unknown-age", "ruleId": "R7", "outcome": "unknown", "title": "Add the age at entry", "body": "The schedule prints the insured person's age or date of birth at entry. Add it so the co-payment can be checked." },
-    { "id": "r7-unknown-schedule", "ruleId": "R7", "outcome": "unknown", "title": "Upload the policy schedule", "body": "Age at entry is usually on the first page of the schedule, next to the insured person's name." },
-
-    { "id": "r8-deduction-restore", "ruleId": "R8", "outcome": "deduction", "title": "Ask about restoration or recharge benefits", "body": "Some plans restore the sum insured after it is used up. Ask the insurer whether a restoration or recharge applies to this admission." },
-    { "id": "r8-deduction-other-cover", "ruleId": "R8", "outcome": "deduction", "title": "Use other cover for the balance", "body": "An employer group policy or a top-up policy can pay the amount above your sum insured. Tell each insurer about the other." },
-    { "id": "r8-deduction-plan", "ruleId": "R8", "outcome": "deduction", "title": "Plan the amount above the sum insured", "body": "The estimate is above the sum insured left this year. Ask the hospital about package rates, and plan how you will pay the difference." },
-    { "id": "r8-unknown-si", "ruleId": "R8", "outcome": "unknown", "title": "Add the sum insured", "body": "Upload the policy schedule or type the sum insured as printed on it." },
-    { "id": "r8-unknown-used", "ruleId": "R8", "outcome": "unknown", "title": "Add any claims already paid this year", "body": "If a claim was already paid this policy year, enter the amount so the remaining sum insured is right. Enter 0 if none." }
+    {
+      "id": "r1-fail-renewal",
+      "ruleId": "R1",
+      "outcome": "fail",
+      "title": "Check the policy dates on your schedule",
+      "body": "The admission date falls outside the policy period we read. If you renewed, upload the latest schedule. A renewal paid within the grace period keeps cover continuous, but claims for treatment during the unpaid gap itself may not be paid."
+    },
+    {
+      "id": "r1-fail-insurer",
+      "ruleId": "R1",
+      "outcome": "fail",
+      "title": "Ask the insurer or TPA to confirm cover",
+      "body": "Call the number on your health card and ask whether the policy is in force on the planned admission date. Ask them to note the call reference."
+    },
+    {
+      "id": "r1-unknown-schedule",
+      "ruleId": "R1",
+      "outcome": "unknown",
+      "title": "Add the policy start and end dates",
+      "body": "Upload your policy schedule, or type the start and end dates exactly as printed on it, so the policy period can be checked."
+    },
+    {
+      "id": "r1-unknown-admission",
+      "ruleId": "R1",
+      "outcome": "unknown",
+      "title": "Add the planned admission date",
+      "body": "Enter the admission date from the hospital estimate or the doctor's advice so it can be compared with the policy period."
+    },
+    {
+      "id": "r2-fail-accident",
+      "ruleId": "R2",
+      "outcome": "fail",
+      "title": "Tell the insurer if this is due to an accident",
+      "body": "The initial waiting period does not apply to claims arising from an accident. If the treatment is because of an accident, say so truthfully with the supporting medical records."
+    },
+    {
+      "id": "r2-fail-porting",
+      "ruleId": "R2",
+      "outcome": "fail",
+      "title": "Check whether earlier cover counts",
+      "body": "If you ported or migrated from another policy without a break, your first inception date is the earlier policy's start date. Upload the porting or previous policy documents."
+    },
+    {
+      "id": "r2-fail-plan",
+      "ruleId": "R2",
+      "outcome": "fail",
+      "title": "Plan non-urgent treatment after the waiting period",
+      "body": "If your doctor says the treatment can safely wait, the waiting period ends on the date shown in this check. Medical advice comes first; never delay emergency care."
+    },
+    {
+      "id": "r2-unknown-inception",
+      "ruleId": "R2",
+      "outcome": "unknown",
+      "title": "Add the first inception date",
+      "body": "The schedule usually prints 'Date of first inception' or 'Continuous cover since'. Upload it or type the date so the waiting period can be checked."
+    },
+    {
+      "id": "r2-unknown-accident",
+      "ruleId": "R2",
+      "outcome": "unknown",
+      "title": "Say whether the treatment is due to an accident",
+      "body": "Inside the waiting period, only accident claims are covered. Answer the accident question on the facts screen as it really happened."
+    },
+    {
+      "id": "r3-fail-accident",
+      "ruleId": "R3",
+      "outcome": "fail",
+      "title": "Tell the insurer if the condition is due to an accident",
+      "body": "The specific-disease waiting period does not apply to claims arising from an accident. If that is what happened, give the medical records that show it."
+    },
+    {
+      "id": "r3-fail-porting",
+      "ruleId": "R3",
+      "outcome": "fail",
+      "title": "Check whether earlier cover counts",
+      "body": "Continuous cover from a previous policy you ported or migrated from counts towards this waiting period. Upload the previous policy schedule."
+    },
+    {
+      "id": "r3-fail-plan",
+      "ruleId": "R3",
+      "outcome": "fail",
+      "title": "Ask your doctor whether the treatment can wait",
+      "body": "Planned procedures on the waiting-period list are covered once the period ends, on the date shown here. Follow your doctor's advice about timing."
+    },
+    {
+      "id": "r3-unknown-diagnosis",
+      "ruleId": "R3",
+      "outcome": "unknown",
+      "title": "Add the diagnosis or planned procedure",
+      "body": "Upload the hospital estimate or the doctor's advice note, or type the diagnosis as written by the doctor, so it can be compared with the waiting-period list."
+    },
+    {
+      "id": "r3-unknown-inception",
+      "ruleId": "R3",
+      "outcome": "unknown",
+      "title": "Add the first inception date",
+      "body": "The waiting period counts from the first policy with continuous cover. Add that date from your schedule."
+    },
+    {
+      "id": "r4-fail-disclosed",
+      "ruleId": "R4",
+      "outcome": "fail",
+      "title": "Check the PED waiting period end date",
+      "body": "Claims for a pre-existing disease are covered once the waiting period on your schedule ends. The date is shown in this check; plan non-urgent care with your doctor."
+    },
+    {
+      "id": "r4-fail-diagnosis-date",
+      "ruleId": "R4",
+      "outcome": "fail",
+      "title": "Check when the condition was first diagnosed",
+      "body": "If your medical records show the condition was first diagnosed after the policy started, it is not a pre-existing disease. Correct the date on the facts screen only if your records show it."
+    },
+    {
+      "id": "r4-fail-porting",
+      "ruleId": "R4",
+      "outcome": "fail",
+      "title": "Check whether earlier cover counts",
+      "body": "Time on a previous policy you ported or migrated from counts towards the PED waiting period. Upload the previous policy schedule."
+    },
+    {
+      "id": "r4-unknown-ped",
+      "ruleId": "R4",
+      "outcome": "unknown",
+      "title": "Answer the pre-existing disease question",
+      "body": "Say whether the person had this condition, or symptoms of it, before the policy started, and when it was first diagnosed, exactly as your medical records show."
+    },
+    {
+      "id": "r4-unknown-schedule",
+      "ruleId": "R4",
+      "outcome": "unknown",
+      "title": "Check the schedule for declared conditions",
+      "body": "Many schedules list declared pre-existing diseases. Upload the schedule so the facts can be read from it."
+    },
+    {
+      "id": "r5-fail-declare",
+      "ruleId": "R5",
+      "outcome": "fail",
+      "title": "Talk to the insurer about the undisclosed condition",
+      "body": "A condition that existed before the policy and was not declared can lead to a rejection. Speak to the insurer or your agent before admission and give full, accurate medical history."
+    },
+    {
+      "id": "r5-fail-moratorium",
+      "ruleId": "R5",
+      "outcome": "fail",
+      "title": "Know when the moratorium starts",
+      "body": "After the moratorium period of continuous cover shown in this check, a claim can be contested only for proven fraud. This check shows the date it begins."
+    },
+    {
+      "id": "r5-fail-help",
+      "ruleId": "R5",
+      "outcome": "fail",
+      "title": "Get independent help",
+      "body": "If a claim is rejected, write to the insurer's grievance officer, then use Bima Bharosa or the Insurance Ombudsman. Keep copies of every document."
+    },
+    {
+      "id": "r6-deduction-room",
+      "ruleId": "R6",
+      "outcome": "deduction",
+      "title": "Choose a room within your policy's limit",
+      "body": "A room above the limit also cuts associated charges in proportion. Try the room simulator: a room within the cap removes this deduction. Ask the hospital for its room tariff."
+    },
+    {
+      "id": "r6-deduction-billing",
+      "ruleId": "R6",
+      "outcome": "deduction",
+      "title": "Ask whether the hospital uses room-based billing",
+      "body": "The wording says proportionate deduction is not applied to expenses for which the hospital does not bill differently by room category. Ask the hospital billing desk in writing."
+    },
+    {
+      "id": "r6-deduction-upgrade",
+      "ruleId": "R6",
+      "outcome": "deduction",
+      "title": "Check for a higher sum insured or room upgrade at renewal",
+      "body": "The room limit depends on your sum insured. At renewal, compare a higher sum insured or a plan without a room cap; this does not help the current admission."
+    },
+    {
+      "id": "r6-unknown-rent",
+      "ruleId": "R6",
+      "outcome": "unknown",
+      "title": "Add the room rent per day and number of days",
+      "body": "Upload the hospital estimate, or type the room category, rent per day and expected days, so the room limit can be checked."
+    },
+    {
+      "id": "r6-unknown-bill",
+      "ruleId": "R6",
+      "outcome": "unknown",
+      "title": "Ask the hospital for an itemised estimate",
+      "body": "An estimate split into room, nursing, surgeon, OT, implants, pharmacy and diagnostics lets the room-rent rule be applied line by line."
+    },
+    {
+      "id": "r7-deduction-plan",
+      "ruleId": "R7",
+      "outcome": "deduction",
+      "title": "Budget for the co-payment",
+      "body": "This policy has a co-payment for this person's age at entry. It applies to every claim; plan for it before admission."
+    },
+    {
+      "id": "r7-deduction-other-cover",
+      "ruleId": "R7",
+      "outcome": "deduction",
+      "title": "Check other cover you may have",
+      "body": "An employer group policy or another personal policy may cover the co-payment part. Tell both insurers about each other, as their claim forms ask."
+    },
+    {
+      "id": "r7-unknown-age",
+      "ruleId": "R7",
+      "outcome": "unknown",
+      "title": "Add the age at entry",
+      "body": "The schedule prints the insured person's age or date of birth at entry. Add it so the co-payment can be checked."
+    },
+    {
+      "id": "r7-unknown-schedule",
+      "ruleId": "R7",
+      "outcome": "unknown",
+      "title": "Upload the policy schedule",
+      "body": "Age at entry is usually on the first page of the schedule, next to the insured person's name."
+    },
+    {
+      "id": "r8-deduction-restore",
+      "ruleId": "R8",
+      "outcome": "deduction",
+      "title": "Ask about restoration or recharge benefits",
+      "body": "Some plans restore the sum insured after it is used up. Ask the insurer whether a restoration or recharge applies to this admission."
+    },
+    {
+      "id": "r8-deduction-other-cover",
+      "ruleId": "R8",
+      "outcome": "deduction",
+      "title": "Use other cover for the balance",
+      "body": "An employer group policy or a top-up policy can pay the amount above your sum insured. Tell each insurer about the other."
+    },
+    {
+      "id": "r8-deduction-plan",
+      "ruleId": "R8",
+      "outcome": "deduction",
+      "title": "Plan the amount above the sum insured",
+      "body": "The estimate is above the sum insured left this year. Ask the hospital about package rates, and plan how you will pay the difference."
+    },
+    {
+      "id": "r8-unknown-si",
+      "ruleId": "R8",
+      "outcome": "unknown",
+      "title": "Add the sum insured",
+      "body": "Upload the policy schedule or type the sum insured as printed on it."
+    },
+    {
+      "id": "r8-unknown-used",
+      "ruleId": "R8",
+      "outcome": "unknown",
+      "title": "Add any claims already paid this year",
+      "body": "If a claim was already paid this policy year, enter the amount so the remaining sum insured is right. Enter 0 if none."
+    }
   ]
 }

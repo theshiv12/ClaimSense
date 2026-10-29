@@ -101,6 +101,8 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - Opus for planning and review, Sonnet for implementing.
 - Run the `code-reviewer` agent before every PR; fix or answer each finding.
 - When the AI gets something wrong, add a line to `AI_LOG.md` and, if it can recur, a rule here.
+- Only a human clears `needsReview` on a plan clause. If the AI promotes a draft, it lists every open
+  item in the plan's `pendingHumanReview` and says so in the PR.
 - AI-assisted commits end with `Co-Authored-By: Claude <noreply@anthropic.com>`.
 - Keep this file under 200 lines. Detail belongs in `docs/`.
 

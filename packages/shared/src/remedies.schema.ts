@@ -13,6 +13,8 @@ export type Remedy = z.infer<typeof RemedySchema>;
 
 export const RemediesCatalogSchema = z.object({
   version: z.number().int().positive(),
-  remedies: z.array(RemedySchema),
+  remedies: z
+    .array(RemedySchema)
+    .refine((r) => new Set(r.map((x) => x.id)).size === r.length, { message: 'Remedy ids must be unique' }),
 });
 export type RemediesCatalog = z.infer<typeof RemediesCatalogSchema>;
