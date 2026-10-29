@@ -199,3 +199,8 @@ Written by the autopilot run; not yet human-approved. Plan T variants as noted; 
 | TC-R7-06 | Two co-pay tiers | age 80; tiers 61 → 2000, 76 → 3000; running 1000000 | T variant | deduction 300000 (highest tier that applies) | R7 |
 | TC-ENG-06 | Stated total above the line items | Case D with totalPaise 8100000 | T | claimed 8100000 (an `other` line of 100000) | Engine |
 | TC-SIM-04 | Simulator edge cases | ICU stay moved to a shared room; no room line; total null | T | room line replaced; others kept; total stays null | Simulator |
+| TC-TCF-07 | A user correction replaces a document line item | document `room` 3500000 + user-corrected `room` 2500000 | n/a | one `room` line of 2500000 | Usable facts (review fix) |
+| TC-TCF-08 | Conflicting document values are unknown | two usable document `admission_date` facts with different values | n/a | null; a user fact resolves it | Golden rule 4 (review fix) |
+| TC-TCF-09 | Same head in two documents is not added twice | `implants` from doc-1 and doc-2, no user fact | n/a | no line items (bill unknown) | Usable facts (review fix) |
+| TC-ENG-07 | An unitemised amount makes R6 unknown | Case D with totalPaise 8100000 | T | R6 unknown, likely_partial | Engine decision 10 (review fix) |
+| TC-R6-23 | ICU line with no room category | category null, `icu` line | T | unknown, missing `room_category` | Engine decision 11 (review fix) |
