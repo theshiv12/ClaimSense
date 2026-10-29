@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { rupeesToPaise } from '@/lib/format';
 import { ERROR_MESSAGES, ROOM_LABELS } from '@/lib/labels';
-import { createClaim } from '@/server/actions/claims';
+import { createClaim } from '@/lib/api/client';
 import { Button, ButtonLink } from '../ui/button';
 import { Card } from '../ui/card';
 import { ErrorText, Field, inputClass } from '../ui/field';

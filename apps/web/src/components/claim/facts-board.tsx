@@ -2,6 +2,7 @@
 import { BillHead, FactKey, type ActionResult, type FactValue } from '@claimsense/shared';
 import Link from 'next/link';
 import { useId, useState } from 'react';
+import * as api from '@/lib/api/client';
 import { documentSummaries, toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, HEAD_LABELS } from '@/lib/labels';
 import { buttonClass, Button } from '../ui/button';
@@ -18,7 +19,8 @@ type UploadResult = Promise<ActionResult<{ facts: WireFact[]; needsYou: number; 
 interface Props {
   claimId: string;
   initial: StoredFactView[];
-  actions: FactActions & {
+  /** Defaults to the REST API (lib/api/client); tests pass fakes. */
+  actions?: FactActions & {
     add: (input: { claimId: string; key: FactKey; head: BillHead; value: FactValue }) => FactResult;
     upload: (form: FormData) => UploadResult;
   };
@@ -46,7 +48,14 @@ const WARNINGS: Record<string, string> = {
   NO_TEXT_LAYER: 'This is a photo or scan, so quotes cannot be checked automatically. Please confirm each fact.',
 };
 
-export function FactsBoard({ claimId, initial, actions }: Props) {
+const API_ACTIONS: NonNullable<Props['actions']> = {
+  confirm: api.confirmFact,
+  edit: api.editFact,
+  add: api.addFact,
+  upload: api.uploadAndExtract,
+};
+
+export function FactsBoard({ claimId, initial, actions = API_ACTIONS }: Props) {
   const id = useId();
   const [facts, setFacts] = useState(initial);
   const [notice, setNotice] = useState<string[]>([]);

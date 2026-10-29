@@ -8,11 +8,15 @@ import tseslint from 'typescript-eslint';
 const WEB = 'apps/web/**/*.{js,mjs,ts,tsx}';
 const GENAI = {
   group: ['@google/genai', '@google/genai/*'],
-  message: 'Only apps/web/src/server/gemini.ts talks to Gemini (CLAUDE.md golden rule 8).',
+  message: 'Only apps/api/src/integrations/gemini.ts talks to Gemini (CLAUDE.md golden rule 8).',
 };
 const MONGOOSE = {
   group: ['mongoose', 'mongoose/*'],
-  message: 'Only server code (apps/web/src/server/**) may use mongoose.',
+  message: 'Only apps/api uses mongoose; the web app calls the REST API (ADR-009).',
+};
+const API_INTERNALS = {
+  group: ['**/apps/api/**', '@claimsense/api', '@claimsense/api/*'],
+  message: 'The web app talks to the API over HTTP only (src/lib/api), never by importing its code.',
 };
 
 // Keep each Next entry's own files/ignores, but only inside apps/web.
@@ -66,17 +70,16 @@ export default defineConfig(
     },
   },
 
-  // apps/web outside src/server: neither Gemini nor mongoose.
+  // apps/web: UI only. No database, no Gemini, no API internals (ADR-009).
   {
     files: [WEB],
-    ignores: ['apps/web/src/server/**', 'apps/web/test/**'], // test/ sets up the in-memory database
-    rules: { 'no-restricted-imports': ['error', { patterns: [GENAI, MONGOOSE] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [GENAI, MONGOOSE, API_INTERNALS] }] },
   },
 
-  // apps/web/src/server: mongoose is fine, Gemini only in gemini.ts.
+  // apps/api: mongoose is fine, Gemini only in integrations/gemini.ts.
   {
-    files: ['apps/web/src/server/**/*.{js,mjs,ts,tsx}'],
-    ignores: ['apps/web/src/server/gemini.ts'],
+    files: ['apps/api/**/*.{js,mjs,ts}'],
+    ignores: ['apps/api/src/integrations/gemini.ts'],
     rules: { 'no-restricted-imports': ['error', { patterns: [GENAI] }] },
   },
 );

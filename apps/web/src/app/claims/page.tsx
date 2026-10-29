@@ -8,8 +8,8 @@ import { Card } from '@/components/ui/card';
 import { claimStats, filterClaims, type ClaimFilter } from '@/lib/claim-stats';
 import { formatInr } from '@/lib/format';
 import { VERDICT_LABELS } from '@/lib/labels';
-import { currentUser } from '@/server/auth';
-import { claimSummaries } from '@/server/views';
+import type { ClaimSummary } from '@claimsense/shared';
+import { apiPage, currentUser } from '@/lib/api/server';
 
 const FILTERS: ClaimFilter[] = ['all', 'likely_payable', 'likely_partial', 'at_risk'];
 const asFilter = (v: unknown): ClaimFilter => (FILTERS.includes(v as ClaimFilter) ? (v as ClaimFilter) : 'all');
@@ -19,7 +19,7 @@ export default async function ClaimsPage({ searchParams }: PageProps<'/claims'>)
   if (!user) redirect('/login?next=/claims');
   const sp = await searchParams;
   const status = asFilter(sp.status);
-  const claims = await claimSummaries(user.id);
+  const claims = await apiPage<ClaimSummary[]>('/api/claims', '/claims');
   const stats = claimStats(claims);
   const shown = filterClaims(claims, status, '');
   const count = (f: ClaimFilter) => (f === 'all' ? stats.checks : stats.byVerdict[f]);

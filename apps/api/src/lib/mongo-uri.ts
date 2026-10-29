@@ -34,7 +34,7 @@ export const mongoUriProblem = (uri: string | undefined): MongoUriProblem | null
 };
 
 const HINTS: Record<MongoUriProblem, string> = {
-  empty: 'MONGODB_URI is not set. Paste the Atlas "Connect → Drivers" string into apps/web/.env.local.',
+  empty: 'MONGODB_URI is not set. Paste the Atlas "Connect → Drivers" string into apps/api/.env.local.',
   surrounding_space: 'MONGODB_URI has spaces around the value. Write MONGODB_URI=mongodb+srv://… with nothing else on the line.',
   quoted: 'MONGODB_URI has a stray or curly quote. Use plain " on both ends, or no quotes at all.',
   bad_scheme:

@@ -1,5 +1,5 @@
 import type { ErrorCode } from '@claimsense/shared';
-import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import type { Request, RequestHandler, Response } from 'express';
 import type { z } from 'zod';
 import { ActionError, fail, STATUS } from './errors';
 
@@ -17,7 +17,7 @@ export const logInternal = (where: string, err: unknown) => {
  */
 export const handler =
   (name: string, fn: (req: Request, res: Response) => Promise<unknown>): RequestHandler =>
-  (req: Request, res: Response, _next: NextFunction) => {
+  (req: Request, res: Response) => {
     // The mount pattern (set in app.ts), never req.baseUrl: that holds real ids.
     const base = typeof res.locals.base === 'string' ? res.locals.base : '';
     const path = String((req.route as { path?: string } | undefined)?.path ?? '');

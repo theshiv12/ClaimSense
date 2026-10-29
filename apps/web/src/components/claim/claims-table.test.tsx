@@ -2,11 +2,11 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ClaimSummary } from '@/server/views';
+import type { ClaimSummary } from '@claimsense/shared';
 import { ClaimsTable } from './claims-table';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-vi.mock('@/server/actions/claims', () => ({ deleteClaim: vi.fn(), deleteMe: vi.fn() }));
+vi.mock('@/lib/api/client', () => ({ deleteClaim: vi.fn(), deleteMe: vi.fn() }));
 afterEach(cleanup);
 
 const row = (patch: Partial<ClaimSummary>): ClaimSummary => ({

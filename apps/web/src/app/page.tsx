@@ -5,7 +5,7 @@ import { SampleButton } from '@/components/forms/sample-button';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatInr } from '@/lib/format';
-import { sampleEstimateView } from '@/server/views';
+import { samplePreview } from '@/lib/sample-preview';
 
 const SAMPLES = [
   ['B', 'Knee replacement, Single AC room over the limit', 'Likely partly paid'],
@@ -24,7 +24,7 @@ const short = (q: string, max = 90) => (q.length > max ? `${q.slice(0, max).trim
 
 export default async function Home({ searchParams }: PageProps<'/'>) {
   const busy = (await searchParams).sample === 'busy';
-  const sample = sampleEstimateView();
+  const sample = samplePreview();
   return (
     <main className="mx-auto max-w-[1440px] space-y-14 px-4 py-14 sm:px-20">
       <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_500px]">

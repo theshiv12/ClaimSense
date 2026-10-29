@@ -1,25 +1,34 @@
-// e2e web server: a throw-away in-memory MongoDB plus `next start`, so CI needs no secrets.
-// Gemini is never called (the e2e journeys use samples and manual facts only).
+// e2e: a throw-away in-memory MongoDB, the Express API, and `next start` in front of it (ADR-009),
+// so CI needs no secrets. Gemini is never called (the e2e journeys use samples and manual facts only).
 import { spawn } from 'node:child_process';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const port = process.env.E2E_PORT ?? '3200';
+const apiPort = String(Number(port) + 1000);
 const db = await MongoMemoryServer.create();
-const next = spawn('pnpm', ['exec', 'next', 'start', '-p', port], {
+
+const api = spawn('pnpm', ['--filter', '@claimsense/api', 'exec', 'tsx', 'src/server.ts'], {
   stdio: 'inherit',
   env: {
     ...process.env,
     MONGODB_URI: db.getUri(),
     MONGODB_DB: 'claimsense_e2e',
     GEMINI_API_KEY: 'e2e-not-a-real-key',
+    PORT: apiPort,
+    WEB_ORIGIN: `http://localhost:${port}`,
   },
+});
+const next = spawn('pnpm', ['exec', 'next', 'start', '-p', port], {
+  stdio: 'inherit',
+  env: { ...process.env, API_ORIGIN: `http://localhost:${apiPort}` },
 });
 
 const stop = async () => {
   next.kill('SIGTERM');
+  api.kill('SIGTERM');
   await db.stop();
   process.exit(0);
 };
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
-next.on('exit', (code) => void db.stop().then(() => process.exit(code ?? 0)));
+for (const child of [api, next]) child.on('exit', (code) => void stop().then(() => process.exit(code ?? 0)));

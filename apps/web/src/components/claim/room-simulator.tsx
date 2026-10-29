@@ -1,6 +1,7 @@
 'use client';
 import type { ActionResult, Estimate, RoomCategory } from '@claimsense/shared';
 import { useId, useState } from 'react';
+import { simulateRoom } from '@/lib/api/client';
 import { formatInr, rupeesToPaise } from '@/lib/format';
 import { ERROR_MESSAGES, ROOM_LABELS } from '@/lib/labels';
 import { Button } from '../ui/button';
@@ -11,7 +12,7 @@ type Simulate = (input: { claimId: string; category: RoomCategory; rentPerDayPai
 const CATEGORIES: RoomCategory[] = ['general', 'shared', 'single', 'deluxe', 'suite'];
 
 /** What-if for a cheaper (or dearer) room. Re-runs the rules engine on the server; nothing is saved. */
-export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { claimId: string; currentOutOfPocketPaise: number; simulate: Simulate }) {
+export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate = simulateRoom }: { claimId: string; currentOutOfPocketPaise: number; simulate?: Simulate }) {
   const id = useId();
   const [category, setCategory] = useState<RoomCategory>('shared');
   const [rent, setRent] = useState('4500');

@@ -370,11 +370,10 @@ New, for the HTTP boundary:
 |---|---|---|---|---|---|
 | TC-API-01 | Health check | the app | GET `/healthz` | 200 `{ ok: true }`, no cookie | API |
 | TC-API-02 | Error codes map to HTTP statuses | no session; bad input; a foreign claim id; a taken email | POST `/api/claims`; POST `/api/auth/signup` bad body; GET `/api/claims/<other>`; signup twice | 401 `AUTH_REQUIRED`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND`; 409 `EMAIL_TAKEN`; body is always the `ActionResult` | API |
-| TC-API-03 | Writes from another site are refused (CSRF; replaces Next's server-action origin check) | a signed-in user | POST `/api/claims` with `Origin: https://evil.example` | 403 `FORBIDDEN`, nothing created | API |
-| TC-API-04 | Reads never create sessions (CLAUDE.md) | no cookie | GET `/api/auth/me`, `/api/plans`, `/api/samples/B/preview`, `/healthz` | no `Set-Cookie` on any of them | API |
+| TC-API-03 | Writes from another site are refused (CSRF; replaces Next's server-action origin check) | a signed-in user | POST `/api/claims` with `Origin: https://evil.example` | 401 `AUTH_REQUIRED`, nothing created (the closed ErrorCode set has no 403 code: TC-SH-05) | API |
+| TC-API-04 | Reads never create sessions (CLAUDE.md) | no cookie | GET `/api/auth/me`, `/api/plans`, `/healthz` | no `Set-Cookie` on any of them | API |
 | TC-API-05 | The session cookie keeps its flags behind the proxy | signup | POST `/api/auth/signup` | `Set-Cookie: cs_session=…; HttpOnly; Secure; SameSite=Lax; Path=/` | API |
 | TC-API-06 | Request logs never contain bodies, queries or health data (golden rule 6) | a fact with a diagnosis | POST `/api/claims/:id/facts` with `{ value: 'Osteoarthritis' }` and `?q=knee` | the log line has method, route pattern, status and ms only; no "Osteoarthritis", no "knee", no claim id | API |
 | TC-API-07 | Over-size uploads are refused before reading | a 4 MB + 1 byte file | POST `/api/claims/:id/documents` | 413 `FILE_TOO_LARGE` | API |
 | TC-API-08 | Unknown routes and malformed JSON | the app | GET `/api/nope`; POST `/api/claims` with `{bad json` | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED` | API |
 | TC-API-09 | Plans list for the setup form | the app | GET `/api/plans` | `[{ planId: 'star-fho', name: '<planName> (<wordingVersion>)' }]` from the plan config | API |
-| TC-API-10 | Landing sample preview is engine output | the app | GET `/api/samples/B/preview` | Case B: payable 20,580,000, claimed 24,000,000, R6 deduction 2,460,000 (docs/rules-spec.md) | API |

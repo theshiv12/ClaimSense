@@ -42,12 +42,12 @@ describe('HTTP boundary', () => {
     await signUpAs();
     const before = await Claim.countDocuments({});
     const r = await send('post', '/api/claims', claimInput, { Origin: 'https://evil.example' });
-    expect([r.status, r.body]).toEqual([403, { ok: false, code: 'FORBIDDEN' }]);
+    expect([r.status, r.body]).toEqual([401, { ok: false, code: 'AUTH_REQUIRED' }]);
     expect(await Claim.countDocuments({})).toBe(before);
   });
 
   it('TC-API-04 reads never create sessions', async () => {
-    for (const path of ['/api/auth/me', '/api/plans', '/api/samples/B/preview', '/healthz']) {
+    for (const path of ['/api/auth/me', '/api/plans', '/healthz']) {
       const r = await send('get', path);
       expect(r.headers['set-cookie'], path).toBeUndefined();
     }
@@ -99,12 +99,5 @@ describe('HTTP boundary', () => {
   it('TC-API-09 plans list for the setup form', async () => {
     const r = await send('get', '/api/plans');
     expect(r.body).toEqual({ ok: true, data: [{ planId: 'star-fho', name: expect.stringMatching(/^Family Health Optima .+ \(.+\)$/) as string }] });
-  });
-
-  it('TC-API-10 landing sample preview is engine output (Case B)', async () => {
-    const r = await send('get', '/api/samples/B/preview');
-    const data = (r.body as { data: { estimate: { payablePaise: number; claimedPaise: number }; room: { deductionPaise: number } } }).data;
-    // docs/rules-spec.md Case B: ₹2,05,800 of ₹2,40,000; room-rent deduction ₹24,600.
-    expect([data.estimate.payablePaise, data.estimate.claimedPaise, data.room.deductionPaise]).toEqual([20_580_000, 24_000_000, 2_460_000]);
   });
 });

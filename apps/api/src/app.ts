@@ -48,6 +48,8 @@ export const createApp = () => {
 
   app.use((_req: Request, res: Response) => sendError(res, 'NOT_FOUND'));
   // Malformed JSON and anything unexpected: a code, never a stack or message (golden rule 6).
+  // Express knows an error handler by its four parameters, so `next` stays although it is unused.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof SyntaxError || (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.parse.failed')) return sendError(res, 'VALIDATION_FAILED');
     if (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.too.large') return sendError(res, 'VALIDATION_FAILED');

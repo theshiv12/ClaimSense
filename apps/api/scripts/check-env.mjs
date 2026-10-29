@@ -1,5 +1,5 @@
-// Usage: pnpm --filter @claimsense/web check:env
-// Loads .env.local the way `next dev` does and reports what is wrong, never the values.
+// Usage: pnpm check:env (from the repo root) or pnpm --filter @claimsense/api check:env
+// Loads apps/api/.env.local the way `pnpm dev` does and reports what is wrong, never the values.
 import { mongoUriHint, mongoUriProblem } from '../src/lib/mongo-uri.ts';
 
 const problem = mongoUriProblem(process.env.MONGODB_URI);

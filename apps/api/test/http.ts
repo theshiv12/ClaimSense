@@ -22,8 +22,8 @@ export const send = async (method: Method, path: string, body?: unknown, extra: 
   if (cookie) req = req.set('Cookie', cookie);
   for (const [k, v] of Object.entries(extra)) req = req.set(k, v);
   const res = body === undefined ? await req : await req.send(body as object);
-  jar.absorb(res.headers['set-cookie'] as string[] | undefined);
-  return { status: res.status, body: res.body as unknown, headers: res.headers as Sent['headers'] };
+  jar.absorb(res.headers['set-cookie']);
+  return { status: res.status, body: res.body as unknown, headers: res.headers };
 };
 
 /** Multipart upload, as the facts page sends it. */
@@ -32,8 +32,8 @@ export const upload = async (path: string, bytes: Uint8Array, filename: string, 
   const cookie = jar.header();
   if (cookie) req = req.set('Cookie', cookie);
   const res = await req.attach('file', Buffer.from(bytes), { filename, contentType });
-  jar.absorb(res.headers['set-cookie'] as string[] | undefined);
-  return { status: res.status, body: res.body as unknown, headers: res.headers as Sent['headers'] };
+  jar.absorb(res.headers['set-cookie']);
+  return { status: res.status, body: res.body as unknown, headers: res.headers };
 };
 
 export const result = <T>(s: Sent) => s.body as ActionResult<T>;
