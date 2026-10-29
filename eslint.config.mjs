@@ -69,7 +69,7 @@ export default defineConfig(
   // apps/web outside src/server: neither Gemini nor mongoose.
   {
     files: [WEB],
-    ignores: ['apps/web/src/server/**'],
+    ignores: ['apps/web/src/server/**', 'apps/web/test/**'], // test/ sets up the in-memory database
     rules: { 'no-restricted-imports': ['error', { patterns: [GENAI, MONGOOSE] }] },
   },
 

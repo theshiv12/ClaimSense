@@ -75,7 +75,8 @@ describe('Ownership', () => {
 
     expect(await deleteMe()).toEqual({ ok: true, data: null });
     expect(jar.get(SESSION_COOKIE)).toBeUndefined();
-    for (const model of [Claim, FactModel, EstimateModel, Session]) expect(await model.countDocuments({ userId: aUser })).toBe(0);
+    const owned = [Claim, FactModel, EstimateModel, Session] as unknown as { countDocuments(filter: object): Promise<number> }[];
+    for (const model of owned) expect(await model.countDocuments({ userId: aUser })).toBe(0);
     expect(await User.countDocuments({ _id: aUser })).toBe(0);
 
     actAs(a);

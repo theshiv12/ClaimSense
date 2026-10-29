@@ -22,7 +22,7 @@ describe('Server actions', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const facts = await FactModel.find({ claimId: r.data.claimId }).lean();
-    expect(facts.map((f) => [f.key, f.value, f.source]).sort()).toEqual([
+    expect(facts.map((f) => [f.key, f.value as unknown, f.source]).sort()).toEqual([
       ['admission_date', '2026-09-10', 'user-stated'],
       ['room_category', 'shared', 'user-stated'],
       ['room_rent_per_day', 400_000, 'user-stated'],
@@ -84,7 +84,8 @@ describe('Server actions', () => {
     await signUpAs();
     for (const model of [Session, Claim, FactModel, EstimateModel, User]) {
       await model.syncIndexes();
-      const ttl = (await model.listIndexes()).find((i) => i.key.expiresAt === 1);
+      const indexes = (await model.listIndexes()) as { key: Record<string, number>; expireAfterSeconds?: number }[];
+      const ttl = indexes.find((i) => i.key.expiresAt === 1);
       expect(ttl?.expireAfterSeconds, model.modelName).toBe(0);
     }
   });

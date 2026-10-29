@@ -8,3 +8,4 @@ export * from './errors';
 export * from './fact.schema';
 export * from './llm-extraction.schema';
 export * from './remedies.schema';
+export * from './actions.schema';
