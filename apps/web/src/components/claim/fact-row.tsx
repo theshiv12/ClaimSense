@@ -1,7 +1,7 @@
 'use client';
 import type { ActionResult, FactValue } from '@claimsense/shared';
 import { useId, useState } from 'react';
-import type { StoredFactView } from '@/lib/fact-view';
+import { toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, formatFactValue, HEAD_LABELS } from '@/lib/labels';
 import { Button } from '../ui/button';
 import { Chip } from '../ui/chip';
@@ -10,7 +10,7 @@ import { CheckIcon, QuestionIcon } from '../ui/icons';
 import { FactValueInput, parseInput, toInput } from './fact-value-input';
 import { Quote } from './quote';
 
-type FactResult = Promise<ActionResult<{ fact: StoredFactView }>>;
+type FactResult = Promise<ActionResult<{ fact: WireFact }>>;
 export interface FactActions {
   confirm: (input: { claimId: string; factId: string }) => FactResult;
   edit: (input: { claimId: string; factId: string; value: FactValue }) => FactResult;
@@ -34,7 +34,7 @@ export function FactRow({ claimId, fact: initial, actions, onChange }: { claimId
 
   const done = (r: Awaited<FactResult>) => {
     if (!r.ok) return setError(ERROR_MESSAGES[r.code]);
-    const next = { ...r.data.fact, usable: true };
+    const next = toView(r.data.fact);
     setFact(next);
     setEditing(false);
     setError(null);
