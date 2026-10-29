@@ -1,4 +1,6 @@
+import { LlmExtractionSchema } from '@claimsense/shared';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { geminiFixture } from '../../test/fake-llm';
 import { createGeminiLlm, RESPONSE_SCHEMA, SYSTEM_INSTRUCTION, type InteractionsCreate } from './gemini';
 import { LlmError } from './llm';
@@ -61,5 +63,26 @@ describe('gemini response schema', () => {
     expect(items.required).toEqual(expect.arrayContaining(['key', 'valueText', 'sourceQuote', 'page']));
     const long = { documentType: 'other', facts: [{ key: 'diagnosis', head: 'none', valueText: 'x', status: 'found', sourceQuote: 'q'.repeat(501), page: 1, confidence: 'high' }] };
     await expect(fake([answer(long)]).llm.extract(pdf)).rejects.toEqual(new LlmError('LLM_OUTPUT_INVALID'));
+  });
+
+  it('TC-GEM-01b the schema sent is Zod\'s JSON schema minus bound keywords only, built independently here', async () => {
+    // Test-local stripper: removes bound keywords from schema nodes, never from a `properties` name map.
+    const BOUNDS = ['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'minItems', 'maxItems'];
+    const strip = (node: unknown, isNameMap = false): unknown => {
+      if (Array.isArray(node)) return node.map((n) => strip(n));
+      if (typeof node !== 'object' || node === null) return node;
+      return Object.fromEntries(
+        Object.entries(node)
+          .filter(([k]) => isNameMap || !BOUNDS.includes(k))
+          .map(([k, v]) => [k, strip(v, !isNameMap && k === 'properties')]),
+      );
+    };
+    const { calls, llm } = fake([answer(geminiFixture('case-b-schedule'))]);
+    await llm.extract(pdf);
+    const sent = calls[0]!.response_format.schema;
+    expect(sent).toEqual(strip(z.toJSONSchema(LlmExtractionSchema)));
+    const item = (sent as { properties: { facts: { items: { properties: Record<string, { enum?: unknown[] }> } } } }).properties.facts.items.properties;
+    expect(Object.keys(item).sort()).toEqual(Object.keys(LlmExtractionSchema.shape.facts.element.shape).sort());
+    for (const k of ['key', 'head', 'status', 'confidence']) expect(item[k]?.enum?.length).toBeGreaterThan(1);
   });
 });

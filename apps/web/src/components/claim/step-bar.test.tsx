@@ -15,3 +15,11 @@ describe('StepBar', () => {
     expect(screen.getByText('Confirm facts').closest('[aria-current]')?.getAttribute('aria-current')).toBe('step');
   });
 });
+
+describe('StepBar pending facts', () => {
+  it('TC-UI-10b does not call facts confirmed while some still need you', () => {
+    render(<StepBar current="estimate" pendingFacts={2} />);
+    expect(screen.getAllByText('done')).toHaveLength(2);
+    expect(screen.getByText('2 to confirm')).toBeTruthy();
+  });
+});

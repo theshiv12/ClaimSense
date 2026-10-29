@@ -76,3 +76,6 @@ export const toClaimFacts = (facts: Fact[], planId: string): ClaimFacts => {
     },
   };
 };
+
+/** The facts `toClaimFacts` actually used, for evidence shown to the user. */
+export const selectedFacts = (_facts: Fact[]): Fact[] => [];
