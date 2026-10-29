@@ -231,3 +231,8 @@ cookies faked in memory. "A" and "B" are two signed-up users.
 | TC-ACT-04 | Run check and simulate | A's Case B claim | `runCheck`, `simulateRoom(shared, 450000)` | saved estimate 20580000; scenario 21790000 not saved | API |
 | TC-ACT-05 | Delete a claim | A's claim | `deleteClaim` | claim, facts, estimates gone; other claims stay | API |
 | TC-ACT-06 | TTL indexes | models | read indexes | Session, Claim, Fact, Estimate (and guest User) have `expiresAt` with `expireAfterSeconds: 0` | API |
+| TC-AUTH-09 | Rate limit holds under parallel requests (review fix) | A | 8 wrong passwords at once, then the right one | right one → `RATE_LIMITED` | API |
+| TC-AUTH-10 | A guest who starts another sample keeps one guest user (review fix) | guest session | `startSample('D')` | same user id; still one guest | API |
+| TC-AUTH-11 | Samples are rate-limited per IP (review fix) | no session, same IP | 21 `startSample` calls | 21st → `RATE_LIMITED` | API |
+| TC-AUTH-12 | Login and signup end the previous session (review fix) | guest session | `signup` | old session row deleted | API |
+| TC-ACT-07 | Bad input on every action (review fix) | A | each action with `null`, missing fields, a 501-char diagnosis | `VALIDATION_FAILED` | API |

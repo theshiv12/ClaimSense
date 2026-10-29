@@ -5,7 +5,7 @@ import { createClaim, deleteClaim, deleteMe } from './actions/claims';
 import { runCheck, simulateRoom } from './actions/estimate';
 import { addFact, confirmFact, editFact } from './actions/facts';
 import { SESSION_COOKIE } from './auth';
-import { Claim, EstimateModel, FactModel, Session, User } from './models';
+import { Claim, EstimateModel, ExtractionUsage, FactModel, Session, User } from './models';
 import { findClaim } from './scope';
 
 const newClaim = async () => {
@@ -40,6 +40,7 @@ describe('Ownership', () => {
     actAs(null);
     for (const call of claimActions(claimId, factId)) expect(await call()).toEqual({ ok: false, code: 'AUTH_REQUIRED' });
     expect(await createClaim({})).toEqual({ ok: false, code: 'AUTH_REQUIRED' });
+    expect(await deleteMe()).toEqual({ ok: false, code: 'AUTH_REQUIRED' });
   });
 
   it("TC-OWN-02 another user's claim is not found, and stays unchanged", async () => {
@@ -71,11 +72,12 @@ describe('Ownership', () => {
     const c1 = await newClaim();
     await newClaim();
     await runCheck({ claimId: c1 });
+    await ExtractionUsage.create({ userId: aUser, day: '2026-10-29', count: 1, expiresAt: new Date(Date.now() + 86_400_000) });
     expect(await EstimateModel.countDocuments({ userId: aUser })).toBe(1);
 
     expect(await deleteMe()).toEqual({ ok: true, data: null });
     expect(jar.get(SESSION_COOKIE)).toBeUndefined();
-    const owned = [Claim, FactModel, EstimateModel, Session] as unknown as { countDocuments(filter: object): Promise<number> }[];
+    const owned = [Claim, FactModel, EstimateModel, Session, ExtractionUsage] as unknown as { countDocuments(filter: object): Promise<number> }[];
     for (const model of owned) expect(await model.countDocuments({ userId: aUser })).toBe(0);
     expect(await User.countDocuments({ _id: aUser })).toBe(0);
 

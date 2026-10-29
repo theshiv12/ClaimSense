@@ -27,3 +27,6 @@ export const jar = {
     this.options.clear();
   },
 };
+
+/** The client IP the fake request comes from (x-forwarded-for); random per test. */
+export const testIp = { value: '10.0.0.1' };
