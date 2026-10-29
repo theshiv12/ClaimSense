@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import { SampleButton } from '@/components/forms/sample-button';
+import { Disclaimer } from '@/components/claim/disclaimer';
 import { Card } from '@/components/ui/card';
 
 const STORIES: Record<string, string> = {
-  A: 'Gastroenteritis, admitted inside the 30-day initial wait.',
+  A: 'Gastroenteritis, admitted inside the initial waiting period.',
   B: 'Knee replacement for a parent, Single AC room over the room rent limit.',
-  C: 'Cataract surgery inside the 24-month specific-disease wait.',
+  C: 'Cataract surgery inside its specific-disease waiting period.',
   D: 'Appendicitis, room within the limit.',
 };
 
@@ -21,6 +22,7 @@ export default async function SamplePage({ params }: PageProps<'/sample/[caseId]
         <p className="text-sm text-muted">{story} Made-up documents; no AI call is made.</p>
         <SampleButton caseId={caseId}>Open sample {caseId}</SampleButton>
       </Card>
+      <div className="mt-4"><Disclaimer /></div>
     </main>
   );
 }

@@ -1,7 +1,8 @@
 # Test cases
 
-Written **before** the tests and the code, from `docs/prd.md` and `docs/rules-spec.md`,
-and approved by a human. Every automated test name starts with its ID here, so each
+Written **before** the tests and the code, from `docs/prd.md` and `docs/rules-spec.md`.
+Sections marked *approved* were approved by a human; sections marked *autopilot* are AI-written and
+**not yet human-approved**. Every automated test name starts with its ID here, so each
 requirement can be traced: FR → test case → test → commit.
 
 ## Template
@@ -300,3 +301,4 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-E2E-01 | Demo journey | fresh browser, in-memory DB | sample B → twin sharing ₹4,500 → Delete my data | ₹2,05,800 of ₹2,40,000, likely partly paid, −₹24,600, disclaimer, never "approved"; ₹2,17,900 of ₹2,27,500, you pay ₹9,600; after delete the claim URL needs a login | E2E |
 | TC-E2E-02 | Own claim, no AI | new account | new check (consent first) → add sum insured by hand → estimate | consent error keeps the form; ₹3,00,000 shown; estimate At risk with Unknown checks | E2E |
 | TC-E2E-03 | Ownership in the browser | second account | open the first account's claim URL | HTTP 404 page | E2E |
+| TC-ACT-08 | Remaining actions: bad input / no session (final review fix) | no session | `signup` with bad input; `logout` with no session; `openSample` with a bad case id | `VALIDATION_FAILED`; ok (nothing to end); redirects home without creating a guest | API |

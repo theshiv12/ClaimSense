@@ -1,11 +1,12 @@
+import { Disclaimer } from '@/components/claim/disclaimer';
 import { SampleButton } from '@/components/forms/sample-button';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 const SAMPLES = [
   ['B', 'Knee replacement, Single AC room over the limit', 'Likely partly paid'],
-  ['A', 'Admission inside the 30-day initial wait', 'At risk'],
-  ['C', 'Cataract inside the 24-month wait', 'At risk'],
+  ['A', 'Admission inside the initial waiting period', 'At risk'],
+  ['C', 'Cataract inside its specific-disease waiting period', 'At risk'],
   ['D', 'Appendicitis, room within the limit', 'Likely paid in full'],
 ] as const;
 
@@ -31,7 +32,7 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
         {[
           ['1. Upload', 'Your policy schedule and the hospital’s estimate. AI reads the facts and shows the exact line it read each one from.'],
           ['2. Check', 'Confirm or correct each fact. Anything we could not verify counts as unknown, never as a guess.'],
-          ['3. Understand', 'Eight checks from your policy wording: waiting periods, room rent limit, co-pay, sum insured. Code does the maths, not the AI.'],
+          ['3. Understand', 'Checks from your policy wording: waiting periods, room rent limit, co-pay, sum insured. Code does the maths, not the AI.'],
         ].map(([t, b]) => (
           <Card key={t}>
             <h2 className="text-base font-semibold text-ink">{t}</h2>
@@ -53,6 +54,7 @@ export default async function Home({ searchParams }: PageProps<'/'>) {
             </li>
           ))}
         </ul>
+        <Disclaimer />
       </section>
     </main>
   );
