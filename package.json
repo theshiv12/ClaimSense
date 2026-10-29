@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @claimsense/web dev",
     "build": "pnpm -r --if-present run build",
-    "lint": "eslint .",
+    "lint": "pnpm --filter @claimsense/web exec next typegen && eslint .",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "test:cov": "pnpm -r run test:cov",
