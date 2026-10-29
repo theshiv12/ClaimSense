@@ -269,3 +269,10 @@ Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and 
 | TC-EXT-09 | Bytes and names never stored or logged (golden rules 6, 9) | upload Case B schedule | scan every collection and the console | no file name, no base64 of the bytes, no quote or value in logs | API |
 | TC-EXT-10 | Ownership | no session; B's claim | upload | `AUTH_REQUIRED`; `NOT_FOUND` | API |
 | TC-INJ-01 | Prompt injection (golden rule 8) | base64-stored injection PDF; FakeLlm that obeys it | upload | the doc's facts are all "please check" (`DOCUMENT_HAS_INSTRUCTIONS` warning, verification `none`); the engine sees SI unknown; an extra `verdict` key → `LLM_OUTPUT_INVALID` | API |
+| TC-QV-07 | Quote must be on the stated page (review fix) | 2 pages; quote on page 1 | verify against page 2 | `none` | Unit |
+| TC-QV-08 | Fuzzy never swaps numbers or drops a negation (review fix) | "12/03/2026"; "is not covered" | quote "03/12/2026 …"; "is covered" | `none` | Unit |
+| TC-QV-09 | The value must be in its quote (review fix) | quote "Sum Insured (Rs.) 3,00,000" | value 990000000 / 30000000 | false / true; dates, days, room category, diagnosis likewise | Unit |
+| TC-NORM-05 | Indian spellings and strict dates (review fix) | `3 Lakhs`, `2 lacs`, `1.5 crores`, `Semi-private room`, `112/03/2019` | normalise | 30000000, 20000000, 1500000000, shared, null | Unit |
+| TC-EXT-11 | Document limit holds in parallel (review fix) | claim at 7 documents | two uploads at once | one ok, one `DOCUMENT_LIMIT_REACHED`; count 8 | API |
+| TC-EXT-12 | A real quote with a different value is not verified (review fix) | FakeLlm: quote "Sum Insured (Rs.) 3,00,000", valueText "99,00,00,000" | upload Case B schedule | fact verification `none`; engine sees SI unknown | API |
+| TC-EXT-13 | A failed model call gives the slot and quota back (review fix) | FakeLlm throws `LLM_UNAVAILABLE` | upload | documentCount unchanged; usage count unchanged | API |
