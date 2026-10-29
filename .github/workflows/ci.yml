@@ -39,7 +39,39 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:cov
+      - run: pnpm cases
       - run: pnpm build
 
       - name: AI config check
         run: node scripts/check-ai-config.mjs
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @claimsense/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @claimsense/web build
+      # The web server uses an in-memory MongoDB and never calls Gemini, so no secrets are needed.
+      - run: pnpm --filter @claimsense/web e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: apps/web/test-results/
+          retention-days: 7
+
+  semgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v7
+      - run: semgrep scan --config p/typescript --config p/nodejsscan --config p/secrets --error --exclude node_modules --exclude 'apps/web/test/fixtures'
