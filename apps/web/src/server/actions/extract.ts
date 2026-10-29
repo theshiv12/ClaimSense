@@ -1,0 +1,112 @@
+'use server';
+import 'server-only';
+import { randomUUID } from 'node:crypto';
+import { FactSchema, LlmExtractionSchema, type Fact, type LlmFact } from '@claimsense/shared';
+import { isUsable } from '@claimsense/rules';
+import type { Types } from 'mongoose';
+import { z } from 'zod';
+import { fail, userAction } from '../action';
+import { env } from '../env';
+import { getLlm, LlmError, type LlmMimeType } from '../llm';
+import { Claim, ExtractionUsage, FactModel } from '../models';
+import { normalizeValue } from '../normalize';
+import { readPdfPages } from '../pdf-text';
+import { verifyQuote } from '../quote-verify';
+import { findClaim, toStoredFact } from '../scope';
+
+const InputSchema = z.object({ claimId: z.string().min(1).max(64), file: z.instanceof(File) });
+
+const MAGIC: [LlmMimeType, number[]][] = [
+  ['application/pdf', [0x25, 0x50, 0x44, 0x46, 0x2d]], // %PDF-
+  ['image/jpeg', [0xff, 0xd8, 0xff]],
+  ['image/png', [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]],
+];
+const sniff = (b: Uint8Array) => MAGIC.find(([, sig]) => sig.every((x, i) => b[i] === x))?.[0] ?? null;
+
+// Text aimed at an AI inside a document is a red flag: every fact from it needs the user's check.
+const INJECTION = /ignore (all |any )?(the )?(previous|prior|above|earlier) instructions|(system|developer) (note|prompt|message|instruction)s? (to|for) (the )?(ai|assistant|model)|disregard (all |your |the )?(rules|instructions)/i;
+
+/** One counter per user per UTC day, bumped atomically before the model is called. */
+const takeQuota = async (userId: Types.ObjectId) => {
+  const day = new Date().toISOString().slice(0, 10);
+  const doc = await ExtractionUsage.findOneAndUpdate(
+    { userId, day },
+    { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) } },
+    { upsert: true, returnDocument: 'after' },
+  ).lean();
+  return (doc?.count ?? 1) <= env().AI_DAILY_EXTRACTIONS_PER_USER;
+};
+
+const toFact = (f: LlmFact, documentId: string, pages: string[] | null, flagged: boolean): Fact => {
+  const found = f.status === 'found';
+  const value = found ? normalizeValue(f.key, f.valueText) : null;
+  const hasRef = found && f.sourceQuote.trim() !== '' && f.page > 0 && (pages === null || f.page <= pages.length);
+  const status = !found ? f.status : value === null || !hasRef ? 'illegible' : 'found';
+  return {
+    key: f.key,
+    head: f.head,
+    value,
+    status,
+    source: 'document',
+    documentId,
+    sourceQuote: found && f.sourceQuote.trim() ? f.sourceQuote.trim() : null,
+    page: hasRef ? f.page : null,
+    confidence: f.confidence,
+    verification: status === 'found' && !flagged ? verifyQuote(f.sourceQuote, pages) : 'none',
+    confirmedByUser: false,
+  };
+};
+
+/**
+ * Read → extract → save facts → discard the bytes (golden rule 9). The file and its name are never
+ * stored or logged; only ids and counts are.
+ */
+const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async (user, { claimId, file }) => {
+  const claim = await findClaim(user.id, claimId);
+  if (!claim) return fail('NOT_FOUND');
+  const e = env();
+  if (file.size > e.MAX_UPLOAD_MB * 1024 * 1024) return fail('FILE_TOO_LARGE');
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const mimeType = sniff(bytes);
+  if (!mimeType) return fail('FILE_TYPE_NOT_ALLOWED');
+  if (claim.documentCount >= e.MAX_FILES_PER_CLAIM) return fail('DOCUMENT_LIMIT_REACHED');
+
+  const pages = mimeType === 'application/pdf' ? await readPdfPages(bytes) : null;
+  if (!(await takeQuota(claim.userId))) return fail('AI_QUOTA_EXCEEDED');
+
+  let raw: unknown;
+  try {
+    raw = await (await getLlm()).extract({ bytes, mimeType });
+  } catch (err) {
+    return fail(err instanceof LlmError ? err.code : 'LLM_UNAVAILABLE');
+  }
+  const parsed = LlmExtractionSchema.safeParse(raw);
+  if (!parsed.success) return fail('LLM_OUTPUT_INVALID');
+
+  const flagged = pages !== null && INJECTION.test(pages.join('\n'));
+  const documentId = randomUUID();
+  const facts = parsed.data.facts.map((f) => FactSchema.safeParse(toFact(f, documentId, pages, flagged)));
+  const valid = facts.flatMap((r) => (r.success ? [r.data] : []));
+  const docs = await FactModel.insertMany(valid.map((f) => ({ ...f, userId: claim.userId, claimId: claim._id, expiresAt: claim.expiresAt })));
+  await Claim.updateOne({ _id: claim._id, userId: claim.userId }, { $inc: { documentCount: 1, factsVersion: 1 } });
+
+  const warnings = [
+    ...(flagged ? ['DOCUMENT_HAS_INSTRUCTIONS'] : []),
+    ...(valid.length < facts.length ? ['SOME_FACTS_DROPPED'] : []),
+    ...(pages === null ? ['NO_TEXT_LAYER'] : []),
+  ];
+  console.info(`[extract] claim=${String(claim._id)} doc=${documentId} facts=${valid.length} dropped=${facts.length - valid.length}`);
+  const stored = docs.map((d) => toStoredFact(d.toObject()));
+  return {
+    documentId,
+    documentType: parsed.data.documentType,
+    facts: stored,
+    needsYou: stored.filter((f) => f.status === 'found' && !isUsable(f)).length,
+    warnings,
+  };
+});
+
+// 'use server' files may export only async functions.
+export async function uploadAndExtract(form: FormData) {
+  return uploadAndExtractAction({ claimId: form.get('claimId'), file: form.get('file') });
+}

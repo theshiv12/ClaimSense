@@ -9,7 +9,7 @@ const pdf = { bytes: new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]), mimeType: '
 const answer = (o: unknown) => ({ id: 'i-1', output_text: JSON.stringify(o) });
 const apiError = (status: number) => Object.assign(new Error(`HTTP ${status}`), { status });
 
-const fake = (results: (unknown | Error)[]) => {
+const fake = (results: unknown[]) => {
   const calls: Parameters<InteractionsCreate>[0][] = [];
   const create: InteractionsCreate = (req) => {
     calls.push(req);

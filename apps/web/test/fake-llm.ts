@@ -13,7 +13,7 @@ export const docFixture = (name: string) => new Uint8Array(readFileSync(new URL(
 /** A test LLM: returns queued answers in order and records what it was sent. Never touches the network. */
 export class FakeLlm implements LlmClient {
   calls: LlmDocument[] = [];
-  constructor(private readonly answers: (unknown | Error)[]) {}
+  constructor(private readonly answers: unknown[]) {}
   extract(doc: LlmDocument): Promise<unknown> {
     this.calls.push(doc);
     const next = this.answers.shift();

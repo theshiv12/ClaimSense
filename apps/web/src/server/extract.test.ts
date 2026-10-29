@@ -14,7 +14,7 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0
 const form = (claimId: string, bytes: Uint8Array, name = 'caseB-schedule-SAMPLE.pdf', type = 'application/pdf') => {
   const f = new FormData();
   f.set('claimId', claimId);
-  f.set('file', new File([bytes], name, { type }));
+  f.set('file', new File([bytes.slice()], name, { type }));
   return f;
 };
 const newClaim = async () => {
