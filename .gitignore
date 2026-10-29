@@ -26,3 +26,7 @@ test-results/
 
 # symlinked node_modules (worktrees)
 node_modules
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/
