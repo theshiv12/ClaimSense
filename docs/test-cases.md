@@ -302,3 +302,19 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-E2E-02 | Own claim, no AI | new account | new check (consent first) → add sum insured by hand → estimate | consent error keeps the form; ₹3,00,000 shown; estimate At risk with Unknown checks | E2E |
 | TC-E2E-03 | Ownership in the browser | second account | open the first account's claim URL | HTTP 404 page | E2E |
 | TC-ACT-08 | Remaining actions: bad input / no session (final review fix) | no session | `signup` with bad input; `logout` with no session; `openSample` with a bad case id | `VALIDATION_FAILED`; ok (nothing to end); redirects home without creating a guest | API |
+| TC-GEM-05 | Gemini can serve the response schema (live finding, 29 Oct 2026) | `LlmExtractionSchema` | build the schema sent to Gemini | no `minimum`/`maximum`/`maxLength`/`maxItems`/`minLength`, no `$schema`; enums and `required` kept; output still Zod-parsed with the full limits (a 501-char quote is rejected) | Unit |
+
+## MONGODB_URI check (*autopilot*, fix for the local `MongoParseError`)
+
+`mongoUriProblem(uri)` names what is wrong with the connection string, never its value.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-ENV-01 | A well-formed URI passes | `mongodb+srv://u:p@cluster0.example.net/?retryWrites=true`, and `mongodb://localhost:27017` | `mongoUriProblem` | `null` | Unit |
+| TC-ENV-02 | Missing value | `undefined`, `''` | `mongoUriProblem` | `empty` | Unit |
+| TC-ENV-03 | Text before the scheme | `mongodb_uri = mongodb+srv://u:p@h.net/` | `mongoUriProblem` | `bad_scheme` | Unit |
+| TC-ENV-04 | Stray or curly quotes left in the value | `“mongodb+srv://u:p@h.net/”`, `"mongodb+srv://u:p@h.net/` | `mongoUriProblem` | `quoted` | Unit |
+| TC-ENV-05 | Spaces around the value | ` mongodb+srv://u:p@h.net/` | `mongoUriProblem` | `surrounding_space` | Unit |
+| TC-ENV-06 | Password with unencoded `@`, `/`, `#`, `:` or a bare `%` | `mongodb+srv://u:p@ss@h.net/` (and `p/ss`, `p#ss`, `p:ss`, `p%zz`) | `mongoUriProblem` | `unencoded_password`; `p%40ss` passes | Unit |
+| TC-ENV-07 | No host | `mongodb+srv://u:p@/` | `mongoUriProblem` | `no_host` | Unit |
+| TC-ENV-08 | The hint never contains the URI | each problem | `mongoUriHint(problem)` | a fix-it sentence that names `MONGODB_URI` and contains no part of the value | Unit |

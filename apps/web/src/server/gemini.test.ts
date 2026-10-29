@@ -1,8 +1,6 @@
-import { LlmExtractionSchema } from '@claimsense/shared';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 import { geminiFixture } from '../../test/fake-llm';
-import { createGeminiLlm, SYSTEM_INSTRUCTION, type InteractionsCreate } from './gemini';
+import { createGeminiLlm, RESPONSE_SCHEMA, SYSTEM_INSTRUCTION, type InteractionsCreate } from './gemini';
 import { LlmError } from './llm';
 
 const pdf = { bytes: new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]), mimeType: 'application/pdf' as const };
@@ -30,9 +28,8 @@ describe('gemini adapter', () => {
     expect(req.store).toBe(false);
     const input = req.input as { type: string; data?: string; mime_type?: string; text?: string }[];
     expect(input).toContainEqual({ type: 'document', data: Buffer.from(pdf.bytes).toString('base64'), mime_type: 'application/pdf' });
-    const { $schema: _s, ...schema } = z.toJSONSchema(LlmExtractionSchema) as Record<string, unknown>;
-    void _s;
-    expect(req.response_format).toEqual({ type: 'text', mime_type: 'application/json', schema });
+    // Changed after the live check (TC-GEM-05): the schema sent is the served-safe copy, not the raw Zod one.
+    expect(req.response_format).toEqual({ type: 'text', mime_type: 'application/json', schema: RESPONSE_SCHEMA });
   });
 
   it('TC-GEM-02 falls back once on 429', async () => {
@@ -52,5 +49,17 @@ describe('gemini adapter', () => {
     await expect(fake([{ id: 'x', output_text: 'not json' }]).llm.extract(pdf)).rejects.toEqual(new LlmError('LLM_OUTPUT_INVALID'));
     const extra = { ...(geminiFixture('case-b-schedule') as object), verdict: 'approved' };
     await expect(fake([answer(extra)]).llm.extract(pdf)).rejects.toEqual(new LlmError('LLM_OUTPUT_INVALID'));
+  });
+});
+
+describe('gemini response schema', () => {
+  it('TC-GEM-05 sends a schema Gemini can serve, and still enforces the limits in code', async () => {
+    const text = JSON.stringify(RESPONSE_SCHEMA);
+    expect(text).not.toMatch(/"(minimum|maximum|maxLength|minLength|maxItems|\$schema)"/);
+    expect(text).toContain('"enum"');
+    const items = (RESPONSE_SCHEMA as { properties: { facts: { items: { required: string[] } } } }).properties.facts.items;
+    expect(items.required).toEqual(expect.arrayContaining(['key', 'valueText', 'sourceQuote', 'page']));
+    const long = { documentType: 'other', facts: [{ key: 'diagnosis', head: 'none', valueText: 'x', status: 'found', sourceQuote: 'q'.repeat(501), page: 1, confidence: 'high' }] };
+    await expect(fake([answer(long)]).llm.extract(pdf)).rejects.toEqual(new LlmError('LLM_OUTPUT_INVALID'));
   });
 });

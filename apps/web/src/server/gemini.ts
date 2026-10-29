@@ -22,8 +22,17 @@ const KEY_HINTS = `Keys: ${FactKey.options.join(', ')}. Use bill_line_item once 
 
 export const EXTRACTION_PROMPT = `Extract the facts from the attached document. ${KEY_HINTS}`;
 
-const { $schema: _drop, ...RESPONSE_SCHEMA } = z.toJSONSchema(LlmExtractionSchema) as Record<string, unknown>;
-void _drop;
+// Gemini rejects schemas whose bounds make "too many states" (live 400, 29 Oct 2026), so the copy sent
+// drops numeric and length bounds. They are still enforced: the output is parsed with the full Zod schema.
+const UNSERVED = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'minLength', 'maxLength', 'minItems', 'maxItems']);
+const servable = (node: unknown): unknown =>
+  Array.isArray(node)
+    ? node.map(servable)
+    : typeof node === 'object' && node !== null
+      ? Object.fromEntries(Object.entries(node).filter(([k]) => !UNSERVED.has(k)).map(([k, v]) => [k, servable(v)]))
+      : node;
+
+export const RESPONSE_SCHEMA = servable(z.toJSONSchema(LlmExtractionSchema)) as Record<string, unknown>;
 
 export interface InteractionsRequest {
   model: string;
@@ -36,6 +45,12 @@ export type InteractionsCreate = (req: InteractionsRequest) => Promise<{ output_
 
 const statusOf = (err: unknown) =>
   typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number' ? err.status : null;
+
+/** Ops log: model, HTTP status and error class only. Never the request, response or document (golden rule 6). */
+const logFailure = (model: string, err: unknown) => {
+  const kind = err instanceof Error ? err.name : typeof err;
+  console.error(`[gemini] model=${model} status=${statusOf(err) ?? 'none'} error=${kind}`);
+};
 
 const parse = (text: string | undefined): LlmExtraction => {
   try {
@@ -64,6 +79,7 @@ export const createGeminiLlm = (o: { create: InteractionsCreate; model: string; 
       return parse((await o.create(request(o.model))).output_text);
     } catch (err) {
       if (err instanceof LlmError) throw err;
+      logFailure(o.model, err);
       first = statusOf(err);
       if (first !== 429 && (first === null || first < 500)) throw new LlmError('LLM_UNAVAILABLE');
     }
@@ -71,6 +87,7 @@ export const createGeminiLlm = (o: { create: InteractionsCreate; model: string; 
       return parse((await o.create(request(o.fallbackModel))).output_text); // one retry, on the fallback model
     } catch (err) {
       if (err instanceof LlmError) throw err;
+      logFailure(o.fallbackModel, err);
       throw new LlmError(first === 429 && statusOf(err) === 429 ? 'AI_QUOTA_EXCEEDED' : 'LLM_UNAVAILABLE');
     }
   },
