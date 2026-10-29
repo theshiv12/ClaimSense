@@ -16,7 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-screen bg-bg font-sans text-ink antialiased">
         <SiteHeader />
         {children}
-        <footer className="mx-auto max-w-4xl px-4 py-10 text-xs text-muted">
+        <footer className="mx-auto max-w-7xl px-4 py-10 text-xs text-muted sm:px-10">
           ClaimSense is a self-help estimate, not an insurer, broker or TPA. It never files claims or sells policies.
         </footer>
       </body>

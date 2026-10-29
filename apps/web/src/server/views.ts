@@ -1,6 +1,7 @@
 import 'server-only';
 import { estimate as runEngine, isUsable, toClaimFacts } from '@claimsense/rules';
-import { EstimateSchema, type Estimate, type Remedy } from '@claimsense/shared';
+import { EstimateSchema, type Estimate, type Remedy, type RuleId } from '@claimsense/shared';
+import type { EvidenceLine } from '@/components/claim/evidence-panel';
 import type { StoredFactView } from '@/lib/fact-view';
 import { EstimateModel } from './models';
 import { getPlan, remedies } from './plans';
@@ -17,18 +18,28 @@ export const estimateView = async (userId: string, claimId: string) => {
   if (!claim) return null;
   const plan = getPlan(claim.planId);
   if (!plan) return null;
+  const facts = await listFacts(userId, claimId);
   const saved = await latestEstimate(userId, claimId);
   const parsed = saved ? EstimateSchema.safeParse(saved.estimate) : null;
   let estimate: Estimate;
   if (parsed?.success && parsed.data.factsVersion === claim.factsVersion) estimate = parsed.data;
   else {
-    estimate = runEngine(toClaimFacts(await listFacts(userId, claimId), claim.planId), plan, claim.factsVersion);
+    estimate = runEngine(toClaimFacts(facts, claim.planId), plan, claim.factsVersion);
     await EstimateModel.create({ userId: claim.userId, claimId: claim._id, estimate, expiresAt: claim.expiresAt });
   }
   const forResults: Remedy[] = estimate.results.flatMap((r) =>
     r.outcome === 'pass' ? [] : remedies.remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
   );
-  return { claim, plan, estimate, remedies: forResults };
+  // The document lines behind each check that did not pass (Figma 04 evidence panel). Bill lines: the room only.
+  const evidence: Partial<Record<RuleId, EvidenceLine[]>> = {};
+  for (const r of estimate.results) {
+    if (r.outcome === 'pass') continue;
+    evidence[r.ruleId] = facts
+      .filter((f) => r.usedFacts.includes(f.key) && f.source === 'document' && f.sourceQuote)
+      .filter((f) => f.key !== 'bill_line_item' || f.head === 'room' || f.head === 'icu')
+      .map((f) => ({ key: f.key, quote: f.sourceQuote ?? '', page: f.page, usable: isUsable(f) }));
+  }
+  return { claim, plan, estimate, remedies: forResults, evidence };
 };
 
 export interface ClaimSummary {

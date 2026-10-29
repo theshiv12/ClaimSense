@@ -1,26 +1,31 @@
 import Link from 'next/link';
 import { currentUser } from '@/server/auth';
 import { logoutAndGoHome } from '@/server/actions/navigation';
+import { buttonClass } from './ui/button';
+import { Brand } from './ui/brand';
 
 export async function SiteHeader() {
   const user = await currentUser().catch(() => null);
   return (
     <header className="border-b border-border bg-white">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3" aria-label="Main">
-        <Link href="/" className="text-lg font-bold text-teal">ClaimSense</Link>
-        <div className="flex items-center gap-4 text-sm">
+      <nav className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-10" aria-label="Main">
+        <Brand />
+        <div className="flex items-center gap-5 text-sm">
           {user ? (
             <>
-              <Link className="text-ink hover:text-teal" href="/claims">My checks</Link>
-              {user.isGuest ? <Link className="text-ink hover:text-teal" href="/signup">Create account</Link> : null}
+              <Link className="text-muted hover:text-ink" href="/claims">My claims</Link>
+              {user.isGuest ? <Link className="text-muted hover:text-ink" href="/signup">Create account</Link> : null}
+              {user.email ? <span className="hidden text-muted md:inline">{user.email}</span> : null}
               <form action={logoutAndGoHome}>
-                <button type="submit" className="text-muted hover:text-ink">{user.isGuest ? 'End sample' : 'Log out'}</button>
+                <button type="submit" className={buttonClass('secondary')}>{user.isGuest ? 'End sample' : 'Log out'}</button>
               </form>
             </>
           ) : (
             <>
-              <Link className="text-ink hover:text-teal" href="/login">Sign in</Link>
-              <Link className="font-semibold text-teal" href="/signup">Create account</Link>
+              <Link className="hidden text-muted hover:text-ink sm:inline" href="/#how">How it works</Link>
+              <Link className="hidden text-muted hover:text-ink sm:inline" href="/#privacy">Privacy</Link>
+              <Link className="hidden text-muted hover:text-ink sm:inline" href="/#samples">Sample cases</Link>
+              <Link className={buttonClass('secondary')} href="/login">Sign in</Link>
             </>
           )}
         </div>

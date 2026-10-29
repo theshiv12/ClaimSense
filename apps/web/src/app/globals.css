@@ -13,6 +13,9 @@
   --color-warn-fg: #8a4a06;
   --color-risk-bg: #fdecea;
   --color-risk-fg: #8f1d14;
+  /* Payout bar segments (Figma 04): room-rent cut and non-payables. */
+  --color-cut: #e39b3a;
+  --color-nonpay: #c8d0cc;
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 

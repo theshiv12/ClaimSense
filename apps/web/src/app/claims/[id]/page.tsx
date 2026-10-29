@@ -1,9 +1,12 @@
+import type { Estimate } from '@claimsense/shared';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { CheckRow } from '@/components/claim/check-row';
+import { ClaimBar } from '@/components/claim/claim-bar';
 import { DeleteClaimButton, DeleteMyDataButton } from '@/components/claim/delete-buttons';
 import { Disclaimer } from '@/components/claim/disclaimer';
-import { PayoutBar } from '@/components/claim/payout-bar';
+import { EvidencePanel } from '@/components/claim/evidence-panel';
+import { PayoutBar, type PayoutPart } from '@/components/claim/payout-bar';
 import { RejectionSteps } from '@/components/claim/rejection-steps';
 import { RemediesPanel } from '@/components/claim/remedies-panel';
 import { RoomSimulator } from '@/components/claim/room-simulator';
@@ -15,68 +18,88 @@ import { simulateRoom } from '@/server/actions/estimate';
 import { currentUser } from '@/server/auth';
 import { estimateView } from '@/server/views';
 
+/** What makes up "you pay", from the engine's own amounts; whatever is left is not covered until checks clear. */
+const breakdownOf = (e: Estimate): PayoutPart[] => {
+  const cut = (id: string) => e.results.find((r) => r.ruleId === id)?.deductionPaise ?? 0;
+  const parts = [
+    { label: 'Room-rent deduction', paise: cut('R6') },
+    { label: 'Non-payables', paise: e.nonPayablePaise },
+    { label: 'Co-pay', paise: cut('R7') },
+    { label: 'Over sum insured', paise: cut('R8') },
+  ];
+  const rest = e.outOfPocketPaise - parts.reduce((s, p) => s + p.paise, 0);
+  return rest > 0 ? [...parts, { label: 'Not covered until checks clear', paise: rest }] : parts;
+};
+
 export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>) {
   const { id } = await params;
   const user = await currentUser();
   if (!user) redirect(`/login?next=/claims/${id}`);
   const view = await estimateView(user.id, id);
   if (!view) notFound();
-  const { claim, plan, estimate, remedies } = view;
+  const { claim, plan, estimate, remedies, evidence } = view;
+  const notPassed = estimate.results.filter((r) => r.outcome !== 'pass');
+  const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <div>
-        <p className="text-sm text-muted">
-          For {claim.subject?.relation} · {claim.subject?.treatment}
-          {claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : ''}
-        </p>
-        <h1 className="sr-only">Estimate</h1>
-      </div>
-
-      <Disclaimer />
-
-      <Card className="space-y-5">
-        <VerdictHeadline estimate={estimate} />
-        <PayoutBar claimedPaise={estimate.claimedPaise} payablePaise={estimate.payablePaise} />
-      </Card>
-
-      <Card>
-        <h2 className="text-lg font-semibold text-ink">The checks</h2>
-        <p className="text-xs text-muted">
-          {plan.planName}, {plan.wordingVersion} (UIN {plan.uin}). Rules as of {formatDate(plan.rulesAsOf)}.
-        </p>
-        <ul className="mt-2">
-          {estimate.results.map((r) => (
-            <CheckRow key={r.ruleId} result={r} />
-          ))}
-        </ul>
-      </Card>
-
-      <Card>
-        <h2 className="mb-1 text-lg font-semibold text-ink">Try a different room</h2>
-        <p className="mb-4 text-sm text-muted">The room you choose changes more than the room charge: other charges are cut in proportion when the room is over the limit.</p>
-        <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} simulate={simulateRoom} />
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-lg font-semibold text-ink">What you can do</h2>
-        <RemediesPanel remedies={remedies} />
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-lg font-semibold text-ink">If the insurer rejects or cuts the claim</h2>
-        <RejectionSteps />
-      </Card>
-
-      <Disclaimer />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Link className={buttonClass('secondary')} href={`/claims/${id}/facts`}>Review facts</Link>
-        <Link className={buttonClass('ghost')} href="/claims">All my checks</Link>
-        <DeleteClaimButton claimId={id} after="list" />
-      </div>
-      <Card>
+    <>
+      <ClaimBar step="estimate" claimId={id} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}${sample}`}>
         <DeleteMyDataButton />
-      </Card>
-    </main>
+      </ClaimBar>
+      <main className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_420px]">
+        <h1 className="sr-only">Estimate</h1>
+        <div className="space-y-5">
+          <Card className="space-y-6 sm:p-7">
+            <VerdictHeadline estimate={estimate} eyebrow={`Likely payout · ${plan.planName} · rules as of ${formatDate(plan.rulesAsOf)}`} />
+            <PayoutBar claimedPaise={estimate.claimedPaise} payablePaise={estimate.payablePaise} breakdown={breakdownOf(estimate)} />
+          </Card>
+
+          <Card flush className="overflow-hidden">
+            <div className="px-5 pb-2 pt-5">
+              <h2 className="text-lg font-semibold text-ink">Checks on your policy</h2>
+              <p className="text-xs text-muted">
+                {plan.planName}, {plan.wordingVersion} (UIN {plan.uin}). Rules as of {formatDate(plan.rulesAsOf)}.
+              </p>
+            </div>
+            <ul>
+              {estimate.results.map((r) => (
+                <CheckRow key={r.ruleId} result={r} actionHref={remedies.some((m) => m.ruleId === r.ruleId) ? '#remedies' : undefined} />
+              ))}
+            </ul>
+          </Card>
+
+          <Disclaimer />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link className={buttonClass('secondary')} href={`/claims/${id}/facts`}>Review facts</Link>
+            <Link className={buttonClass('ghost')} href="/claims">All my checks</Link>
+            <DeleteClaimButton claimId={id} after="list" />
+          </div>
+        </div>
+
+        <aside className="space-y-5">
+          <Card>
+            <h2 className="mb-1 text-lg font-semibold text-ink">Compare room types</h2>
+            <p className="mb-4 text-sm text-muted">The room changes more than the room charge: other charges are cut in proportion when the room is over the limit.</p>
+            <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} simulate={simulateRoom} />
+          </Card>
+
+          {notPassed.map((r) => (
+            <Card key={r.ruleId}>
+              <EvidencePanel result={r} lines={evidence[r.ruleId] ?? []} />
+            </Card>
+          ))}
+
+          <Card>
+            <h2 id="remedies" className="mb-3 scroll-mt-6 text-lg font-semibold text-ink">What you can do</h2>
+            <RemediesPanel remedies={remedies} />
+          </Card>
+
+          <Card>
+            <h2 className="mb-3 text-lg font-semibold text-ink">If the claim is rejected later</h2>
+            <RejectionSteps />
+          </Card>
+        </aside>
+      </main>
+    </>
   );
 }
