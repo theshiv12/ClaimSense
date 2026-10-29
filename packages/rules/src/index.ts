@@ -6,7 +6,7 @@ export const RULE_IDS = RuleId.options;
 export type { AmountRule, EligibilityRule } from './types';
 export { ENGINE_VERSION, estimate } from './engine';
 export { simulateRoom, type RoomScenario } from './simulate-room';
-export { isUsable, toClaimFacts } from './to-claim-facts';
+export { isUsable, selectedFacts, toClaimFacts } from './to-claim-facts';
 export { addDays, addMonths } from './dates';
 export { r1PolicyActive } from './rules/r1-policy-active';
 export { r2InitialWait } from './rules/r2-initial-wait';

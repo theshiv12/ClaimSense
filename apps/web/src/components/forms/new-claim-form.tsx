@@ -5,12 +5,32 @@ import { useId, useState } from 'react';
 import { rupeesToPaise } from '@/lib/format';
 import { ERROR_MESSAGES, ROOM_LABELS } from '@/lib/labels';
 import { createClaim } from '@/server/actions/claims';
-import { Button } from '../ui/button';
+import { Button, ButtonLink } from '../ui/button';
+import { Card } from '../ui/card';
 import { ErrorText, Field, inputClass } from '../ui/field';
 
 const str = (v: FormDataEntryValue | null) => (typeof v === 'string' ? v.trim() : '');
 
-const RELATIONS = [['self', 'Myself'], ['spouse', 'Spouse'], ['parent', 'Parent'], ['child', 'Child'], ['other', 'Someone else']] as const;
+const RELATIONS = [['self', 'Me'], ['parent', 'Parent'], ['spouse', 'Spouse'], ['child', 'Child'], ['other', 'Someone else']] as const;
+
+/** A checkbox drawn as a switch (Figma 02). The label stays a real <label>, so it is keyboard and screen-reader friendly. */
+function Toggle({ name, defaultChecked, required, title, children }: { name: string; defaultChecked?: boolean; required?: boolean; title: string; children: React.ReactNode }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 text-sm">
+      <span className="relative mt-0.5 h-6 w-10 shrink-0">
+        <input type="checkbox" role="switch" aria-required={required ? true : undefined} name={name} defaultChecked={defaultChecked} className="peer absolute inset-0 z-10 cursor-pointer opacity-0" />
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-border transition after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:bg-teal peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal"
+        />
+      </span>
+      <span>
+        <strong className="block text-ink">{title}</strong>
+        <span className="text-muted">{children}</span>
+      </span>
+    </label>
+  );
+}
 
 /** 02 Setup + consent: one toggle per purpose, and the truth about the Gemini free tier. */
 export function NewClaimForm({ plans }: { plans: { planId: string; name: string }[] }) {
@@ -46,66 +66,79 @@ export function NewClaimForm({ plans }: { plans: { planId: string; name: string 
       onSubmit={(e) => {
         e.preventDefault();
         void submit(new FormData(e.currentTarget));
-      }} className="space-y-5" noValidate>
-      <Field id={`${id}-plan`} label="Your policy">
-        <select id={`${id}-plan`} name="planId" className={inputClass}>
-          {plans.map((p) => (
-            <option key={p.planId} value={p.planId}>{p.name}</option>
-          ))}
-        </select>
-      </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id={`${id}-rel`} label="Who is being admitted?">
-          <select id={`${id}-rel`} name="relation" className={inputClass} defaultValue="self">
-            {RELATIONS.map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-        </Field>
-        <Field id={`${id}-tr`} label="Planned treatment">
-          <input id={`${id}-tr`} name="treatment" className={inputClass} placeholder="e.g. Knee replacement" />
-        </Field>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field id={`${id}-adm`} label="Planned admission (optional)">
-          <input id={`${id}-adm`} name="admissionDate" type="date" className={inputClass} />
-        </Field>
-        <Field id={`${id}-cat`} label="Room type (optional)">
-          <select id={`${id}-cat`} name="category" className={inputClass} defaultValue="">
-            <option value="">Not decided</option>
-            {(Object.keys(ROOM_LABELS) as RoomCategory[]).map((c) => (
-              <option key={c} value={c}>{ROOM_LABELS[c]}</option>
-            ))}
-          </select>
-        </Field>
-        <Field id={`${id}-rent`} label="Room rent per day (₹)">
-          <input id={`${id}-rent`} name="rent" inputMode="decimal" className={inputClass} placeholder="e.g. 7000" />
-        </Field>
-      </div>
+      }}
+      className="grid gap-5 lg:grid-cols-[520px_minmax(0,1fr)]"
+      noValidate
+    >
+      <Card className="h-fit space-y-5 p-7">
+        <h2 className="text-2xl font-bold text-ink">Before you upload</h2>
+        <p className="text-sm text-muted">
+          Your documents are read by Google Gemini (free tier) to extract facts, so the data leaves India. Google may use it to
+          improve its products, and people may review it. Nothing is shared with your insurer.
+        </p>
+        <Toggle name="analysis" required title="Read my documents to estimate this claim (required).">
+          This is a demo: upload only the sample or made-up documents. The file itself is never stored; only the facts read from it are.
+        </Toggle>
+        <Toggle name="retention" defaultChecked title="Keep my check for 7 days">
+          So you can come back. Deleted automatically after that, or when you press “Delete my data”.
+        </Toggle>
+        <Toggle name="improve" title="Help improve ClaimSense">
+          Use my anonymised results to check accuracy (optional).
+        </Toggle>
+        <p className="border-t border-border pt-4 text-xs text-muted">
+          Estimate, not a guarantee. Only your insurer decides. Not medical or legal advice. ClaimSense is not IRDAI-registered.
+        </p>
+      </Card>
 
-      <fieldset className="space-y-3 rounded-xl border border-border bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-ink">Your consent</legend>
-        <label className="flex items-start gap-2 text-sm text-ink">
-          <input type="checkbox" name="analysis" className="mt-1" />
-          <span>
-            <strong>Read my documents to estimate this claim (required).</strong> Your documents are read by Google Gemini
-            (free tier). Google may use them to improve its products, and people may review them. This is a demo: upload
-            only the sample or made-up documents. The file itself is never stored; only the facts read from it are.
-          </span>
-        </label>
-        <label className="flex items-start gap-2 text-sm text-ink">
-          <input type="checkbox" name="retention" defaultChecked className="mt-1" />
-          <span>Keep the facts and estimate for 7 days so I can come back. They are deleted automatically after that, or when I press “Delete my data”.</span>
-        </label>
-        <label className="flex items-start gap-2 text-sm text-ink">
-          <input type="checkbox" name="improve" className="mt-1" />
-          <span>Use my anonymised results to improve ClaimSense (optional).</span>
-        </label>
-      </fieldset>
-      {error ? <ErrorText>{error}</ErrorText> : null}
-      <Button type="submit" disabled={busy}>
-        Continue to documents
-      </Button>
+      <Card className="space-y-5 p-7">
+        <h2 className="text-2xl font-bold text-ink">About the claim</h2>
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium text-ink">Who is this claim for?</legend>
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg p-1 sm:grid-cols-5">
+            {RELATIONS.map(([v, l]) => (
+              <label key={v} className="cursor-pointer">
+                <input type="radio" name="relation" value={v} defaultChecked={v === 'self'} className="peer sr-only" />
+                <span className="block rounded-lg px-3 py-2 text-center text-sm text-muted peer-checked:border peer-checked:border-border peer-checked:bg-white peer-checked:font-semibold peer-checked:text-ink peer-focus-visible:outline-2 peer-focus-visible:outline-teal">
+                  {l}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <Field id={`${id}-plan`} label="Insurer and plan">
+          <select id={`${id}-plan`} name="planId" className={inputClass}>
+            {plans.map((p) => (
+              <option key={p.planId} value={p.planId}>{p.name}</option>
+            ))}
+          </select>
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id={`${id}-tr`} label="Planned treatment">
+            <input id={`${id}-tr`} name="treatment" className={inputClass} placeholder="e.g. Knee replacement (right)" />
+          </Field>
+          <Field id={`${id}-adm`} label="Planned admission (optional)">
+            <input id={`${id}-adm`} name="admissionDate" type="date" className={inputClass} />
+          </Field>
+          <Field id={`${id}-cat`} label="Room type (optional)">
+            <select id={`${id}-cat`} name="category" className={inputClass} defaultValue="">
+              <option value="">Not decided</option>
+              {(Object.keys(ROOM_LABELS) as RoomCategory[]).map((c) => (
+                <option key={c} value={c}>{ROOM_LABELS[c]}</option>
+              ))}
+            </select>
+          </Field>
+          <Field id={`${id}-rent`} label="Room rent per day (₹)">
+            <input id={`${id}-rent`} name="rent" inputMode="decimal" className={inputClass} placeholder="e.g. 7000" />
+          </Field>
+        </div>
+        {error ? <ErrorText>{error}</ErrorText> : null}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <ButtonLink href="/claims" variant="ghost">← Back</ButtonLink>
+          <Button type="submit" disabled={busy}>
+            Continue to documents
+          </Button>
+        </div>
+      </Card>
     </form>
   );
 }

@@ -36,7 +36,7 @@ export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { 
   const saving = result ? currentOutOfPocketPaise - result.outOfPocketPaise : 0;
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid grid-cols-2 gap-3 [&>button]:col-span-2">
         <Field id={`${id}-cat`} label="Room type">
           <select id={`${id}-cat`} className={inputClass} value={category} onChange={(e) => setCategory(e.target.value as RoomCategory)}>
             {CATEGORIES.map((c) => (

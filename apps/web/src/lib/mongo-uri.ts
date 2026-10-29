@@ -20,7 +20,9 @@ export const mongoUriProblem = (uri: string | undefined): MongoUriProblem | null
   if (QUOTE.test(uri)) return 'quoted';
   if (!SCHEME.test(uri)) return 'bad_scheme';
   const rest = uri.replace(SCHEME, '');
-  const at = rest.lastIndexOf('@');
+  // Credentials end at the last @ before the query string; an @ inside the query is not a password.
+  const query = rest.indexOf('?');
+  const at = rest.lastIndexOf('@', query >= 0 ? query : rest.length);
   if (at >= 0) {
     const userinfo = rest.slice(0, at);
     const colon = userinfo.indexOf(':');

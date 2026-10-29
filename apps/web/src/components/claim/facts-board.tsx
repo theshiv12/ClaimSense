@@ -2,10 +2,11 @@
 import { BillHead, FactKey, type ActionResult, type FactValue } from '@claimsense/shared';
 import Link from 'next/link';
 import { useId, useState } from 'react';
-import { toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
+import { documentSummaries, toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, HEAD_LABELS } from '@/lib/labels';
 import { buttonClass, Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { Disclaimer } from './disclaimer';
 import { Chip } from '../ui/chip';
 import { ErrorText, Field, inputClass } from '../ui/field';
 import { FactRow, type FactActions } from './fact-row';
@@ -57,6 +58,8 @@ export function FactsBoard({ claimId, initial, actions }: Props) {
   const [text, setText] = useState('');
 
   const needsYou = facts.filter((f) => f.status === 'found' && !f.usable).length;
+  const ready = facts.filter((f) => f.usable).length;
+  const docs = documentSummaries(facts);
   const replace = (f: StoredFactView) => setFacts((all) => all.map((x) => (x.id === f.id ? f : x)));
 
   const upload = async (file: File | undefined) => {
@@ -91,11 +94,16 @@ export function FactsBoard({ claimId, initial, actions }: Props) {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <h2 className="text-lg font-semibold text-ink">1. Add your documents</h2>
-        <p className="mt-1 text-sm text-muted">Policy schedule and the hospital’s estimate. PDF, JPEG or PNG, up to 4 MB each, 8 per check.</p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+    <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)_360px]">
+      <aside className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted">Documents · {docs.length}</p>
+        {docs.map((d) => (
+          <Card key={d.id} as="div" className="space-y-2 p-4">
+            <p className="text-sm font-semibold text-ink">Document {d.n}</p>
+            {d.toConfirm > 0 ? <Chip tone="warn">{d.toConfirm} to confirm</Chip> : <Chip tone="pass">{d.found} {d.found === 1 ? 'fact' : 'facts'} found</Chip>}
+          </Card>
+        ))}
+        <div className="space-y-3 rounded-xl border-2 border-dashed border-border p-4 text-center">
           <input
             id={`${id}-file`}
             type="file"
@@ -110,71 +118,95 @@ export function FactsBoard({ claimId, initial, actions }: Props) {
           <label
             htmlFor={`${id}-file`}
             aria-disabled={busy}
-            className={buttonClass('primary', `peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal ${busy ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`)}
+            className={buttonClass('primary', `w-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal ${busy ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`)}
           >
             {busy ? 'Reading…' : 'Upload a document'}
           </label>
-          <Button variant="secondary" onClick={() => setManual((m) => !m)}>
+          <p className="text-xs text-muted">Policy schedule and the hospital’s estimate. PDF, JPG, PNG · up to 4 MB each, 8 per check. Files are read, then discarded.</p>
+          <Button variant="secondary" className="w-full" onClick={() => setManual((m) => !m)}>
             Enter facts yourself
           </Button>
         </div>
         {notice.map((n) => (
-          <p key={n} className="mt-3 rounded-lg bg-warn-bg px-3 py-2 text-sm text-warn-fg">{n}</p>
+          <p key={n} className="rounded-lg bg-warn-bg px-3 py-2 text-sm text-warn-fg">{n}</p>
         ))}
-        {error ? <div className="mt-3"><ErrorText>{error}</ErrorText></div> : null}
-      </Card>
+        {error ? <ErrorText>{error}</ErrorText> : null}
+      </aside>
 
-      {manual ? (
-        <Card>
-          <h2 className="text-lg font-semibold text-ink">Enter a fact</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
-            <Field id={`${id}-key`} label="What">
-              <select id={`${id}-key`} className={inputClass} value={key} onChange={(e) => { setKey(e.target.value as FactKey); setText(''); }}>
-                {FactKey.options.map((k) => (
-                  <option key={k} value={k}>{FACT_LABELS[k]}</option>
-                ))}
-              </select>
-            </Field>
-            {key === 'bill_line_item' ? (
-              <Field id={`${id}-head`} label="Bill head">
-                <select id={`${id}-head`} className={inputClass} value={head} onChange={(e) => setHead(e.target.value as BillHead)}>
-                  {BillHead.options.filter((h) => h !== 'none').map((h) => (
-                    <option key={h} value={h}>{HEAD_LABELS[h]}</option>
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-ink">Check what we found</h1>
+            <p className="text-sm text-muted">The estimate uses only confirmed facts. Correct anything that’s wrong. We never guess.</p>
+          </div>
+          {needsYou > 0 ? <Chip tone="warn">{needsYou} need you</Chip> : <Chip tone="pass">All facts usable</Chip>}
+        </div>
+
+        {manual ? (
+          <Card>
+            <h2 className="text-lg font-semibold text-ink">Enter a fact</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+              <Field id={`${id}-key`} label="What">
+                <select id={`${id}-key`} className={inputClass} value={key} onChange={(e) => { setKey(e.target.value as FactKey); setText(''); }}>
+                  {FactKey.options.map((k) => (
+                    <option key={k} value={k}>{FACT_LABELS[k]}</option>
                   ))}
                 </select>
               </Field>
-            ) : <div />}
-            <Field id={`${id}-val`} label="Value">
-              <FactValueInput id={`${id}-val`} factKey={key} value={text} onChange={setText} />
-            </Field>
-            <Button onClick={() => void add()}>Add</Button>
-          </div>
+              {key === 'bill_line_item' ? (
+                <Field id={`${id}-head`} label="Bill head">
+                  <select id={`${id}-head`} className={inputClass} value={head} onChange={(e) => setHead(e.target.value as BillHead)}>
+                    {BillHead.options.filter((h) => h !== 'none').map((h) => (
+                      <option key={h} value={h}>{HEAD_LABELS[h]}</option>
+                    ))}
+                  </select>
+                </Field>
+              ) : <div />}
+              <Field id={`${id}-val`} label="Value">
+                <FactValueInput id={`${id}-val`} factKey={key} value={text} onChange={setText} />
+              </Field>
+              <Button onClick={() => void add()}>Add</Button>
+            </div>
+          </Card>
+        ) : null}
+
+        <Card flush className="overflow-hidden">
+          {facts.length === 0 ? (
+            <p className="p-5 text-sm text-muted">No facts yet. Upload a document or enter them yourself.</p>
+          ) : (
+            <ul>
+              {facts.map((f) => (
+                <FactRow key={f.id} claimId={claimId} fact={f} actions={actions} onChange={replace} />
+              ))}
+            </ul>
+          )}
         </Card>
-      ) : null}
-
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-ink">2. Check the facts</h2>
-          {needsYou > 0 ? <Chip tone="warn">{needsYou} {needsYou === 1 ? 'fact needs' : 'facts need'} you</Chip> : <Chip tone="pass">All facts usable</Chip>}
-        </div>
-        <p className="mt-1 text-sm text-muted">A fact marked “Please check” counts as unknown until you confirm or correct it. We never guess.</p>
-        {facts.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">No facts yet. Upload a document or enter them yourself.</p>
-        ) : (
-          <ul className="mt-2">
-            {facts.map((f) => (
-              <FactRow key={f.id} claimId={claimId} fact={f} actions={actions} onChange={replace} />
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Link href={`/claims/${claimId}`} className={buttonClass('primary')}>
-          3. See the estimate
-        </Link>
-        {needsYou > 0 ? <p className="text-sm text-muted">Unconfirmed facts will show as Unknown.</p> : null}
       </div>
+
+      <aside className="space-y-3">
+        <Card className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Your estimate</p>
+          <h2 className="text-xl font-bold text-ink">{needsYou > 0 ? `Confirm ${needsYou} ${needsYou === 1 ? 'fact' : 'facts'} first` : 'Ready when you are'}</h2>
+          <p className="text-sm text-muted">
+            {needsYou > 0
+              ? 'Facts we could not verify count as Unknown until you confirm them. Facts read from photos need a quick check.'
+              : 'The rules run only on the facts above.'}
+          </p>
+          {facts.length > 0 ? (
+            <div className="space-y-1">
+              <div className="h-2 overflow-hidden rounded-full bg-border">
+                <div className="h-full bg-teal" style={{ width: `${Math.round((ready / facts.length) * 100)}%` }} />
+              </div>
+              <p className="text-sm text-muted">{ready} of {facts.length} facts ready</p>
+            </div>
+          ) : null}
+          <Link href={`/claims/${claimId}`} className={buttonClass('primary', 'w-full')}>
+            3. See the estimate
+          </Link>
+          {needsYou > 0 ? <p className="text-xs text-muted">Unconfirmed facts will show as Unknown.</p> : null}
+        </Card>
+        <Disclaimer />
+      </aside>
     </div>
   );
 }

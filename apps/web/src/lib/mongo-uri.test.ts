@@ -44,3 +44,9 @@ describe('mongoUriProblem', () => {
     }
   });
 });
+
+describe('mongoUriProblem query strings', () => {
+  it('TC-ENV-09 an @ in the query string is not a password', () => {
+    expect(mongoUriProblem('mongodb://localhost:27017/db?appName=a@b')).toBeNull();
+  });
+});

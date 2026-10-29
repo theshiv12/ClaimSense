@@ -318,3 +318,30 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-ENV-06 | Password with unencoded `@`, `/`, `#`, `:` or a bare `%` | `mongodb+srv://u:p@ss@h.net/` (and `p/ss`, `p#ss`, `p:ss`, `p%zz`) | `mongoUriProblem` | `unencoded_password`; `p%40ss` passes | Unit |
 | TC-ENV-07 | No host | `mongodb+srv://u:p@/` | `mongoUriProblem` | `no_host` | Unit |
 | TC-ENV-08 | The hint never contains the URI | each problem | `mongoUriHint(problem)` | a fix-it sentence that names `MONGODB_URI` and contains no part of the value | Unit |
+
+## Figma layouts (*autopilot*, `feat/figma-layouts`)
+
+Layout follows the Figma file "ClaimSense web app — MVP screens". Where Figma conflicts with the rules spec or
+golden rules (twin-sharing ₹2,30,400, a free-text chat, "read by Claude", 10 MB, 30-day retention), the spec wins.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-09 | The payout bar splits what you pay into its causes, with a legend (Figma 04) | Case B: claimed ₹2,40,000, payable ₹2,05,800, breakdown room-rent ₹24,600 + non-payables ₹9,600 | render `PayoutBar` with `breakdown` | `payout-you-pay` is still 14.25%; inside it room-rent is 71.93% and non-payables 28.07% (24,600 ÷ 34,200; 9,600 ÷ 34,200, rounded to 2 dp); legend reads "Paid by insurer", "Room-rent deduction ₹24,600", "Non-payables ₹9,600" | Component |
+| TC-UI-10 | The step bar shows where you are, with a word and not colour alone (Figma 02–04) | current step "Confirm facts" | render `StepBar` | four steps in order; Set up and Upload marked done (icon + "done" for screen readers); Confirm facts has `aria-current="step"` | Component |
+| TC-UI-11 | Evidence for a cut shows the policy clause and the line from the user's own document (Figma 04) | an R6 deduction; a usable room-rent fact with quote "Room charges (Single AC) 7,000 × 5" on page 1; an unusable fact | render `EvidencePanel` | "From your policy · p.5" with the clause quote; "From your documents · p.1" with the fact quote; the unusable fact's quote is not shown | Component |
+| TC-UI-12 | The documents panel groups facts by document, never by file name (Figma 03; golden rules 6 and 9) | facts from documents d1 (2 found, 1 usable) and d2 (1 illegible), and one user-stated fact | `documentSummaries(facts)` | `[{ n: 1, found: 2, toConfirm: 1 }, { n: 2, found: 0, toConfirm: 0 }]` in upload order; user facts are not a document | Unit |
+| TC-UI-13 | My claims totals and filter (Figma 08) | three checks: B likely_partial (₹2,05,800 payable, you pay ₹34,200), D likely_payable (₹88,000, you pay ₹0), one not checked yet | `claimStats(claims)`; `filterClaims(claims, 'likely_partial', '')`; `filterClaims(claims, 'all', 'knee')` | checks 3, payout ₹2,93,800 (2,05,800 + 88,000) across 2 checked, you may pay ₹34,200, counts per verdict; the filter keeps only B in both cases (search is case-insensitive on treatment and relation) | Unit |
+| TC-UI-14 | A shown estimate is saved so My claims lists its verdict (bug found while building Figma 08) | sample B, estimate page opened | `claimSummaries` | verdict likely_partial, ₹2,05,800 of ₹2,40,000, you pay ₹34,200 (was "Not checked yet": Mongoose dropped empty `params: {}`, so the saved estimate failed `EstimateSchema`) | API |
+
+## Review fixes for `feat/figma-layouts` (*autopilot*, code-reviewer findings)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-TCF-10 | `selectedFacts` returns exactly the facts the engine used (same merge as `toClaimFacts`) | a user-stated room rent and a document one; two documents that disagree on admission date; two that agree on sum insured; one unusable fact; room line items from one document | `selectedFacts(facts)` | the user room rent (not the document one); neither admission fact; both sum-insured facts; no unusable fact; the room line item | Unit |
+| TC-UI-11b | Evidence cites only document lines the engine used | R6 deduction; room rent stated by the user plus a verified document quote; a document room line | `evidenceFor(result, facts)` | the room line's quote only; the overridden room-rent quote is not shown | Unit |
+| TC-UI-10b | The step bar does not call facts confirmed while some still need you | estimate page, 2 facts to confirm | `StepBar current="estimate" pendingFacts={2}` | Set up and Upload done; Confirm facts not done and reads "2 to confirm" | Component |
+| TC-UI-15 | The landing sample card shows engine output and the full disclaimer | Home page | render | "₹2,05,800" (Case B, engine), the disclaimer sentence, no "approved", no "real rules" | Component |
+| TC-UI-16 | Search terms never go into the URL (golden rule 6) | claims table with B and D | type "knee" in the search box | only B is listed; the search box is not inside a GET form | Component |
+| TC-UI-17 | Consent switches are announced as switches; the required one is marked required | setup form | render | three `role="switch"`; the analysis switch has `aria-required="true"` | Component |
+| TC-ENV-09 | An `@` in the query string is not a password | `mongodb://localhost:27017/db?appName=a@b` | `mongoUriProblem` | `null` | Unit |
+| TC-GEM-01b | (strengthens TC-GEM-01/05, needs human sign-off) the schema sent equals Zod's JSON schema with only bound keywords removed, built independently in the test; key/head/status/confidence enums and every property name survive | `LlmExtractionSchema` | build request | equals the test-built expected schema; enums present; property names equal the Zod shape keys | Unit |
