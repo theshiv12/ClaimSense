@@ -1,4 +1,3 @@
-import 'server-only';
 import { FACT_VALUE_SCHEMAS, type BillHead, type ClaimFacts, type Fact, type FactKey, type FactValue } from '@claimsense/shared';
 
 /** A fact the user typed: no document, no quote, nothing to verify (golden rule 3). */

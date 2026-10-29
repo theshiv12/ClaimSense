@@ -1,4 +1,3 @@
-import 'server-only';
 import type { FactKey, FactValue, Verification } from '@claimsense/shared';
 import { normalizeValue } from './normalize';
 

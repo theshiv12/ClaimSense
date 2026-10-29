@@ -1,11 +1,14 @@
-import type { ActionResult, CurrentUserView } from '@claimsense/shared';
+import type { ActionResult, CurrentUserView, Estimate, UploadResultView, WireFact } from '@claimsense/shared';
 import { result, send, upload } from './http';
 
 // The server actions the tests were written against (docs/test-cases.md), now as calls to the REST API
 // (docs/api.md). Same names and the same ActionResult, so every test keeps its assertions.
+// A path cannot leave an id out. A missing or non-string id is sent as a 65-character segment, which fails
+// the same shared `Id` schema (1–64 chars) the action input did, so it is still VALIDATION_FAILED.
+const MISSING_ID = 'x'.repeat(65);
 const idOf = (input: unknown, key: string) => {
   const v = (input as Record<string, unknown> | null | undefined)?.[key];
-  return typeof v === 'string' ? encodeURIComponent(v) : 'invalid';
+  return typeof v === 'string' && v !== '' ? encodeURIComponent(v) : MISSING_ID;
 };
 const without = (input: unknown, ...keys: string[]) =>
   input && typeof input === 'object' ? Object.fromEntries(Object.entries(input).filter(([k]) => !keys.includes(k))) : input;
@@ -22,20 +25,20 @@ export const createClaim = (input?: unknown): R<{ claimId: string }> => call('po
 export const deleteClaim = (input?: unknown): R<null> => call('delete', `/api/claims/${idOf(input, 'claimId')}`);
 export const deleteMe = (): R<null> => call('delete', '/api/me');
 
-export const confirmFact = (input?: unknown) => call<{ fact: never }>('post', `/api/claims/${idOf(input, 'claimId')}/facts/${idOf(input, 'factId')}/confirm`, {});
-export const editFact = (input?: unknown) => call<{ fact: never }>('patch', `/api/claims/${idOf(input, 'claimId')}/facts/${idOf(input, 'factId')}`, without(input, 'claimId', 'factId'));
-export const addFact = (input?: unknown) => call<{ fact: never }>('post', `/api/claims/${idOf(input, 'claimId')}/facts`, without(input, 'claimId'));
+export const confirmFact = (input?: unknown) => call<{ fact: WireFact }>('post', `/api/claims/${idOf(input, 'claimId')}/facts/${idOf(input, 'factId')}/confirm`, {});
+export const editFact = (input?: unknown) => call<{ fact: WireFact }>('patch', `/api/claims/${idOf(input, 'claimId')}/facts/${idOf(input, 'factId')}`, without(input, 'claimId', 'factId'));
+export const addFact = (input?: unknown) => call<{ fact: WireFact }>('post', `/api/claims/${idOf(input, 'claimId')}/facts`, without(input, 'claimId'));
 
-export const runCheck = (input?: unknown) => call<{ estimate: never }>('post', `/api/claims/${idOf(input, 'claimId')}/estimate`, {});
-export const simulateRoom = (input?: unknown) => call<{ estimate: never }>('post', `/api/claims/${idOf(input, 'claimId')}/simulate-room`, without(input, 'claimId'));
+export const runCheck = (input?: unknown) => call<{ estimate: Estimate }>('post', `/api/claims/${idOf(input, 'claimId')}/estimate`, {});
+export const simulateRoom = (input?: unknown) => call<{ estimate: Estimate }>('post', `/api/claims/${idOf(input, 'claimId')}/simulate-room`, without(input, 'claimId'));
 
 /** The upload the facts page sends: FormData with claimId and file, as multipart to the documents endpoint. */
 export const uploadAndExtract = async (form: FormData) => {
   const claimId = form.get('claimId');
   const file = form.get('file');
-  const path = `/api/claims/${typeof claimId === 'string' ? encodeURIComponent(claimId) : 'invalid'}/documents`;
-  if (!(file instanceof File)) return result<never>(await send('post', path, {}));
-  return result<never>(await upload(path, new Uint8Array(await file.arrayBuffer()), file.name, file.type || 'application/octet-stream'));
+  const path = `/api/claims/${idOf({ claimId }, 'claimId')}/documents`;
+  if (!(file instanceof File)) return result<UploadResultView>(await send('post', path, {}));
+  return result<UploadResultView>(await upload(path, new Uint8Array(await file.arrayBuffer()), file.name, file.type || 'application/octet-stream'));
 };
 
 /** The signed-in user (or guest) for the jar's cookie, or null. */

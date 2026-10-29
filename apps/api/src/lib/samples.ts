@@ -1,4 +1,3 @@
-import 'server-only';
 import { ClaimFactsSchema, type ClaimFacts } from '@claimsense/shared';
 import a from '../../../../fixtures/cases/A/case.json';
 import b from '../../../../fixtures/cases/B/case.json';

@@ -1,6 +1,5 @@
-import 'server-only';
 import mongoose from 'mongoose';
-import { mongoUriHint, mongoUriProblem, type MongoUriProblem } from '@/lib/mongo-uri';
+import { mongoUriHint, mongoUriProblem, type MongoUriProblem } from '../lib/mongo-uri';
 import { env } from './env';
 
 const BLOCKING = new Set<MongoUriProblem>(['empty', 'bad_scheme', 'quoted', 'surrounding_space']);

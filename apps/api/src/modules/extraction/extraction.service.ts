@@ -1,20 +1,15 @@
-'use server';
-import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { FactSchema, LlmExtractionSchema, type Fact, type LlmFact } from '@claimsense/shared';
 import { isUsable } from '@claimsense/rules';
 import type { Types } from 'mongoose';
-import { z } from 'zod';
-import { fail, userAction } from '../action';
-import { env } from '../env';
-import { getLlm, LlmError, type LlmMimeType } from '../llm';
-import { Claim, ExtractionUsage, FactModel } from '../models';
-import { normalizeValue } from '../normalize';
-import { readPdfPages } from '../pdf-text';
-import { valueInQuote, verifyQuote } from '../quote-verify';
-import { findClaim, toStoredFact } from '../scope';
-
-const InputSchema = z.object({ claimId: z.string().min(1).max(64), file: z.instanceof(File) });
+import { env } from '../../core/env';
+import { fail } from '../../core/errors';
+import { Claim, ExtractionUsage, FactModel } from '../../core/models';
+import { findClaim, toStoredFact } from '../../core/scope';
+import { getLlm, LlmError, type LlmMimeType } from '../../integrations/llm';
+import { readPdfPages } from '../../integrations/pdf-text';
+import { normalizeValue } from '../../lib/normalize';
+import { valueInQuote, verifyQuote } from '../../lib/quote-verify';
 
 const MAGIC: [LlmMimeType, number[]][] = [
   ['application/pdf', [0x25, 0x50, 0x44, 0x46, 0x2d]], // %PDF-
@@ -76,12 +71,12 @@ const toFact = (f: LlmFact, documentId: string, pages: string[] | null, flagged:
  * Read → extract → save facts → discard the bytes (golden rule 9). The file and its name are never
  * stored or logged; only ids and counts are.
  */
-const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async (user, { claimId, file }) => {
-  const claim = await findClaim(user.id, claimId);
+export const uploadAndExtract = async (userId: string, claimId: string, file: Uint8Array) => {
+  const claim = await findClaim(userId, claimId);
   if (!claim) return fail('NOT_FOUND');
   const e = env();
-  if (file.size > e.MAX_UPLOAD_MB * 1024 * 1024) return fail('FILE_TOO_LARGE');
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (file.byteLength > e.MAX_UPLOAD_MB * 1024 * 1024) return fail('FILE_TOO_LARGE');
+  const bytes = new Uint8Array(file);
   const mimeType = sniff(bytes);
   if (!mimeType) return fail('FILE_TYPE_NOT_ALLOWED');
   const slot = await takeSlot(claim._id, claim.userId, e.MAX_FILES_PER_CLAIM);
@@ -94,7 +89,7 @@ const uploadAndExtractAction = userAction('uploadAndExtract', InputSchema, async
   } finally {
     if (!saved) await slot.release();
   }
-});
+};
 
 const extractAndSave = async (
   claim: { _id: Types.ObjectId; userId: Types.ObjectId; expiresAt: Date },
@@ -137,8 +132,3 @@ const extractAndSave = async (
     warnings,
   };
 };
-
-// 'use server' files may export only async functions.
-export async function uploadAndExtract(form: FormData) {
-  return uploadAndExtractAction({ claimId: form.get('claimId'), file: form.get('file') });
-}

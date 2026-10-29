@@ -1,4 +1,3 @@
-import 'server-only';
 import { FactSchema, type Fact } from '@claimsense/shared';
 import { isValidObjectId, Types } from 'mongoose';
 import { connectDb } from './db';

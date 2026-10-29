@@ -1,4 +1,3 @@
-import 'server-only';
 import { LoadablePlanConfigSchema, RemediesCatalogSchema, type PlanConfig, type RemediesCatalog } from '@claimsense/shared';
 import remediesJson from '../../../../config/remedies.json';
 import starFho from '../../../../config/plans/star-fho.json';

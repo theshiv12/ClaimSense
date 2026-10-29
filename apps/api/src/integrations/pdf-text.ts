@@ -1,6 +1,5 @@
-import 'server-only';
 import { extractText } from 'unpdf';
-import { fail } from './action';
+import { fail } from '../core/errors';
 
 /**
  * The PDF text layer, one string per page, used only to verify quotes. null when there is no text

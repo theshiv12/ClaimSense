@@ -1,4 +1,3 @@
-import 'server-only';
 import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
 import { BillHead, Confidence, FactKey, FactSource, FactStatus, Verification } from '@claimsense/shared';
 

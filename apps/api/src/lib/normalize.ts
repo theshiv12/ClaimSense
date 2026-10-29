@@ -1,4 +1,3 @@
-import 'server-only';
 import { FACT_VALUE_SCHEMAS, type FactKey, type FactValue } from '@claimsense/shared';
 
 // Turns the text the model read ("Rs. 3,00,000/-", "12/03/2019") into the typed value for its key.

@@ -1,4 +1,3 @@
-import 'server-only';
 import type { ErrorCode } from '@claimsense/shared';
 
 export type LlmMimeType = 'application/pdf' | 'image/jpeg' | 'image/png';

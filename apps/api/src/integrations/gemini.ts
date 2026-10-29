@@ -1,8 +1,7 @@
-import 'server-only';
 import { GoogleGenAI } from '@google/genai';
 import { FactKey, LlmExtractionSchema, type LlmExtraction } from '@claimsense/shared';
 import { z } from 'zod';
-import { env } from './env';
+import { env } from '../core/env';
 import { LlmError, type LlmClient, type LlmDocument } from './llm';
 
 // The ONLY file that talks to Gemini (CLAUDE.md golden rule 8). Interactions API (ADR-008):

@@ -1,7 +1,6 @@
-import 'server-only';
-import type { CurrentUser } from './auth';
-import { env } from './env';
-import { User } from './models';
+import type { CurrentUserView as CurrentUser } from '@claimsense/shared';
+import { env } from '../core/env';
+import { User } from '../core/models';
 
 /** When a user's rows expire: guests after GUEST_TTL_HOURS, others after CLAIM_TTL_DAYS. */
 export const claimExpiry = async (user: CurrentUser) => {

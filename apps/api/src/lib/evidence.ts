@@ -1,11 +1,5 @@
 import { selectedFacts } from '@claimsense/rules';
-import type { Fact, RuleResult } from '@claimsense/shared';
-
-export interface EvidenceLine {
-  key: Fact['key'];
-  quote: string;
-  page: number | null;
-}
+import type { EvidenceLine, Fact, RuleResult } from '@claimsense/shared';
 
 /**
  * The document lines behind one check: only facts the engine actually used (same merge as toClaimFacts),
