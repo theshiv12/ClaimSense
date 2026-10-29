@@ -67,3 +67,15 @@ describe('Backend review fixes', () => {
     }
   });
 });
+
+describe('Backend review fixes (UI phase)', () => {
+  it('TC-AUTH-13 a signed-in user opening a sample keeps their session', async () => {
+    const token = await signUpAs();
+    const before = await currentUser();
+    const r = await startSample({ caseId: 'B' });
+    expect(r.ok).toBe(true);
+    expect(jar.get(SESSION_COOKIE)?.value).toBe(token);
+    expect((await currentUser())?.id).toBe(before?.id);
+    expect(r.ok && (await runCheck({ claimId: r.data.claimId })).ok).toBe(true);
+  });
+});

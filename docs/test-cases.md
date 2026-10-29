@@ -1,7 +1,8 @@
 # Test cases
 
-Written **before** the tests and the code, from `docs/prd.md` and `docs/rules-spec.md`,
-and approved by a human. Every automated test name starts with its ID here, so each
+Written **before** the tests and the code, from `docs/prd.md` and `docs/rules-spec.md`.
+Sections marked *approved* were approved by a human; sections marked *autopilot* are AI-written and
+**not yet human-approved**. Every automated test name starts with its ID here, so each
 requirement can be traced: FR → test case → test → commit.
 
 ## Template
@@ -236,3 +237,68 @@ cookies faked in memory. "A" and "B" are two signed-up users.
 | TC-AUTH-11 | Samples are rate-limited per IP (review fix) | no session, same IP | 21 `startSample` calls | 21st → `RATE_LIMITED` | API |
 | TC-AUTH-12 | Login and signup end the previous session (review fix) | guest session | `signup` | old session row deleted | API |
 | TC-ACT-07 | Bad input on every action (review fix) | A | each action with `null`, missing fields, a 501-char diagnosis | `VALIDATION_FAILED` | API |
+
+## Extraction: pdf-text, quote-verify, normalise, gemini, uploadAndExtract (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and hand-written fixtures in
+`apps/web/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-QV-01 | Exact quote | page text "Sum Insured (Rs.) 3,00,000" | quote with other case, extra spaces, `ﬁ` ligature | `exact` | Unit |
+| TC-QV-02 | Fuzzy quote | same | quote with one word misspelt or punctuation dropped | `fuzzy` | Unit |
+| TC-QV-03 | Invented quote | same | "Sum Insured Rs. 99,00,00,000" | `none` | Unit |
+| TC-QV-04 | Image | no text layer | any quote | `unverifiable` | Unit |
+| TC-QV-05 | Empty quote | text layer | "" | `none` | Unit |
+| TC-QV-06 | Short quotes need an exact match | text layer | 2-word quote with a typo | `none` | Unit |
+| TC-NORM-01 | Dates | `12/03/2019`, `12-03-2019`, `18 Nov 2026`, `2026-11-18`, `31/02/2026` | normalise | `2019-03-12`, `2019-03-12`, `2026-11-18`, `2026-11-18`, null | Unit |
+| TC-NORM-02 | Money in paise | `Rs. 3,00,000/-`, `₹7,000`, `2,40,000.50`, `3 lakh`, `abc` | normalise | 30000000, 700000, 24000050, 30000000, null | Unit |
+| TC-NORM-03 | Integers, booleans | `52 years`, `5 days`, `No`, `yes`, `maybe` | normalise | 52, 5, false, true, null | Unit |
+| TC-NORM-04 | Room category | `Single AC room`, `Twin sharing`, `General ward`, `ICU`, `Deluxe` | normalise | single, shared, general, icu, deluxe | Unit |
+| TC-GEM-01 | Request shape (golden rule 8) | fake Interactions client | `extract(pdf)` | system instruction says document text is untrusted data; document sent inline as base64 with its MIME type; `response_format` is the JSON schema of `LlmExtractionSchema`; `store: false`; prompt has no document text | Unit |
+| TC-GEM-02 | Fallback on 429 | primary throws 429, fallback answers | `extract` | one call each, fallback model used, parsed result | Unit |
+| TC-GEM-03 | Both models limited | 429, 429 | `extract` | `AI_QUOTA_EXCEEDED`; 500/503 → `LLM_UNAVAILABLE` | Unit |
+| TC-GEM-04 | Output is untrusted | `output_text` not JSON; JSON with an extra key | `extract` | `LLM_OUTPUT_INVALID` | Unit |
+| TC-EXT-01 | Case B end to end | Case B schedule + estimate PDFs, FakeLlm fixtures | `uploadAndExtract` ×2, `runCheck` | facts verified `exact`, values normalised; estimate 20580000 payable of 24000000 | API |
+| TC-EXT-02 | File type by magic bytes | text bytes named `x.pdf`; PNG bytes | upload | `FILE_TYPE_NOT_ALLOWED`; PNG accepted | API |
+| TC-EXT-03 | Size cap | 5 MB PDF | upload | `FILE_TOO_LARGE` | API |
+| TC-EXT-04 | 8 documents per claim | claim with 8 documents | upload | `DOCUMENT_LIMIT_REACHED` | API |
+| TC-EXT-05 | Daily AI quota per user | limit 6 used | upload | `AI_QUOTA_EXCEEDED`, FakeLlm not called | API |
+| TC-EXT-06 | Password-protected PDF | encrypted sample | upload | `PDF_PASSWORD_PROTECTED`, FakeLlm not called | API |
+| TC-EXT-07 | Gemini down | FakeLlm throws `LLM_UNAVAILABLE` | upload | `LLM_UNAVAILABLE`, no facts saved | API |
+| TC-EXT-08 | Photo | PNG + FakeLlm fact | upload | fact `unverifiable`, not usable until confirmed | API |
+| TC-EXT-09 | Bytes and names never stored or logged (golden rules 6, 9) | upload Case B schedule | scan every collection and the console | no file name, no base64 of the bytes, no quote or value in logs | API |
+| TC-EXT-10 | Ownership | no session; B's claim | upload | `AUTH_REQUIRED`; `NOT_FOUND` | API |
+| TC-INJ-01 | Prompt injection (golden rule 8) | base64-stored injection PDF; FakeLlm that obeys it | upload | the doc's facts are all "please check" (`DOCUMENT_HAS_INSTRUCTIONS` warning, verification `none`); the engine sees SI unknown; an extra `verdict` key → `LLM_OUTPUT_INVALID` | API |
+| TC-QV-07 | Quote must be on the stated page (review fix) | 2 pages; quote on page 1 | verify against page 2 | `none` | Unit |
+| TC-QV-08 | Fuzzy never swaps numbers or drops a negation (review fix) | "12/03/2026"; "is not covered" | quote "03/12/2026 …"; "is covered" | `none` | Unit |
+| TC-QV-09 | The value must be in its quote (review fix) | quote "Sum Insured (Rs.) 3,00,000" | value 990000000 / 30000000 | false / true; dates, days, room category, diagnosis likewise | Unit |
+| TC-NORM-05 | Indian spellings and strict dates (review fix) | `3 Lakhs`, `2 lacs`, `1.5 crores`, `Semi-private room`, `112/03/2019` | normalise | 30000000, 20000000, 1500000000, shared, null | Unit |
+| TC-EXT-11 | Document limit holds in parallel (review fix) | claim at 7 documents | two uploads at once | one ok, one `DOCUMENT_LIMIT_REACHED`; count 8 | API |
+| TC-EXT-12 | A real quote with a different value is not verified (review fix) | FakeLlm: quote "Sum Insured (Rs.) 3,00,000", valueText "99,00,00,000" | upload Case B schedule | fact verification `none`; engine sees SI unknown | API |
+| TC-EXT-13 | A failed model call gives the slot and quota back (review fix) | FakeLlm throws `LLM_UNAVAILABLE` | upload | documentCount unchanged; usage count unchanged | API |
+
+## UI components (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. Vitest + Testing Library (jsdom); what the user sees.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-01 | Indian ₹ format | 20580000, 24000000, 960000, 20579999, 0 paise | `formatInr` | ₹2,05,800 · ₹2,40,000 · ₹9,600 · ₹2,05,799.99 · ₹0 | Unit |
+| TC-UI-02 | PayoutBar widths | Case B: claimed 24000000, payable 20580000 | render | payable segment 85.75% wide, you-pay segment 14.25%; text "₹2,05,800 of ₹2,40,000"; labelled for screen readers | UI |
+| TC-UI-03 | PayoutBar edge cases | payable 0; claimed 0 | render | 0% / 100%; claimed 0 shows no bar and no NaN | UI |
+| TC-UI-04 | CheckRow states | one result per outcome | render | each shows an icon **and** the word Pass / Deduction / Fail / Unknown; clause id shown; deduction amount in ₹; unknown lists what is missing; never the word "approved" | UI |
+| TC-UI-05 | RoomSimulator | Case B claim, simulate stub returns the twin-sharing estimate | choose "Twin sharing", ₹4,500/day, submit | stub called with `shared`, 450000 paise; shows "₹2,17,900 of ₹2,27,500", "you pay ₹9,600", "saves ₹24,600" and "Assumes other charges stay the same" | UI |
+| TC-UI-06 | RoomSimulator errors | stub returns `{ ok: false }`; rent field empty | submit | an error message; the stub is not called with an empty rent | UI |
+| TC-UI-07 | FactRow | an unverified document fact; a verified one | render, click Confirm | "Please check" vs "Verified" with icon; quote and page shown; Confirm calls the action with claim and fact ids | UI |
+| TC-UI-08 | Waiting-period results put medical advice first (review fix) | R2, R3, R4 `fail` inside a wait | render CheckRow | the line "Medical advice comes first" is shown | UI |
+| TC-AUTH-13 | A signed-in user opening a sample keeps their session (review fix) | signed-up user | `startSample('B')` | same user, same session; the sample claim is theirs | API |
+
+## End to end (Playwright, autopilot, 29 Oct 2026)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-E2E-01 | Demo journey | fresh browser, in-memory DB | sample B → twin sharing ₹4,500 → Delete my data | ₹2,05,800 of ₹2,40,000, likely partly paid, −₹24,600, disclaimer, never "approved"; ₹2,17,900 of ₹2,27,500, you pay ₹9,600; after delete the claim URL needs a login | E2E |
+| TC-E2E-02 | Own claim, no AI | new account | new check (consent first) → add sum insured by hand → estimate | consent error keeps the form; ₹3,00,000 shown; estimate At risk with Unknown checks | E2E |
+| TC-E2E-03 | Ownership in the browser | second account | open the first account's claim URL | HTTP 404 page | E2E |
+| TC-ACT-08 | Remaining actions: bad input / no session (final review fix) | no session | `signup` with bad input; `logout` with no session; `openSample` with a bad case id | `VALIDATION_FAILED`; ok (nothing to end); redirects home without creating a guest | API |

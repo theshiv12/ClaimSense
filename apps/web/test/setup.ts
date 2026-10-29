@@ -8,7 +8,7 @@ vi.mock('next/headers', () => ({
 }));
 
 process.env.MONGODB_DB = `claimsense_test_${process.env.VITEST_POOL_ID ?? '0'}`;
-process.env.GEMINI_API_KEY ??= 'test-key-not-real';
+process.env.GEMINI_API_KEY = 'test-key-not-real'; // always: a real key in the shell must never reach a test
 
 beforeEach(() => {
   jar.clear();

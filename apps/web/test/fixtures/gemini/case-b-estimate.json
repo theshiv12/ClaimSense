@@ -1,0 +1,141 @@
+{
+  "_note": "HAND-WRITTEN in the shape of a Gemini LlmExtraction for the synthetic Case B PDFs (no live call was made by the autopilot). Re-record with scripts/record-gemini.mjs.",
+  "documentType": "hospital_estimate",
+  "facts": [
+    {
+      "key": "admission_date",
+      "head": "none",
+      "valueText": "18/11/2026",
+      "status": "found",
+      "sourceQuote": "Planned admission 18/11/2026, expected stay 5 days",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "room_days",
+      "head": "none",
+      "valueText": "5",
+      "status": "found",
+      "sourceQuote": "Planned admission 18/11/2026, expected stay 5 days",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "diagnosis",
+      "head": "none",
+      "valueText": "Osteoarthritis, right knee",
+      "status": "found",
+      "sourceQuote": "Diagnosis Osteoarthritis, right knee (first diagnosed June 2021)",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "is_accident",
+      "head": "none",
+      "valueText": "No",
+      "status": "found",
+      "sourceQuote": "Accident related No",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "room_category",
+      "head": "none",
+      "valueText": "Single AC room",
+      "status": "found",
+      "sourceQuote": "Room category Single AC room, Rs. 7,000 per day",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "room_rent_per_day",
+      "head": "none",
+      "valueText": "Rs. 7,000",
+      "status": "found",
+      "sourceQuote": "Room category Single AC room, Rs. 7,000 per day",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "room",
+      "valueText": "35,000",
+      "status": "found",
+      "sourceQuote": "Room charges (Single AC) 7,000 x 5 35,000",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "nursing",
+      "valueText": "7,500",
+      "status": "found",
+      "sourceQuote": "Nursing charges 7,500",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "surgeon",
+      "valueText": "30,000",
+      "status": "found",
+      "sourceQuote": "Surgeon fees 30,000",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "ot",
+      "valueText": "13,600",
+      "status": "found",
+      "sourceQuote": "OT charges 13,600",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "implants",
+      "valueText": "1,05,000",
+      "status": "found",
+      "sourceQuote": "Implants (knee prosthesis) 1,05,000",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "pharmacy",
+      "valueText": "18,000",
+      "status": "found",
+      "sourceQuote": "Pharmacy 18,000",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "diagnostics",
+      "valueText": "21,300",
+      "status": "found",
+      "sourceQuote": "Diagnostics 21,300",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_line_item",
+      "head": "consumables",
+      "valueText": "9,600",
+      "status": "found",
+      "sourceQuote": "Consumables (gloves, admission kit, etc.) 9,600",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "bill_total",
+      "head": "none",
+      "valueText": "2,40,000",
+      "status": "found",
+      "sourceQuote": "Total estimate 2,40,000",
+      "page": 1,
+      "confidence": "high"
+    }
+  ]
+}
