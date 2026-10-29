@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { jar } from '../../test/cookie-jar';
-import { logout, signup } from './actions/auth';
-import { openSample } from './actions/navigation';
-import { SESSION_COOKIE } from './auth';
+import { jar } from '../../../test/cookie-jar';
+import { logout, signup } from '../../../test/actions';
+import { openSample } from '../../../test/actions';
+import { SESSION_COOKIE } from '../../core/session';
 
 const redirectOf = async (p: Promise<unknown>) => {
   try {

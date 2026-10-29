@@ -1,15 +1,15 @@
 import mongoose from 'mongoose';
 import { toClaimFacts } from '@claimsense/rules';
 import { afterEach, describe, expect, it } from 'vitest';
-import { docFixture, FakeLlm, geminiFixture } from '../../test/fake-llm';
-import { signUpAs } from '../../test/users';
-import { createClaim } from './actions/claims';
-import { uploadAndExtract } from './actions/extract';
-import { LlmError, setLlmForTests } from './llm';
-import { Claim, ExtractionUsage } from './models';
-import { normalizeValue } from './normalize';
-import { valueInQuote, verifyQuote } from './quote-verify';
-import { listFacts } from './scope';
+import { docFixture, FakeLlm, geminiFixture } from '../../../test/fake-llm';
+import { signUpAs } from '../../../test/users';
+import { createClaim } from '../../../test/actions';
+import { uploadAndExtract } from '../../../test/actions';
+import { LlmError, setLlmForTests } from '../../integrations/llm';
+import { Claim, ExtractionUsage } from '../../core/models';
+import { normalizeValue } from '../../lib/normalize';
+import { valueInQuote, verifyQuote } from '../../lib/quote-verify';
+import { listFacts } from '../../core/scope';
 
 afterEach(() => setLlmForTests(null));
 

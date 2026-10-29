@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { signup } from '@/server/actions/auth';
-import { SESSION_COOKIE } from '@/server/auth';
+import { SESSION_COOKIE } from '../src/core/session';
+import { signup } from './actions';
 import { jar } from './cookie-jar';
 
 export const PASSWORD = 'correct-horse-9';

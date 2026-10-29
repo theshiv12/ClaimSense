@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { startSample } from './actions/auth';
-import { currentUser } from './auth';
-import { claimSummaries, estimateView } from './views';
+import { startSample } from '../../../test/actions';
+import { currentUser } from '../../../test/actions';
+import { claimSummaries } from '../claims/claims.service';
+import { estimateView } from './estimate.service';
 
 describe('claimSummaries', () => {
   it('TC-UI-14 a sample whose estimate was shown is listed with its verdict and amounts', async () => {

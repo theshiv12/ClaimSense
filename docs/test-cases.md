@@ -345,3 +345,36 @@ golden rules (twin-sharing ₹2,30,400, a free-text chat, "read by Claude", 10 M
 | TC-UI-17 | Consent switches are announced as switches; the required one is marked required | setup form | render | three `role="switch"`; the analysis switch has `aria-required="true"` | Component |
 | TC-ENV-09 | An `@` in the query string is not a password | `mongodb://localhost:27017/db?appName=a@b` | `mongoUriProblem` | `null` | Unit |
 | TC-GEM-01b | (strengthens TC-GEM-01/05, needs human sign-off) the schema sent equals Zod's JSON schema with only bound keywords removed, built independently in the test; key/head/status/confidence enums and every property name survive | `LlmExtractionSchema` | build request | equals the test-built expected schema; enums present; property names equal the Zod shape keys | Unit |
+
+## Express API migration (*autopilot*, `feat/express-api`, ADR-009)
+
+The server actions became REST endpoints in `apps/api` (docs/api.md). Every server test moved with its ID and
+its assertions: it calls the endpoints over HTTP through `apps/api/test/actions.ts`, which keeps the old action
+names and the same `ActionResult`. Where each one lives now:
+
+| IDs | Was | Now |
+|---|---|---|
+| TC-AUTH-* | `apps/web/src/server/auth.test.ts` | `apps/api/src/modules/auth/auth.test.ts` |
+| TC-ACT-08 | `server/navigation.test.ts` | `modules/auth/navigation.test.ts` |
+| TC-ACT-01..07 | `server/actions.test.ts` | `modules/claims/actions.test.ts` |
+| TC-OWN-* | `server/ownership.test.ts` | `modules/claims/ownership.test.ts` |
+| review fixes | `server/review-fixes.test.ts` | `modules/claims/review-fixes.test.ts` |
+| TC-EXT-* | `server/extract.test.ts`, `extract-review.test.ts` | `modules/extraction/` |
+| TC-UI-14 | `server/views.test.ts` | `modules/estimate/views.test.ts` |
+| TC-GEM-* | `server/gemini.test.ts` | `integrations/gemini.test.ts` |
+| TC-NORM-*, TC-QV-*, TC-ENV-* | `server/normalize`, `quote-verify`, `lib/mongo-uri` tests | `apps/api/src/lib/` |
+
+New, for the HTTP boundary:
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-API-01 | Health check | the app | GET `/healthz` | 200 `{ ok: true }`, no cookie | API |
+| TC-API-02 | Error codes map to HTTP statuses | no session; bad input; a foreign claim id; a taken email | POST `/api/claims`; POST `/api/auth/signup` bad body; GET `/api/claims/<other>`; signup twice | 401 `AUTH_REQUIRED`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND`; 409 `EMAIL_TAKEN`; body is always the `ActionResult` | API |
+| TC-API-03 | Writes from another site are refused (CSRF; replaces Next's server-action origin check) | a signed-in user | POST `/api/claims` with `Origin: https://evil.example` | 403 `FORBIDDEN`, nothing created | API |
+| TC-API-04 | Reads never create sessions (CLAUDE.md) | no cookie | GET `/api/auth/me`, `/api/plans`, `/api/samples/B/preview`, `/healthz` | no `Set-Cookie` on any of them | API |
+| TC-API-05 | The session cookie keeps its flags behind the proxy | signup | POST `/api/auth/signup` | `Set-Cookie: cs_session=…; HttpOnly; Secure; SameSite=Lax; Path=/` | API |
+| TC-API-06 | Request logs never contain bodies, queries or health data (golden rule 6) | a fact with a diagnosis | POST `/api/claims/:id/facts` with `{ value: 'Osteoarthritis' }` and `?q=knee` | the log line has method, route pattern, status and ms only; no "Osteoarthritis", no "knee", no claim id | API |
+| TC-API-07 | Over-size uploads are refused before reading | a 4 MB + 1 byte file | POST `/api/claims/:id/documents` | 413 `FILE_TOO_LARGE` | API |
+| TC-API-08 | Unknown routes and malformed JSON | the app | GET `/api/nope`; POST `/api/claims` with `{bad json` | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED` | API |
+| TC-API-09 | Plans list for the setup form | the app | GET `/api/plans` | `[{ planId: 'star-fho', name: '<planName> (<wordingVersion>)' }]` from the plan config | API |
+| TC-API-10 | Landing sample preview is engine output | the app | GET `/api/samples/B/preview` | Case B: payable 20,580,000, claimed 24,000,000, R6 deduction 2,460,000 (docs/rules-spec.md) | API |

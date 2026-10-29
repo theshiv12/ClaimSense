@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import type { LlmClient, LlmDocument } from '@/server/llm';
+import type { LlmClient, LlmDocument } from '../src/integrations/llm';
 
 /** Recorded (or hand-written) Gemini output from test/fixtures/gemini, minus its `_note`. */
 export const geminiFixture = (name: string): unknown => {

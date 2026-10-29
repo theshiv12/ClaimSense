@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { jar } from '../../test/cookie-jar';
-import { actAs, signUpAs } from '../../test/users';
-import { createClaim, deleteClaim, deleteMe } from './actions/claims';
-import { runCheck, simulateRoom } from './actions/estimate';
-import { addFact, confirmFact, editFact } from './actions/facts';
-import { SESSION_COOKIE } from './auth';
-import { Claim, EstimateModel, ExtractionUsage, FactModel, Session, User } from './models';
-import { findClaim } from './scope';
+import { jar } from '../../../test/cookie-jar';
+import { actAs, signUpAs } from '../../../test/users';
+import { createClaim, deleteClaim, deleteMe } from '../../../test/actions';
+import { runCheck, simulateRoom } from '../../../test/actions';
+import { addFact, confirmFact, editFact } from '../../../test/actions';
+import { SESSION_COOKIE } from '../../core/session';
+import { Claim, EstimateModel, ExtractionUsage, FactModel, Session, User } from '../../core/models';
+import { findClaim } from '../../core/scope';
 
 const newClaim = async () => {
   const r = await createClaim({

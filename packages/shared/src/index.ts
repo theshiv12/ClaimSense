@@ -9,3 +9,4 @@ export * from './fact.schema';
 export * from './llm-extraction.schema';
 export * from './remedies.schema';
 export * from './actions.schema';
+export * from './api-views';

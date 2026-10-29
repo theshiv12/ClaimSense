@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { signUpAs } from '../../test/users';
-import { startSample } from './actions/auth';
-import { createClaim, deleteClaim } from './actions/claims';
-import { runCheck, simulateRoom } from './actions/estimate';
-import { addFact, confirmFact, editFact } from './actions/facts';
-import { Claim, EstimateModel, FactModel, Session, User } from './models';
+import { signUpAs } from '../../../test/users';
+import { startSample } from '../../../test/actions';
+import { createClaim, deleteClaim } from '../../../test/actions';
+import { runCheck, simulateRoom } from '../../../test/actions';
+import { addFact, confirmFact, editFact } from '../../../test/actions';
+import { Claim, EstimateModel, FactModel, Session, User } from '../../core/models';
 
 const input = (patch: Record<string, unknown> = {}) => ({
   planId: 'star-fho',

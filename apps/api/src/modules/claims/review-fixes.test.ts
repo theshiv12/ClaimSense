@@ -1,13 +1,14 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { jar } from '../../test/cookie-jar';
-import { actAs, newEmail, PASSWORD, signUpAs } from '../../test/users';
-import { login, signup, startSample } from './actions/auth';
-import { createClaim, deleteClaim } from './actions/claims';
-import { runCheck, simulateRoom } from './actions/estimate';
-import { addFact, confirmFact, editFact } from './actions/facts';
-import { currentUser, SESSION_COOKIE } from './auth';
-import { Session, User } from './models';
+import { jar } from '../../../test/cookie-jar';
+import { actAs, newEmail, PASSWORD, signUpAs } from '../../../test/users';
+import { login, signup, startSample } from '../../../test/actions';
+import { createClaim, deleteClaim } from '../../../test/actions';
+import { runCheck, simulateRoom } from '../../../test/actions';
+import { addFact, confirmFact, editFact } from '../../../test/actions';
+import { currentUser } from '../../../test/actions';
+import { SESSION_COOKIE } from '../../core/session';
+import { Session, User } from '../../core/models';
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 

@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { docFixture, FakeLlm, geminiFixture } from '../../test/fake-llm';
-import { actAs, signUpAs } from '../../test/users';
-import { createClaim } from './actions/claims';
-import { runCheck } from './actions/estimate';
-import { uploadAndExtract } from './actions/extract';
-import { listFacts } from './scope';
+import { docFixture, FakeLlm, geminiFixture } from '../../../test/fake-llm';
+import { actAs, signUpAs } from '../../../test/users';
+import { createClaim } from '../../../test/actions';
+import { runCheck } from '../../../test/actions';
+import { uploadAndExtract } from '../../../test/actions';
+import { listFacts } from '../../core/scope';
 import { toClaimFacts } from '@claimsense/rules';
-import { LlmError, setLlmForTests } from './llm';
-import { Claim, ExtractionUsage } from './models';
+import { LlmError, setLlmForTests } from '../../integrations/llm';
+import { Claim, ExtractionUsage } from '../../core/models';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 const form = (claimId: string, bytes: Uint8Array, name = 'caseB-schedule-SAMPLE.pdf', type = 'application/pdf') => {
