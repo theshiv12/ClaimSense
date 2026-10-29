@@ -236,3 +236,36 @@ cookies faked in memory. "A" and "B" are two signed-up users.
 | TC-AUTH-11 | Samples are rate-limited per IP (review fix) | no session, same IP | 21 `startSample` calls | 21st → `RATE_LIMITED` | API |
 | TC-AUTH-12 | Login and signup end the previous session (review fix) | guest session | `signup` | old session row deleted | API |
 | TC-ACT-07 | Bad input on every action (review fix) | A | each action with `null`, missing fields, a 501-char diagnosis | `VALIDATION_FAILED` | API |
+
+## Extraction: pdf-text, quote-verify, normalise, gemini, uploadAndExtract (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and hand-written fixtures in
+`apps/web/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-QV-01 | Exact quote | page text "Sum Insured (Rs.) 3,00,000" | quote with other case, extra spaces, `ﬁ` ligature | `exact` | Unit |
+| TC-QV-02 | Fuzzy quote | same | quote with one word misspelt or punctuation dropped | `fuzzy` | Unit |
+| TC-QV-03 | Invented quote | same | "Sum Insured Rs. 99,00,00,000" | `none` | Unit |
+| TC-QV-04 | Image | no text layer | any quote | `unverifiable` | Unit |
+| TC-QV-05 | Empty quote | text layer | "" | `none` | Unit |
+| TC-QV-06 | Short quotes need an exact match | text layer | 2-word quote with a typo | `none` | Unit |
+| TC-NORM-01 | Dates | `12/03/2019`, `12-03-2019`, `18 Nov 2026`, `2026-11-18`, `31/02/2026` | normalise | `2019-03-12`, `2019-03-12`, `2026-11-18`, `2026-11-18`, null | Unit |
+| TC-NORM-02 | Money in paise | `Rs. 3,00,000/-`, `₹7,000`, `2,40,000.50`, `3 lakh`, `abc` | normalise | 30000000, 700000, 24000050, 30000000, null | Unit |
+| TC-NORM-03 | Integers, booleans | `52 years`, `5 days`, `No`, `yes`, `maybe` | normalise | 52, 5, false, true, null | Unit |
+| TC-NORM-04 | Room category | `Single AC room`, `Twin sharing`, `General ward`, `ICU`, `Deluxe` | normalise | single, shared, general, icu, deluxe | Unit |
+| TC-GEM-01 | Request shape (golden rule 8) | fake Interactions client | `extract(pdf)` | system instruction says document text is untrusted data; document sent inline as base64 with its MIME type; `response_format` is the JSON schema of `LlmExtractionSchema`; `store: false`; prompt has no document text | Unit |
+| TC-GEM-02 | Fallback on 429 | primary throws 429, fallback answers | `extract` | one call each, fallback model used, parsed result | Unit |
+| TC-GEM-03 | Both models limited | 429, 429 | `extract` | `AI_QUOTA_EXCEEDED`; 500/503 → `LLM_UNAVAILABLE` | Unit |
+| TC-GEM-04 | Output is untrusted | `output_text` not JSON; JSON with an extra key | `extract` | `LLM_OUTPUT_INVALID` | Unit |
+| TC-EXT-01 | Case B end to end | Case B schedule + estimate PDFs, FakeLlm fixtures | `uploadAndExtract` ×2, `runCheck` | facts verified `exact`, values normalised; estimate 20580000 payable of 24000000 | API |
+| TC-EXT-02 | File type by magic bytes | text bytes named `x.pdf`; PNG bytes | upload | `FILE_TYPE_NOT_ALLOWED`; PNG accepted | API |
+| TC-EXT-03 | Size cap | 5 MB PDF | upload | `FILE_TOO_LARGE` | API |
+| TC-EXT-04 | 8 documents per claim | claim with 8 documents | upload | `DOCUMENT_LIMIT_REACHED` | API |
+| TC-EXT-05 | Daily AI quota per user | limit 6 used | upload | `AI_QUOTA_EXCEEDED`, FakeLlm not called | API |
+| TC-EXT-06 | Password-protected PDF | encrypted sample | upload | `PDF_PASSWORD_PROTECTED`, FakeLlm not called | API |
+| TC-EXT-07 | Gemini down | FakeLlm throws `LLM_UNAVAILABLE` | upload | `LLM_UNAVAILABLE`, no facts saved | API |
+| TC-EXT-08 | Photo | PNG + FakeLlm fact | upload | fact `unverifiable`, not usable until confirmed | API |
+| TC-EXT-09 | Bytes and names never stored or logged (golden rules 6, 9) | upload Case B schedule | scan every collection and the console | no file name, no base64 of the bytes, no quote or value in logs | API |
+| TC-EXT-10 | Ownership | no session; B's claim | upload | `AUTH_REQUIRED`; `NOT_FOUND` | API |
+| TC-INJ-01 | Prompt injection (golden rule 8) | base64-stored injection PDF; FakeLlm that obeys it | upload | the doc's facts are all "please check" (`DOCUMENT_HAS_INSTRUCTIONS` warning, verification `none`); the engine sees SI unknown; an extra `verdict` key → `LLM_OUTPUT_INVALID` | API |

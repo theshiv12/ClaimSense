@@ -1,0 +1,78 @@
+{
+  "_note": "HAND-WRITTEN in the shape of a Gemini LlmExtraction for the synthetic Case B PDFs (no live call was made by the autopilot). Re-record with scripts/record-gemini.mjs.",
+  "documentType": "policy_schedule",
+  "facts": [
+    {
+      "key": "policy_start_date",
+      "head": "none",
+      "valueText": "12/03/2026",
+      "status": "found",
+      "sourceQuote": "Policy Period From 12/03/2026 To 11/03/2027",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "policy_end_date",
+      "head": "none",
+      "valueText": "11/03/2027",
+      "status": "found",
+      "sourceQuote": "Policy Period From 12/03/2026 To 11/03/2027",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "first_inception_date",
+      "head": "none",
+      "valueText": "12/03/2019",
+      "status": "found",
+      "sourceQuote": "Date of first inception 12/03/2019",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "sum_insured",
+      "head": "none",
+      "valueText": "3,00,000",
+      "status": "found",
+      "sourceQuote": "Sum Insured (Rs.) 3,00,000",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "sum_insured_used",
+      "head": "none",
+      "valueText": "0",
+      "status": "found",
+      "sourceQuote": "Sum Insured utilised this year (Rs.) 0",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "age_at_entry",
+      "head": "none",
+      "valueText": "52",
+      "status": "found",
+      "sourceQuote": "Asha Sample Self 52 None",
+      "page": 1,
+      "confidence": "high"
+    },
+    {
+      "key": "ped_exists",
+      "head": "none",
+      "valueText": "No",
+      "status": "found",
+      "sourceQuote": "Asha Sample Self 52 None",
+      "page": 1,
+      "confidence": "medium"
+    },
+    {
+      "key": "plan_uin",
+      "head": "none",
+      "valueText": "",
+      "status": "not_found",
+      "sourceQuote": "",
+      "page": 0,
+      "confidence": "high"
+    }
+  ]
+}
