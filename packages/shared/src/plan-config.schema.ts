@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BillHead } from './fact-key';
+import { BillHead, RoomCategory } from './fact-key';
 import { BpsSchema, IsoDateSchema, PaiseSchema } from './primitives';
 
 export const ClauseRefSchema = z.object({
@@ -13,6 +13,16 @@ export const ClauseRefSchema = z.object({
 export type ClauseRef = z.infer<typeof ClauseRefSchema>;
 
 const Count = z.number().int().nonnegative();
+
+/** One row of a room-rent table keyed by sum insured: a rupee cap per day, or a room category. */
+export const RoomRentTierSchema = z.object({
+  minSumInsuredPaise: PaiseSchema,
+  cap: z.discriminatedUnion('type', [
+    z.object({ type: z.literal('per_day'), capPaise: PaiseSchema }),
+    z.object({ type: z.literal('category'), maxCategory: RoomCategory }),
+  ]),
+});
+export type RoomRentTier = z.infer<typeof RoomRentTierSchema>;
 
 export const PlanConfigSchema = z.object({
   planId: z.string(),
@@ -52,6 +62,12 @@ export const PlanConfigSchema = z.object({
       icuCapPaise: PaiseSchema.nullable(),
       clause: ClauseRefSchema,
     }),
+    z.object({
+      kind: z.literal('by_sum_insured'),
+      tiers: z.array(RoomRentTierSchema).min(1),
+      icuCapPaise: PaiseSchema.nullable(),
+      clause: ClauseRefSchema,
+    }),
   ]),
   proportionateDeduction: z.object({
     applies: z.boolean(),
@@ -67,3 +83,14 @@ export const PlanConfigSchema = z.object({
   sumInsured: z.object({ optionsPaise: z.array(PaiseSchema), clause: ClauseRefSchema }),
 });
 export type PlanConfig = z.infer<typeof PlanConfigSchema>;
+
+const hasReviewFlag = (value: unknown): boolean =>
+  Array.isArray(value)
+    ? value.some(hasReviewFlag)
+    : typeof value === 'object' && value !== null &&
+      Object.entries(value).some(([k, v]) => (k === 'needsReview' && v === true) || hasReviewFlag(v));
+
+/** What the app loads from config/plans: the strict schema, and no clause still flagged for review. */
+export const LoadablePlanConfigSchema = PlanConfigSchema.refine((plan) => !hasReviewFlag(plan), {
+  message: 'A loaded plan must not have needsReview set on any clause',
+});

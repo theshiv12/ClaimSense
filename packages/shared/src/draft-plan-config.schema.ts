@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { BillHead } from './fact-key';
-import { ClauseRefSchema, PlanConfigSchema } from './plan-config.schema';
+import { ClauseRefSchema, PlanConfigSchema, RoomRentTierSchema } from './plan-config.schema';
 import { BpsSchema, PaiseSchema } from './primitives';
 
 // Drafts in config/plans/drafts/ only. The loader uses the strict PlanConfigSchema.
@@ -76,6 +76,12 @@ export const DraftPlanConfigSchema = PlanConfigSchema.extend({
     z.object({
       kind: z.literal('fixed_per_day'),
       capPaise: PaiseSchema,
+      icuCapPaise: PaiseSchema.nullable(),
+      clause: DraftClauseRefSchema,
+    }),
+    z.object({
+      kind: z.literal('by_sum_insured'),
+      tiers: z.array(RoomRentTierSchema).min(1),
       icuCapPaise: PaiseSchema.nullable(),
       clause: DraftClauseRefSchema,
     }),

@@ -27,7 +27,7 @@ describe('LlmExtraction', () => {
     rejects(LlmExtractionSchema, extraction([item({ key: 'favourite_colour' })]));
     rejects(LlmExtractionSchema, { facts: [item()] });
 
-    const json = z.toJSONSchema(LlmExtractionSchema) as {
+    const json = z.toJSONSchema(LlmExtractionSchema) as unknown as {
       required: string[];
       properties: { facts: { items: { required: string[]; properties: Record<string, unknown> } } };
     };

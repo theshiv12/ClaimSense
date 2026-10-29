@@ -5,3 +5,6 @@ export * from './draft-plan-config.schema';
 export * from './claim-facts.schema';
 export * from './rule-result.schema';
 export * from './errors';
+export * from './fact.schema';
+export * from './llm-extraction.schema';
+export * from './remedies.schema';
