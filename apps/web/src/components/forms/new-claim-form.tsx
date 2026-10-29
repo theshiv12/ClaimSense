@@ -17,11 +17,13 @@ const RELATIONS = [['self', 'Me'], ['parent', 'Parent'], ['spouse', 'Spouse'], [
 function Toggle({ name, defaultChecked, title, children }: { name: string; defaultChecked?: boolean; title: string; children: React.ReactNode }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 text-sm">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer sr-only" />
-      <span
-        aria-hidden
-        className="relative mt-0.5 h-6 w-10 shrink-0 rounded-full bg-border transition after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:bg-teal peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal"
-      />
+      <span className="relative mt-0.5 h-6 w-10 shrink-0">
+        <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer absolute inset-0 z-10 cursor-pointer opacity-0" />
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-border transition after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:bg-teal peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal"
+        />
+      </span>
       <span>
         <strong className="block text-ink">{title}</strong>
         <span className="text-muted">{children}</span>
