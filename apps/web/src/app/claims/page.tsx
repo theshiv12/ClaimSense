@@ -1,4 +1,3 @@
-import type { Verdict } from '@claimsense/shared';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ClaimRow } from '@/components/claim/claim-row';
@@ -25,7 +24,7 @@ export default async function ClaimsPage({ searchParams }: PageProps<'/claims'>)
   const claims = await claimSummaries(user.id);
   const stats = claimStats(claims);
   const shown = filterClaims(claims, status, q);
-  const count = (f: ClaimFilter) => (f === 'all' ? stats.checks : stats.byVerdict[f as Verdict]);
+  const count = (f: ClaimFilter) => (f === 'all' ? stats.checks : stats.byVerdict[f]);
   const href = (f: ClaimFilter) => `/claims?${new URLSearchParams({ ...(f === 'all' ? {} : { status: f }), ...(q ? { q } : {}) }).toString()}`;
   const tiles = [
     ['Checks', String(stats.checks), 'kept for 7 days each'],
