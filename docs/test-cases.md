@@ -204,3 +204,30 @@ Written by the autopilot run; not yet human-approved. Plan T variants as noted; 
 | TC-TCF-09 | Same head in two documents is not added twice | `implants` from doc-1 and doc-2, no user fact | n/a | no line items (bill unknown) | Usable facts (review fix) |
 | TC-ENG-07 | An unitemised amount makes R6 unknown | Case D with totalPaise 8100000 | T | R6 unknown, likely_partial | Engine decision 10 (review fix) |
 | TC-R6-23 | ICU line with no room category | category null, `icu` line | T | unknown, missing `room_category` | Engine decision 11 (review fix) |
+
+## Backend: data, auth, ownership, server actions (autopilot, 29 Oct 2026)
+
+Written by the autopilot run; not yet human-approved. mongodb-memory-server, no network, `next/headers`
+cookies faked in memory. "A" and "B" are two signed-up users.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SH-18 | Form rules are shared (apps/web CLAUDE.md) | `SignupInputSchema` | Parse | `A@Example.com ` → `a@example.com`; password without a number, under 8 chars, or `adultAttested: false` rejected | Unit |
+| TC-AUTH-01 | Sign up | new email | `signup` | ok; user stored with an argon2id hash (`$argon2id$`), never the password; session cookie set httpOnly, Secure, SameSite=Lax | API |
+| TC-AUTH-02 | Email is unique | A exists | `signup` with `A@…` in another case | `EMAIL_TAKEN` | API |
+| TC-AUTH-03 | Login | A | `login` right / wrong password / unknown email | ok + cookie / `AUTH_INVALID` / `AUTH_INVALID` (same code) | API |
+| TC-AUTH-04 | Rate limit | A | 5 wrong passwords, then the right one | 6th → `RATE_LIMITED` | API |
+| TC-AUTH-05 | Session token is never stored | A logged in | read the Session row | `tokenHash` = SHA-256 of the cookie value; the cookie value is not in the database | API |
+| TC-AUTH-06 | Logout | A logged in | `logout` | cookie cleared, session row deleted, `currentUser()` null | API |
+| TC-AUTH-07 | Guest sample | no session | `startSample('B')` | guest session; claim with Case B facts; `runCheck` → 20580000 payable | API |
+| TC-AUTH-08 | Expired session | session `expiresAt` in the past | `currentUser()` | null | API |
+| TC-OWN-01 | Every action needs a session | no cookie | each claim action | `AUTH_REQUIRED` | API |
+| TC-OWN-02 | Another user's claim is not found | B's claim | A calls each claim action with B's id | `NOT_FOUND`; B's data unchanged | API |
+| TC-OWN-03 | Malformed id is not found | A | `runCheck('not-an-id')`, `findClaim(…, '../x')` | `NOT_FOUND` / null | API |
+| TC-OWN-04 | Delete my data | A with 2 claims, facts, estimates; B with 1 | A `deleteMe` | every A row (user, sessions, claims, facts, estimates) gone; B untouched; cookie cleared | API |
+| TC-ACT-01 | Create a claim | A | `createClaim` with consent, admission date, room | claim id; user-stated facts for admission date and room | API |
+| TC-ACT-02 | Consent is required | A | `createClaim` with `consent.analysis: false`; unknown plan | `VALIDATION_FAILED`; `PLAN_NOT_FOUND` | API |
+| TC-ACT-03 | Confirm, edit, add facts | A's claim with an unverified fact | `confirmFact`; `editFact` with a bad value; `editFact`; `addFact` | confirmed; `VALIDATION_FAILED`; source `user-corrected`; new `user-stated` fact | API |
+| TC-ACT-04 | Run check and simulate | A's Case B claim | `runCheck`, `simulateRoom(shared, 450000)` | saved estimate 20580000; scenario 21790000 not saved | API |
+| TC-ACT-05 | Delete a claim | A's claim | `deleteClaim` | claim, facts, estimates gone; other claims stay | API |
+| TC-ACT-06 | TTL indexes | models | read indexes | Session, Claim, Fact, Estimate (and guest User) have `expiresAt` with `expireAfterSeconds: 0` | API |
