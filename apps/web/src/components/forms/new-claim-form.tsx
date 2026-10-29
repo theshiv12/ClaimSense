@@ -42,7 +42,11 @@ export function NewClaimForm({ plans }: { plans: { planId: string; name: string 
   };
 
   return (
-    <form action={(f) => void submit(f)} className="space-y-5" noValidate>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit(new FormData(e.currentTarget));
+      }} className="space-y-5" noValidate>
       <Field id={`${id}-plan`} label="Your policy">
         <select id={`${id}-plan`} name="planId" className={inputClass}>
           {plans.map((p) => (

@@ -34,7 +34,11 @@ export function AuthForm({ mode, next }: { mode: 'signup' | 'login'; next: strin
   };
 
   return (
-    <form action={(f) => void submit(f)} className="space-y-4" noValidate>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit(new FormData(e.currentTarget));
+      }} className="space-y-4" noValidate>
       {mode === 'signup' ? (
         <Field id={`${id}-name`} label="Your name (optional)">
           <input id={`${id}-name`} name="displayName" className={inputClass} autoComplete="name" />

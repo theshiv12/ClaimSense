@@ -2,7 +2,7 @@
 import type { ActionResult, Estimate, RoomCategory } from '@claimsense/shared';
 import { useId, useState } from 'react';
 import { formatInr, rupeesToPaise } from '@/lib/format';
-import { ROOM_LABELS } from '@/lib/labels';
+import { ERROR_MESSAGES, ROOM_LABELS } from '@/lib/labels';
 import { Button } from '../ui/button';
 import { ErrorText, Field, inputClass } from '../ui/field';
 
@@ -30,7 +30,7 @@ export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { 
     const r = await simulate({ claimId, category, rentPerDayPaise: paise });
     setBusy(false);
     if (r.ok) setResult(r.data.estimate);
-    else setError('We could not run this scenario. Please try again.');
+    else setError(`We could not run this scenario. ${ERROR_MESSAGES[r.code]}`);
   };
 
   const saving = result ? currentOutOfPocketPaise - result.outOfPocketPaise : 0;

@@ -96,20 +96,24 @@ export function FactsBoard({ claimId, initial, actions }: Props) {
         <h2 className="text-lg font-semibold text-ink">1. Add your documents</h2>
         <p className="mt-1 text-sm text-muted">Policy schedule and the hospital’s estimate. PDF, JPEG or PNG, up to 4 MB each, 8 per check.</p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <label htmlFor={`${id}-file`} className={buttonClass('primary', busy ? 'opacity-50' : 'cursor-pointer')}>
-            {busy ? 'Reading…' : 'Upload a document'}
-          </label>
           <input
             id={`${id}-file`}
             type="file"
             accept="application/pdf,image/jpeg,image/png"
-            className="sr-only"
+            className="peer sr-only"
             disabled={busy}
             onChange={(e) => {
               void upload(e.target.files?.[0]);
               e.target.value = '';
             }}
           />
+          <label
+            htmlFor={`${id}-file`}
+            aria-disabled={busy}
+            className={buttonClass('primary', `peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal ${busy ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`)}
+          >
+            {busy ? 'Reading…' : 'Upload a document'}
+          </label>
           <Button variant="secondary" onClick={() => setManual((m) => !m)}>
             Enter facts yourself
           </Button>

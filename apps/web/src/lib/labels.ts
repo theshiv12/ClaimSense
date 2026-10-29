@@ -71,8 +71,13 @@ const p = (r: RuleResult, k: string) => r.params[k];
 const date = (v: unknown) => (typeof v === 'string' ? formatDate(v) : '');
 const money = (v: unknown) => (typeof v === 'number' ? formatInr(v) : '');
 
+const MEDICAL_FIRST = ' Medical advice comes first: never delay treatment your doctor says you need because of cover.';
+const WAITING = new Set(['R2_WITHIN_INITIAL_WAIT', 'R3_WITHIN_WAIT', 'R4_WITHIN_PED_WAIT']);
+
 /** One plain-English sentence per reason code; the numbers come from the engine's params. */
-export const explain = (r: RuleResult): string => {
+export const explain = (r: RuleResult): string => reason(r) + (WAITING.has(r.reasonCode) ? MEDICAL_FIRST : '');
+
+const reason = (r: RuleResult): string => {
   if (r.outcome === 'unknown') return `We need: ${r.missingFacts.map((k) => FACT_LABELS[k]).join(', ')}.`;
   switch (r.reasonCode) {
     case 'R1_POLICY_ACTIVE': return `Admission on ${date(p(r, 'admissionDate'))} is inside the policy period.`;

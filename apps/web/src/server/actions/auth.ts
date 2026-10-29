@@ -4,6 +4,7 @@ import { LoginInputSchema, SignupInputSchema, StartSampleInputSchema } from '@cl
 import mongoose, { type Types } from 'mongoose';
 import { z } from 'zod';
 import { fail, publicAction } from '../action';
+import { env } from '../env';
 import {
   currentUser, endSession, guestTtlMs, hashPassword, sessionTtlMs, startSession, takeLoginAttempt, takeSampleStart,
   verifyAgainstDummy, verifyPassword,
@@ -52,15 +53,15 @@ const startSampleAction = publicAction('startSample', StartSampleInputSchema, as
   const existing = await currentUser();
   let userId: Types.ObjectId;
   let expiresAt: Date;
-  if (existing?.isGuest) {
-    // Reuse the guest: one guest user per browser, and its rows keep the guest's expiry.
+  if (existing) {
+    // Reuse whoever is signed in: one guest per browser, and a signed-in user is never logged out.
     userId = new mongoose.Types.ObjectId(existing.id);
-    expiresAt = (await User.findById(userId, { expiresAt: 1 }).lean())?.expiresAt ?? new Date(Date.now() + guestTtlMs());
+    const doc = await User.findById(userId, { expiresAt: 1 }).lean();
+    expiresAt = doc?.expiresAt ?? new Date(Date.now() + env().CLAIM_TTL_DAYS * 24 * 60 * 60 * 1000);
   } else {
     if (!(await takeSampleStart())) return fail('RATE_LIMITED');
     expiresAt = new Date(Date.now() + guestTtlMs());
     userId = (await User.create({ isGuest: true, adultAttested: false, expiresAt }))._id;
-    await endSession();
     await startSession(userId, guestTtlMs());
   }
   const claim = await Claim.create({

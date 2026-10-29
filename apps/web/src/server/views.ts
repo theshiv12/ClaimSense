@@ -48,7 +48,8 @@ export const claimSummaries = async (userId: string): Promise<ClaimSummary[]> =>
     claims.map(async (c) => {
       const e = await latestEstimate(userId, String(c._id));
       const parsed = e ? EstimateSchema.safeParse(e.estimate) : null;
-      const est = parsed?.success ? parsed.data : null;
+      // An estimate for older facts is out of date: show the claim as not checked yet.
+      const est = parsed?.success && parsed.data.factsVersion === c.factsVersion ? parsed.data : null;
       return {
         id: String(c._id),
         treatment: c.subject?.treatment ?? '',

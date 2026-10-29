@@ -1,3 +1,4 @@
+import { SampleButton } from '@/components/forms/sample-button';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -8,7 +9,8 @@ const SAMPLES = [
   ['D', 'Appendicitis, room within the limit', 'Likely paid in full'],
 ] as const;
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<'/'>) {
+  const busy = (await searchParams).sample === 'busy';
   return (
     <main className="mx-auto max-w-4xl space-y-10 px-4 py-14">
       <section className="space-y-4">
@@ -18,9 +20,10 @@ export default function Home() {
           policy clause and the line in your own document for every reason, and what you can do about it.
         </p>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href="/sample/B" prefetch={false}>See a sample (knee replacement)</ButtonLink>
+          <SampleButton caseId="B">See a sample (knee replacement)</SampleButton>
           <ButtonLink href="/claims/new" variant="secondary">Check my policy</ButtonLink>
         </div>
+        {busy ? <p role="alert" className="rounded-lg bg-warn-bg px-3 py-2 text-sm text-warn-fg">Too many samples were opened from this network. Please try again in an hour.</p> : null}
         <p className="text-xs text-muted">Supports Star Family Health Optima (wording V.19). Samples use made-up documents; no AI call is made.</p>
       </section>
 
@@ -41,11 +44,12 @@ export default function Home() {
         <h2 className="text-lg font-semibold text-ink">Try a sample</h2>
         <ul className="grid gap-3 sm:grid-cols-2">
           {SAMPLES.map(([id, story, result]) => (
-            <li key={id}>
-              <a href={`/sample/${id}`} className="block rounded-xl border border-border bg-white p-4 hover:border-teal">
+            <li key={id} className="space-y-3 rounded-xl border border-border bg-white p-4">
+              <div>
                 <p className="text-sm font-semibold text-ink">Sample {id}: {story}</p>
                 <p className="text-xs text-muted">{result}</p>
-              </a>
+              </div>
+              <SampleButton caseId={id} variant="secondary">Open sample {id}</SampleButton>
             </li>
           ))}
         </ul>

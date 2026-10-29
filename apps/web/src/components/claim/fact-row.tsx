@@ -55,7 +55,7 @@ export function FactRow({ claimId, fact: initial, actions, onChange }: { claimId
               Confirm
             </Button>
           ) : null}
-          <Button variant="ghost" aria-label={`Edit ${label}`} onClick={() => setEditing((e) => !e)}>
+          <Button variant="ghost" aria-label={`Edit ${label}`} aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
             Edit
           </Button>
         </div>

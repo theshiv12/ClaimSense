@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { ClaimRow } from '@/components/claim/claim-row';
 import { DeleteMyDataButton } from '@/components/claim/delete-buttons';
+import { Disclaimer } from '@/components/claim/disclaimer';
 import { ButtonLink } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { currentUser } from '@/server/auth';
@@ -16,6 +17,7 @@ export default async function ClaimsPage() {
         <h1 className="text-2xl font-bold text-ink">My checks</h1>
         <ButtonLink href="/claims/new">New check</ButtonLink>
       </div>
+      {claims.some((c) => c.verdict) ? <Disclaimer /> : null}
       <Card>
         {claims.length === 0 ? (
           <p className="text-sm text-muted">No checks yet.</p>
