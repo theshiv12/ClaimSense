@@ -377,3 +377,16 @@ New, for the HTTP boundary:
 | TC-API-07 | Over-size uploads are refused before reading | a 4 MB + 1 byte file | POST `/api/claims/:id/documents` | 413 `FILE_TOO_LARGE` | API |
 | TC-API-08 | Unknown routes and malformed JSON | the app | GET `/api/nope`; POST `/api/claims` with `{bad json` | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED` | API |
 | TC-API-09 | Plans list for the setup form | the app | GET `/api/plans` | `[{ planId: 'star-fho', name: '<planName> (<wordingVersion>)' }]` from the plan config | API |
+
+### Review fixes (code-reviewer on `feat/express-api`)
+
+**Decision on malformed ids.** A path id of 1–64 characters that isn't the user's is `NOT_FOUND` (golden rule 5, as
+before). An id longer than 64 stays `VALIDATION_FAILED`, exactly as the server actions returned it (TC-ACT-07). A
+path that can't be decoded is `NOT_FOUND`. Pages show 404 for every bad id.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-API-03b | Every cross-site signal is refused; same-origin and Origin-less (server) calls pass; the configured origin is normalised | signed-in user | POST `/api/claims` with `Sec-Fetch-Site: cross-site`; `Origin: null`; no Origin; `webOrigin('http://localhost:3000/')` | 401 `AUTH_REQUIRED`; 401; 200; `http://localhost:3000` | API |
+| TC-API-11 | The per-IP sample limit uses the client IP the web proxy vouches for, never a client-sent `X-Forwarded-For` | `TRUST_PROXY=loopback`, proxy secret set | 21 sample starts from the same proxied client IP, each with a different spoofed XFF; then one with a wrong proxy key | the 21st is 429 `RATE_LIMITED`; with a wrong key the proxied IP header is ignored (another bucket) | API |
+| TC-API-12 | Undecodable path → 404; broken multipart → 400; an upload to someone else's claim is refused before the body is read | signed-in user | GET `/api/claims/%E0%A4%A`; POST `/documents` with a truncated multipart body; POST `/documents` to a foreign claim | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND` | API |
+| TC-UI-18 | The sample button goes where the API says | `startSample` ok / `RATE_LIMITED` / another error | click | `/claims/<id>`; `/?sample=busy`; `/` | Component |

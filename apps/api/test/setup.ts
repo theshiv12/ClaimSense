@@ -8,7 +8,9 @@ import { jar, testIp } from './cookie-jar';
 process.env.MONGODB_DB = `claimsense_test_${process.env.VITEST_POOL_ID ?? '0'}_${randomUUID().slice(0, 8)}`;
 process.env.GEMINI_API_KEY = 'test-key-not-real'; // always: a real key in the shell must never reach a test
 process.env.WEB_ORIGIN = 'http://localhost:3000';
-process.env.TRUST_PROXY = 'true';
+// As deployed: only loopback is a trusted hop; the client IP comes from the web proxy's signed header.
+process.env.TRUST_PROXY = 'loopback';
+process.env.PROXY_SECRET = 'test-proxy-secret';
 
 beforeEach(() => {
   jar.clear();

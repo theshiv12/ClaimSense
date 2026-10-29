@@ -101,3 +101,47 @@ describe('HTTP boundary', () => {
     expect(r.body).toEqual({ ok: true, data: [{ planId: 'star-fho', name: expect.stringMatching(/^Family Health Optima .+ \(.+\)$/) as string }] });
   });
 });
+
+describe('HTTP boundary review fixes', () => {
+  it('TC-API-03b every cross-site signal is refused; same-origin and Origin-less calls pass', async () => {
+    await signUpAs();
+    const crossSite = await send('post', '/api/claims', claimInput, { 'Sec-Fetch-Site': 'cross-site' });
+    expect([crossSite.status, crossSite.body]).toEqual([401, { ok: false, code: 'AUTH_REQUIRED' }]);
+    const nullOrigin = await send('post', '/api/claims', claimInput, { Origin: 'null' });
+    expect(nullOrigin.status).toBe(401);
+    const noOrigin = await send('post', '/api/claims', claimInput, { Origin: '' });
+    expect(noOrigin.status).toBe(200);
+    const { webOrigin } = await import('./core/origin');
+    expect(webOrigin('http://localhost:3000/')).toBe('http://localhost:3000');
+  });
+
+  it('TC-API-11 the sample limit uses the proxied client IP, never a spoofed X-Forwarded-For', async () => {
+    // 20 sample starts per IP per hour; the 21st from the same client is refused, whatever XFF says.
+    for (let i = 0; i < 20; i++) {
+      jar.clear();
+      const r = await send('post', '/api/samples/B', {}, { 'X-Forwarded-For': `203.0.113.${i}` });
+      expect(r.status).toBe(200);
+    }
+    jar.clear();
+    const blocked = await send('post', '/api/samples/B', {}, { 'X-Forwarded-For': '198.51.100.7' });
+    expect([blocked.status, blocked.body]).toEqual([429, { ok: false, code: 'RATE_LIMITED' }]);
+    // A wrong proxy key: the vouched-for IP header is ignored, so this counts as another (socket) client.
+    jar.clear();
+    const wrongKey = await send('post', '/api/samples/B', {}, { 'X-CS-Proxy-Key': 'wrong' });
+    expect(wrongKey.status).toBe(200);
+  });
+
+  it('TC-API-12 undecodable paths, broken multipart and foreign upload targets', async () => {
+    await signUpAs();
+    const undecodable = await send('get', '/api/claims/%E0%A4%A');
+    expect([undecodable.status, undecodable.body]).toEqual([404, { ok: false, code: 'NOT_FOUND' }]);
+    const mine = await createClaim(claimInput);
+    if (!mine.ok) throw new Error(mine.code);
+    const truncated = '--x\r\nContent-Disposition: form-data; name="file"; filename="a"\r\n\r\nabc';
+    const broken = await send('post', `/api/claims/${mine.data.claimId}/documents`, truncated, { 'Content-Type': 'multipart/form-data; boundary=x' });
+    expect([broken.status, broken.body]).toEqual([400, { ok: false, code: 'VALIDATION_FAILED' }]);
+    await signUpAs();
+    const foreign = await upload(`/api/claims/${mine.data.claimId}/documents`, new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]), 'a.pdf', 'application/pdf');
+    expect([foreign.status, foreign.body]).toEqual([404, { ok: false, code: 'NOT_FOUND' }]);
+  });
+});
