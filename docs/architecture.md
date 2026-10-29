@@ -6,13 +6,18 @@ human-verified plan config, never from the model at runtime.
 ```
 Browser ──► Next.js on Vercel (apps/web)
               ├─ pages (server components) ── src/server (server-only) ──► MongoDB Atlas M0
-              ├─ server actions: createClaim · uploadAndExtract · confirmFact · editFact ·
-              │                  addFact · runCheck · simulateRoom · deleteClaim · deleteMe ·
-              │                  startSample · auth
+              ├─ pages: / · /signup · /login · /claims · /claims/new · /claims/[id]/facts ·
+              │         /claims/[id] · /sample/[caseId] (read paths via server/views.ts + scope.ts)
+              ├─ server actions: signup · login · logout · startSample/openSample (POST) ·
+              │                  createClaim · uploadAndExtract · confirmFact · editFact ·
+              │                  addFact · runCheck · simulateRoom · deleteClaim · deleteMe
               │        uploadAndExtract:
               │          bytes (≤ 4 MB, magic-byte check) → unpdf text layer
-              │          → gemini.ts (structured JSON output, schema from Zod) ──► Gemini free tier
-              │          → quote-verify (exact / fuzzy / none / unverifiable)
+              │          → document slot + daily quota taken atomically (given back if the model fails)
+              │          → gemini.ts: Interactions API, inline document, untrusted-content
+              │            instruction, JSON schema from Zod, store:false, fallback on 429/5xx ──► Gemini
+              │          → Zod parse → normalise (₹/lakh, Indian dates) → quote-verify on the stated
+              │            page + value-in-quote check (exact / fuzzy / none / unverifiable)
               │          → facts saved; bytes discarded (never stored)
               └─ packages/rules (pure): toClaimFacts → R1–R5 → non-payables → R6 → R7 → R8 → verdict
                     reads config/plans/*.json (ClauseRef per value) and config/remedies.json
@@ -41,3 +46,9 @@ manual fact entry); Vercel 4.5 MB body (4 MB cap, in-browser image resize); Atla
 
 **Decisions:** `docs/decisions/`. Superseded design (NestJS API, Claude API, Azure Blob):
 `docs/reference/nest-plan/`.
+
+**As built (29 Oct 2026).** Rate limits: login 5 tries / 15 min per email (attempt recorded before checking,
+dummy-hash verify for unknown emails), 20 samples / hour per IP, `AI_DAILY_EXTRACTIONS_PER_USER` uploads a
+day. Plan configs load through `LoadablePlanConfigSchema` (no `needsReview`), with room rent by sum insured
+(ADR-007). Tests: Vitest on mongodb-memory-server with `FakeLlm`; Playwright on `next start` with an
+in-memory DB (`apps/web/scripts/e2e-server.mjs`), so CI needs no secrets.
