@@ -50,7 +50,8 @@ Anything else becomes null, so the rule that needs it returns `unknown`.
 - **Months:** a wait of N months ends on the same calendar date N months after inception. Admission
   **on** that date passes (inclusive). Month-end example: 31 Jan + 1 month = 28/29 Feb (date-fns `addMonths`).
 - **Days:** a wait of 30 days: admission on inception + 30 days passes; on day 29 it fails.
-- **Rounding:** proportionate amounts use `floor(amount × cap ÷ rent)` per head. Co-pay uses
+- **Rounding:** proportionate amounts use one `floor(associated total × cap ÷ rent)` (changed 29 Oct 2026 from
+  "per head": flooring each head gives Case B ₹0.01 more deduction than its own worked arithmetic). Co-pay uses
   `floor(running × bps ÷ 10000)`. Rounding always favours the insurer and is never more than 1 paise per head.
 
 ## Verdict
@@ -113,3 +114,55 @@ Starting values for building the config, **not test expectations**: tests read `
 | Excluded heads | implants, pharmacy, diagnostics (**unverified**, so `headsVerified: false`) | clause 2(A) / circular |
 | Non-payable heads | consumables | IRDAI non-payable items list |
 | Co-pay | 20% (2000 bps) if age at entry ≥ 61 | **verify** |
+
+**Autopilot decision (ADR-007, 29 Oct 2026, pending human sign-off):** `config/plans/star-fho.json` uses the
+V.19 wording values: PED 48 months, moratorium 96 months, room cap by sum insured (2(A) table). Rule tests
+use plan T, so they are unaffected.
+
+## Schema decisions (28 Oct 2026, with TC-SH-01..05)
+
+- `plan.nonPayableHeads` is `{ heads: BillHead[], clause: ClauseRef }`. The IRDAI list is cited with
+  `source: 'regulation'`.
+- `RoomCategory`: `general | shared | single | deluxe | suite | icu`. "Single AC" → `single`,
+  "twin sharing" → `shared`.
+- `ClauseRef.needsReview` / `ClauseRef.note` are optional and only for drafts in `config/plans/drafts/`.
+  A plan loaded by the app must not have `needsReview` set (the loader enforces this in PR #3).
+- `Estimate.nonPayablePaise` records the non-payables removed before R6 (Case B: 9,60,000 paise), so
+  `outOfPocketPaise = claimedPaise − payablePaise` can be explained line by line.
+- `RuleResult`: `deductionPaise > 0` **if and only if** `outcome === 'deduction'`; `missingFacts` is
+  non-empty **if and only if** `outcome === 'unknown'`. The schema rejects anything else.
+
+## Draft plan configs (28 Oct 2026, with TC-SH-06..10)
+
+- `config/plans/drafts/*.json` parse with `DraftPlanConfigSchema`; `config/plans/*.json` with the strict
+  `PlanConfigSchema`. A draft can never satisfy the strict schema while any value is `null`.
+- `null` = the wording is silent; `[]` = the wording says there are none.
+- A null value needs its section's clause to have `needsReview: true` and a non-empty `note`. A clause
+  that is not in the wording at all is `{ clauseId: null, page: null, quote: null, source: null,
+  needsReview: true, note }`; anything half-filled is rejected.
+- `roomRent.kind: 'unknown'` (drafts only) is for a missing or garbled room-rent table.
+- `uin` / `wordingVersion` may be null with a top-level `notes` entry; `verifiedBy` is always `null`.
+
+## Engine decisions (28 Oct 2026, with TC-R1..R8, TC-ENG, TC-VERDICT, TC-CASE)
+
+1. R4 checks only the PED waiting period. R5 owns non-disclosure: an undisclosed PED fails R5 while
+   continuous cover is under `moratorium.months`, and passes from that date (inclusive).
+2. If any of R1–R5 is `unknown` (and none fails), `payablePaise` is 0; `payableIfEligiblePaise` is shown.
+3. When one of R6–R8 is `unknown`, the running amount passes through unchanged and the verdict is
+   `likely_partial`.
+4. The room head is paid at min(room line item, cap × days).
+5. Room category `icu` is capped by `icuCapPaise`; null means no cap.
+6. R3 matches a listed condition by `icd10` prefix, or by a case-insensitive keyword substring of `diagnosis`.
+7. Admission before `firstInceptionDate` fails R2 with reason `R2_BEFORE_INCEPTION`.
+8. An empty bill (or claimed 0) makes R6 `unknown`, so the verdict is `likely_partial`.
+9. Rule unit tests use the synthetic plan T (36-month PED wait, 60-month moratorium). The real config
+   follows the PED/moratorium decision on the Star FHO draft.
+10. (29 Oct 2026, review fix) A stated bill total above the usable line items adds an `other` line for the
+    difference, so it is counted in the claim, but R6 is `unknown` (`R6_UNITEMISED_AMOUNT`): its head is unknown.
+11. An `icu` line with no room category makes R6 `unknown` (missing `room_category`).
+12. A room above a category-only tier (Star FHO SI ≥ ₹5 lakh, "Single Standard A/C Room") makes R6 `unknown`
+    with reason `R6_ABOVE_ELIGIBLE_CATEGORY`; the eligible room's rent is not a fact we hold.
+13. Repeated facts: for one key, user-corrected > user-stated > document; two usable document facts that
+    disagree are `unknown`. Line items are chosen per head the same way; one head found in two documents
+    with no user fact makes the line items empty (bill unknown) rather than counting it twice.
+14. Dates use our own `addDays` / `addMonths` (same clamping as date-fns), to keep the package dependency-free.

@@ -4,6 +4,9 @@ packages:
 
 allowBuilds:
   unrs-resolver: true # native resolver for eslint-config-next's import plugin
+  mongodb-memory-server: true # downloads the mongod binary used by tests
+  '@google/genai': false # postinstall not needed
+  protobufjs: false # postinstall not needed
 
 overrides:
   typescript: ~6.0.2 # TS 7 breaks typescript-eslint (peer <6.1)

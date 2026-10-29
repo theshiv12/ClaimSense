@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { SiteHeader } from '@/components/site-header';
 import './globals.css';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta' });
@@ -12,7 +13,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-IN" className={jakarta.variable}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="min-h-screen bg-bg font-sans text-ink antialiased">
+        <SiteHeader />
+        {children}
+        <footer className="mx-auto max-w-4xl px-4 py-10 text-xs text-muted">
+          ClaimSense is a self-help estimate, not an insurer, broker or TPA. It never files claims or sells policies.
+        </footer>
+      </body>
     </html>
   );
 }

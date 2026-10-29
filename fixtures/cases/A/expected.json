@@ -1,0 +1,14 @@
+{
+  "_arithmetic": "Admission day 19 (2026-10-01 + 19) < 30-day wait: R2 fail, payable 0. If eligible: room 300000 x 2 = 600000 <= cap, + 200000 + 200000 = 1000000, no non-payables, no co-pay (35 < 61), under SI.",
+  "verdict": "at_risk",
+  "claimedPaise": 1000000,
+  "nonPayablePaise": 0,
+  "payablePaise": 0,
+  "payableIfEligiblePaise": 1000000,
+  "outOfPocketPaise": 1000000,
+  "results": {
+    "R2": {
+      "outcome": "fail"
+    }
+  }
+}

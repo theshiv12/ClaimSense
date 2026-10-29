@@ -5,7 +5,7 @@ Root `CLAUDE.md` golden rules apply here too.
 ## Where things go
 
 ```
-src/app/                 routes: /, /login, /signup, /claims, /claims/new, /claims/[id], /sample/[caseId]
+src/app/                 routes: /, /login, /signup, /claims, /claims/new, /claims/[id], /claims/[id]/facts, /sample/[caseId]
 src/server/              import 'server-only' in every file
   db.ts                  cached Mongoose connection (serverless-safe)
   models/                User, Session, Claim, Fact, Estimate (TTL index on expiresAt)

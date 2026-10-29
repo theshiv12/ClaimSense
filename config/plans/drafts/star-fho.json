@@ -1,0 +1,132 @@
+{
+  "planId": "star-fho",
+  "insurer": "Star Health and Allied Insurance Company Limited",
+  "planName": "Family Health Optima Insurance Plan",
+  "uin": "SHAHLIP23164V072223",
+  "wordingVersion": "POL / FHO / V.19 / 2023",
+  "rulesAsOf": "2026-10-28",
+  "verifiedBy": null,
+  "notes": [
+    "Source: 01-FHO-Insurance-policy-wordings.pdf (16 pages, footer 'POL / FHO / V.19 / 2023'). Quotes copied from the PDF text with the 'ﬁ' ligature written as 'fi'.",
+    "Not in the schema, recorded for review: 2(H) pre-hospitalisation 'for a period not exceeding 60 days prior to the date of hospitalization' (p5); 2(I) post-hospitalisation 'for a period of 90 days from the date of discharge' (p5).",
+    "Not in the schema: Automatic Restoration of Sum Insured '3 times at 100% each time' for SI Rs.3,00,000/- and above (p7); 2(W) Recharge Benefit 'once for the remaining policy period' (p7).",
+    "Not in the schema: 2(E) cataract sublimits by sum insured (p5), e.g. 'Up to 25,000/-' per eye for SI 3,00,000/-."
+  ],
+  "initialWait": {
+    "days": 30,
+    "accidentExempt": true,
+    "clause": {
+      "clauseId": "3(3)",
+      "page": 10,
+      "quote": "Expenses related to the treatment of any illness within 30 days from the first policy commencement date shall be excluded except claims arising due to an accident, provided the same are covered",
+      "source": "wording",
+      "note": "Code Excl 03. Part B: 'This exclusion shall not, however, apply if the Insured Person has continuous coverage for more than twelve months'. Part C: applies afresh to an enhanced sum insured."
+    }
+  },
+  "specificDiseaseWait": {
+    "months": 24,
+    "accidentExempt": true,
+    "clause": {
+      "clauseId": "3(2)",
+      "page": 10,
+      "quote": "Expenses related to the treatment of the following listed Conditions, surgeries/treatments shall be excluded until the expiry of 24 months of continuous coverage after the date of inception of the first policy with us. This exclusion shall not be applicable for claims arising due to an accident",
+      "source": "wording",
+      "needsReview": true,
+      "note": "Code Excl 02, list f(1)-f(14). The wording gives no ICD-10 codes, so icd10Prefixes are empty and a human must add them. Keywords are phrases copied from each list item. Part c: if a listed condition is also a PED, the longer wait applies."
+    },
+    "conditions": [
+      { "id": "f1-eye-ent-thyroid-breast", "label": "Treatment of Cataract and diseases of the anterior and posterior chamber of the Eye, Diseases of ENT, Diseases related to Thyroid, Benign diseases of the breast.", "icd10Prefixes": [], "keywords": ["cataract", "anterior and posterior chamber of the eye", "diseases of ent", "thyroid", "benign diseases of the breast"] },
+      { "id": "f2-benign-lumps", "label": "Subcutaneous Benign Lumps, Sebaceous cyst, Dermoid cyst, Mucous cyst lip / cheek, Carpal Tunnel Syndrome, Trigger Finger, Lipoma, Neurofibroma, Fibroadenoma, Ganglion and similar pathology", "icd10Prefixes": [], "keywords": ["subcutaneous benign lumps", "sebaceous cyst", "dermoid cyst", "mucous cyst", "carpal tunnel syndrome", "trigger finger", "lipoma", "neurofibroma", "fibroadenoma", "ganglion"] },
+      { "id": "f3-tendon-ligament-bone-joint", "label": "All treatments (Conservative, Operative treatment) and all types of intervention for Diseases related to Tendon, Ligament, Fascia, Bones and Joint Including Arthroscopy and Arthroplasty / Joint Replacement [other than caused by accident].", "icd10Prefixes": [], "keywords": ["tendon", "ligament", "fascia", "bones and joint", "arthroscopy", "arthroplasty", "joint replacement"] },
+      { "id": "f4-disc-vertebral", "label": "All types of treatment for Degenerative disc and Vertebral diseases including Replacement of bones and joints and Degenerative diseases of the Musculo-skeletal system, Prolapse of Intervertebral Disc (other than caused by accident),", "icd10Prefixes": [], "keywords": ["degenerative disc", "vertebral diseases", "replacement of bones and joints", "degenerative diseases of the musculo-skeletal system", "prolapse of intervertebral disc"] },
+      { "id": "f5-hpb-calculi", "label": "All treatments (conservative, interventional, laparoscopic and open) related to Hepato-pancreato-biliary diseases including Gall bladder and Pancreatic calculi. All types of management for Kidney calculi and Genitourinary tract calculi.", "icd10Prefixes": [], "keywords": ["hepato-pancreato-biliary", "gall bladder", "pancreatic calculi", "kidney calculi", "genitourinary tract calculi"] },
+      { "id": "f6-hernia", "label": "All types of Hernia,", "icd10Prefixes": [], "keywords": ["hernia"] },
+      { "id": "f7-desmoid-umbilical", "label": "Desmoid Tumor, Umbilical Granuloma, Umbilical Sinus, Umbilical Fistula,", "icd10Prefixes": [], "keywords": ["desmoid tumor", "umbilical granuloma", "umbilical sinus", "umbilical fistula"] },
+      { "id": "f8-gynaecological", "label": "All treatments (conservative, interventional, laparoscopic and open) related to all Diseases of Cervix, Uterus, Fallopian tubes, Ovaries (other than due to Cancer), Uterine Bleeding, Pelvic Inflammatory Diseases", "icd10Prefixes": [], "keywords": ["cervix", "uterus", "fallopian tubes", "ovaries", "uterine bleeding", "pelvic inflammatory diseases"] },
+      { "id": "f9-prostate-urethra", "label": "All Diseases of Prostate, Stricture Urethra, all Obstructive Uropathies,", "icd10Prefixes": [], "keywords": ["prostate", "stricture urethra", "obstructive uropathies"] },
+      { "id": "f10-epididymis", "label": "Benign Tumours of Epididymis, Spermatocele, Varicocele, Hydrocele,", "icd10Prefixes": [], "keywords": ["benign tumours of epididymis", "spermatocele", "varicocele", "hydrocele"] },
+      { "id": "f11-anorectal", "label": "Fistula, Fissure in Ano, Hemorrhoids, Pilonidal Sinus and Fistula, Rectal Prolapse, Stress Incontinence", "icd10Prefixes": [], "keywords": ["fistula", "fissure in ano", "hemorrhoids", "pilonidal sinus", "rectal prolapse", "stress incontinence"] },
+      { "id": "f12-varicose", "label": "Varicose veins and Varicose ulcers", "icd10Prefixes": [], "keywords": ["varicose veins", "varicose ulcers"] },
+      { "id": "f13-transplant", "label": "All types of transplant and related surgeries.", "icd10Prefixes": [], "keywords": ["transplant"] },
+      { "id": "f14-congenital-internal", "label": "Congenital Internal disease / defect - (except for coverage 2(M))", "icd10Prefixes": [], "keywords": ["congenital internal disease", "congenital internal defect"] }
+    ]
+  },
+  "pedWait": {
+    "months": 48,
+    "clause": {
+      "clauseId": "3(1)",
+      "page": 10,
+      "quote": "Expenses related to the treatment of a pre-existing Disease (PED) and its direct complications shall be excluded until the expiry of 48 months of continuous coverage after the date of inception of the first policy with insurer",
+      "source": "wording",
+      "needsReview": true,
+      "note": "Code Excl 01. Value is as printed in V.19. docs/rules-spec.md says the IRDAI 2024 cap is 36 months and to use 36 with source 'regulation'; that needs a quote from the circular, which was not provided. Human decides."
+    }
+  },
+  "moratorium": {
+    "months": 96,
+    "clause": {
+      "clauseId": "4(12)",
+      "page": 13,
+      "quote": "After completion of eight continuous years under the policy no look back to be applied. This period of eight years is called as moratorium period.",
+      "source": "wording",
+      "needsReview": true,
+      "note": "Eight years written as 96 months. docs/rules-spec.md uses 60 months from regulation; that needs a quote from the circular, which was not provided. Human decides. Enhanced sums insured restart the 8 years on the enhanced limits."
+    }
+  },
+  "roomRent": {
+    "kind": "unknown",
+    "clause": {
+      "clauseId": "2(A)",
+      "page": 5,
+      "quote": "Room, Boarding, Nursing Expenses all inclusive as provided by the Hospital / Nursing Home as per the limits given below;",
+      "source": "wording",
+      "needsReview": true,
+      "note": "The limit depends on the sum insured, which PlanConfigSchema cannot express (one roomRent per plan). Table on p5, read from the rendered page: SI 1,00,000/- and 2,00,000/- 'Upto 2,000/- per day'; SI 3,00,000/- and 4,00,000/- 'Upto 5,000/- per day'; SI 5,00,000/- to 25,00,000/- 'Single Standard A/C Room'. No separate ICU limit in 2(A); ICU charges are listed under 2(C)."
+    }
+  },
+  "proportionateDeduction": {
+    "applies": true,
+    "excludedHeads": ["pharmacy", "consumables", "implants", "diagnostics"],
+    "headsVerified": false,
+    "clause": {
+      "clauseId": "1 Specific Definitions: Associated medical expenses",
+      "page": 4,
+      "quote": "If Policy Holder chooses a higher room category above the eligibility defined in policy, then proportionate deduction will apply on the Associated Medical Expenses in addition to the difference in room rent. Such associated medical expenses do not include Cost of pharmacy and consumables, Cost of implants and medical devices and Cost of diagnostics.",
+      "source": "wording",
+      "needsReview": true,
+      "note": "'medical devices' mapped to the implants head. 2(A) Note (p5) adds: 'Proportionate deductions are not applied in respect of the hospitals which do not follow differential billing or for those expenses in respect of which differential billing is not adopted based on the room category.'"
+    }
+  },
+  "nonPayableHeads": {
+    "heads": null,
+    "clause": {
+      "clauseId": null,
+      "page": null,
+      "quote": null,
+      "source": null,
+      "needsReview": true,
+      "note": "The wording provided has no list of non-payable items. docs/rules-spec.md cites the IRDAI non-payable items list (consumables); a quote from that list was not provided."
+    }
+  },
+  "coPay": {
+    "tiers": [{ "minAgeAtEntry": 61, "bps": 2000 }],
+    "clause": {
+      "clauseId": "2(AA)",
+      "page": 8,
+      "quote": "This policy is subject to co-payment of 20% of each and every claim amount for fresh as well as renewal policies for insured persons whose age at the time of entry is 61 years and above.",
+      "source": "wording",
+      "note": "Heading: 'Co-payment(Applicable for A to K and S)'. The Customer Information Sheet (p2) lists it as '20% of each and every claim as Co-payment' under 2(AA)."
+    }
+  },
+  "sumInsured": {
+    "optionsPaise": [10000000, 20000000, 30000000, 40000000, 50000000, 100000000, 150000000, 200000000, 250000000],
+    "clause": {
+      "clauseId": "2(A)",
+      "page": 5,
+      "quote": "Room, Boarding, Nursing Expenses all inclusive as provided by the Hospital / Nursing Home as per the limits given below;",
+      "source": "wording",
+      "needsReview": true,
+      "note": "No clause lists the sum insured options. Values are the rows of the 2(A) table (Rs.1,00,000/- to Rs.25,00,000/-), converted to paise; the 2(E) and 2(L) tables have the same rows."
+    }
+  }
+}

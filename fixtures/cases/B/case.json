@@ -1,0 +1,62 @@
+{
+  "planId": "star-fho",
+  "policyStartDate": "2026-03-12",
+  "policyEndDate": "2027-03-11",
+  "firstInceptionDate": "2019-03-12",
+  "sumInsuredPaise": 30000000,
+  "sumInsuredUsedPaise": 0,
+  "ageAtEntry": 52,
+  "admissionDate": "2026-11-18",
+  "dischargeDate": "2026-11-23",
+  "diagnosis": "Osteoarthritis, right knee",
+  "icd10": null,
+  "isAccident": false,
+  "ped": {
+    "exists": false,
+    "condition": null,
+    "firstDiagnosedDate": null,
+    "disclosed": null
+  },
+  "room": {
+    "category": "single",
+    "rentPerDayPaise": 700000,
+    "days": 5
+  },
+  "bill": {
+    "totalPaise": 24000000,
+    "lineItems": [
+      {
+        "head": "room",
+        "amountPaise": 3500000
+      },
+      {
+        "head": "nursing",
+        "amountPaise": 750000
+      },
+      {
+        "head": "surgeon",
+        "amountPaise": 3000000
+      },
+      {
+        "head": "ot",
+        "amountPaise": 1360000
+      },
+      {
+        "head": "implants",
+        "amountPaise": 10500000
+      },
+      {
+        "head": "pharmacy",
+        "amountPaise": 1800000
+      },
+      {
+        "head": "diagnostics",
+        "amountPaise": 2130000
+      },
+      {
+        "head": "consumables",
+        "amountPaise": 960000
+      }
+    ]
+  }
+}
