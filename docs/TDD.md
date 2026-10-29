@@ -26,6 +26,8 @@ Exceptions are listed under *Honest notes*.
 - `edge-cases.test.ts` (TC-R2-09/10, TC-R3-14..16, TC-R4-09, TC-R6-17..22, TC-R7-06, TC-ENG-06, TC-SIM-04) was
   added in the green commit `a304bce` to reach the coverage gate, so those cases were never red.
 - TC-E2E-01..03 (`60ce362`) were written after the screens and passed on their first run.
+- TC-ACT-08 (final-review gap: `signup` bad input, `logout` without a session, `openSample`) was added at the end
+  and passed on its first run: the behaviour existed, the test did not.
 - Three test files had **type-only** or call-shape edits after red, never assertion changes: TC-SH-12 cast,
   two `as unknown as` casts in Phase C tests, and TC-SMOKE-03 awaiting the async home page.
 - TC-EXT-12's expected paise value was wrong by ×100 in the red commit (my arithmetic). It was corrected with

@@ -40,7 +40,7 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold text-ink">The eight checks</h2>
+        <h2 className="text-lg font-semibold text-ink">The checks</h2>
         <p className="text-xs text-muted">
           {plan.planName}, {plan.wordingVersion} (UIN {plan.uin}). Rules as of {formatDate(plan.rulesAsOf)}.
         </p>

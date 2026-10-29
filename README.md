@@ -22,7 +22,8 @@ admission, while the patient can still choose a different room or call the insur
 2. **Check.** Code verifies every quote against the PDF text layer, and checks that the value can
    be read from that quote. Anything unverified shows "Please check" and counts as *unknown* until
    you confirm it.
-3. **Understand.** A pure rules engine applies R1–R8 from a human-checked plan config: policy
+3. **Understand.** A pure rules engine applies R1–R8 from a plan config that cites a clause and a
+   verbatim quote for every value (AI-drafted; human check pending, ADR-007): policy
    active, initial wait, specific-disease wait, PED wait, moratorium, room rent with proportionate
    deduction, co-pay, sum insured. It shows the payout, eight checks with clause quotes, a room
    simulator, remedies and the complaint path (insurer → Bima Bharosa → Ombudsman).
