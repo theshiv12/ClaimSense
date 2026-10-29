@@ -41,8 +41,10 @@ Needs Node 24 and pnpm 12 (`corepack enable`).
 
 ```bash
 pnpm install
-cp .env.example apps/web/.env.local   # fill in MONGODB_URI (Atlas M0) and GEMINI_API_KEY (AI Studio)
-pnpm dev                               # http://localhost:3000 — try "See a sample"
+cp apps/api/.env.example apps/api/.env.local   # fill in MONGODB_URI (Atlas M0) and GEMINI_API_KEY (AI Studio)
+cp apps/web/.env.example apps/web/.env.local   # API_ORIGIN=http://localhost:4000
+pnpm check:env                                 # says what is wrong with apps/api/.env.local, never the values
+pnpm dev                                       # API on :4000 + web on http://localhost:3000 — try "See a sample"
 ```
 
 Checks (no secrets, no network: in-memory MongoDB, fake Gemini):
@@ -53,23 +55,32 @@ pnpm --filter @claimsense/web e2e      # Playwright; PW_CHANNEL=chrome to use a 
 node scripts/check-ai-config.mjs
 ```
 
-### Deploy (Vercel)
+### Deploy
 
-Root directory `apps/web`. Add every key from `.env.example` in Project → Settings → Environment
-Variables (`MONGODB_DB=claimsense`), then redeploy. Atlas network access must allow Vercel
-(`0.0.0.0/0` with a long password: Vercel has no fixed IP).
+Two parts (ADR-009):
+
+1. **API** (`apps/api`) on any Node 24 host (Render, Railway, a VM, or a second Vercel project).
+   - Build: `pnpm install && pnpm --filter @claimsense/api build`.
+   - Start: `node apps/api/dist/server.js`.
+   - Variables: every key in `apps/api/.env.example`, with `MONGODB_DB=claimsense`, `WEB_ORIGIN` set to the
+     web URL, and `TRUST_PROXY` set to the host's proxy hop count (usually `1`).
+   - Atlas network access must allow the host (`0.0.0.0/0` with a long password if it has no fixed IP).
+2. **Web** (`apps/web`) on Vercel, with the root directory `apps/web`.
+   - Set `API_ORIGIN` to the API's URL, then redeploy.
+   - The browser only ever talks to the web domain; `/api/*` is proxied.
 
 ## Stack
 
 | Part | Choice |
 |---|---|
-| App | Next.js 16 App Router (server components + server actions), React 19, Tailwind 4 |
+| Web | Next.js 16 App Router (server components, `/api` proxy), React 19, Tailwind 4 |
+| API | Express 5 (`apps/api`): modules auth · samples · plans · claims · facts · estimate · extraction |
 | Rules | `packages/rules`: pure TypeScript, no I/O, 100% line coverage |
-| Schemas | `packages/shared`: Zod 4, shared by forms, actions, model output and the engine |
+| Schemas | `packages/shared`: Zod 4, shared by forms, API inputs, model output and the engine |
 | Data | MongoDB Atlas M0 via Mongoose, every query scoped by user, TTL deletion |
 | AI | Gemini free tier via `@google/genai` Interactions API, JSON-schema output (ADR-008) |
 | Auth | argon2id, opaque session cookie (SHA-256 stored), guest sessions for samples |
-| Tests | Vitest, Testing Library, mongodb-memory-server, Playwright; Semgrep and gitleaks in CI |
+| Tests | Vitest, supertest, Testing Library, mongodb-memory-server, Playwright; Semgrep and gitleaks in CI |
 
 ## Limitations
 
@@ -87,7 +98,7 @@ Variables (`MONGODB_DB=claimsense`), then redeploy. Atlas network access must al
 
 ## Repo
 
-`apps/web` (UI + server actions), `packages/rules`, `packages/shared`, `config/` (plans,
+`apps/api` (Express REST API), `apps/web` (Next.js UI), `packages/rules`, `packages/shared`, `config/` (plans,
 remedies), `fixtures/` (synthetic cases and documents), `docs/` (PRD, rules spec, architecture,
 ADRs, test cases, TDD log, AI usage). AI mistakes and what changed are in `AI_LOG.md`.
 

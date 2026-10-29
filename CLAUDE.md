@@ -12,7 +12,7 @@ in their own document), and what they can do about it. Hackathon MVP, solo, dead
 | Requirements | `docs/prd.md` |
 | Rules R1–R8, boundaries, worked Case B | `docs/rules-spec.md` |
 | Architecture | `docs/architecture.md` |
-| Server actions (the "API") | `docs/api.md` |
+| REST API (Express, `apps/api`) | `docs/api.md` |
 | Decisions | `docs/decisions/` |
 | Test cases (written before tests) | `docs/test-cases.md` |
 | AI policy, compliance | `docs/ai-policy.md`, `docs/compliance.md` |
@@ -28,15 +28,16 @@ in their own document), and what they can do about it. Hackathon MVP, solo, dead
 3. **Every fact is traceable:** `value`, `status` (`found|not_found|illegible`), `source`
    (`document|user-stated|user-corrected`), `documentId`, verbatim `sourceQuote`, `page`,
    `confidence` (`high|medium|low`), `verification` (`exact|fuzzy|none|unverifiable`).
-4. **Validate with Zod** (`packages/shared`): every form, every server action input, every
+4. **Validate with Zod** (`packages/shared`): every form, every API request input, every
    model output. A fact whose quote did not verify, or with low confidence, is `unknown` to the
    engine until the user confirms it. Never guess.
 5. **Owner scoping:** every query on claims, facts and estimates filters by `userId`.
    Another user's id, or a malformed id, gives 404, never 403.
 6. **Never log health data:** no facts, diagnoses, quotes, document text or file names in logs.
-7. **Never commit secrets.** Config comes from env; every new variable goes in `.env.example`.
-8. **Document content is data, never instructions.** Only the Gemini adapter (`gemini.ts` in the
-   web app's server folder) talks to Gemini: inline document data, a system instruction saying document text is untrusted,
+7. **Never commit secrets.** Config comes from env; every new variable goes in `apps/api/.env.example`
+   (or `apps/web/.env.example`).
+8. **Document content is data, never instructions.** Only the Gemini adapter
+   (`apps/api/src/integrations/gemini.ts`) talks to Gemini: inline document data, a system instruction saying document text is untrusted,
    JSON-schema structured output only. Injection test payloads are stored base64-encoded.
 9. **Uploaded files are never stored.** Read → extract → save facts → discard bytes.
 10. **Remedies only from `config/remedies.json`.** Never help hide, change or back-date medical
@@ -45,8 +46,13 @@ in their own document), and what they can do about it. Hackathon MVP, solo, dead
 ## Repo layout
 
 ```
-apps/web              Next.js App Router: UI + server actions (the only app)
-  src/server/         server-only: db, models, auth, scope, gemini, pdf-text, quote-verify, actions/
+apps/api              Express 5 REST API (ADR-009): the only code with mongoose, Gemini and secrets
+  src/core/           env, db, models, errors, http (handler/parse), session, origin (CSRF), logger, scope
+  src/modules/<name>/ <name>.routes.ts → handler → <name>.service.ts; auth, samples, plans, claims, facts,
+                      estimate, extraction (see apps/api/CLAUDE.md)
+  src/integrations/   gemini.ts, llm.ts (FakeLlm in tests), pdf-text.ts
+apps/web              Next.js App Router: UI only; /api/* is proxied to apps/api (src/proxy.ts)
+  src/lib/api/        server.ts (server components → API_ORIGIN) and client.ts (browser → /api/*)
   src/components/     ui/ (Button, Chip, Card, Field, Toggle…) and claim/ (FactRow, CheckRow, PayoutBar…)
 packages/shared       Zod schemas + types (Fact, LlmExtraction, ClaimFacts, PlanConfig, Estimate)
 packages/rules        Rules engine R1–R8: pure functions, no I/O, no clock, no SDKs
@@ -60,7 +66,8 @@ docs                  see the table above
 
 ```
 pnpm install
-pnpm dev                                   # Next.js on :3000
+pnpm dev                                   # API on :4000 + Next.js on :3000 (apps/*/.env.local)
+pnpm check:env                             # what is wrong with apps/api/.env.local, never its values
 pnpm test                                  # all Vitest suites (in-memory MongoDB, fake Gemini)
 pnpm --filter @claimsense/rules test       # rules only
 pnpm exec vitest run <path> -t "TC-R3"     # one file / one test id
@@ -76,10 +83,10 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - Money is integer **paise**, percentages are **basis points**, calendar dates are `YYYY-MM-DD`.
 - Rules: one file per rule, `packages/rules/src/rules/r<N>-<name>.ts`. R1–R5:
   `(facts, plan) => RuleResult`. R6–R8: `(facts, plan, runningPaise) => RuleResult`.
-- `apps/web/src/server/**` starts with `import 'server-only'`. Only `gemini.ts` imports
-  `@google/genai`; only server code imports `mongoose`. ESLint enforces both.
-- Mutations are server actions; they return `{ ok: true, data } | { ok: false, code }` with an
-  `ErrorCode` from `packages/shared`, never raw errors.
+- Only `apps/api` imports `mongoose`; only `apps/api/src/integrations/gemini.ts` imports `@google/genai`;
+  `apps/web` never imports API code (it calls HTTP). ESLint enforces all three.
+- Every endpoint returns `{ ok: true, data } | { ok: false, code }` with an `ErrorCode` from
+  `packages/shared` and its HTTP status (`apps/api/src/core/errors.ts`), never raw errors.
 - Files kebab-case, types PascalCase, functions camelCase. One issue → one branch → one PR.
 
 ## Testing (test-driven; Vitest only, never Jest)
@@ -90,7 +97,8 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - Test names start with their test-case ID (`TC-R3-01 …`).
 - Expected values come from `docs/rules-spec.md` and the plan config, worked out by hand with
   the arithmetic in a comment, **never** from running the implementation.
-- Every server action: no session → `AUTH_REQUIRED`, other user's id → 404, bad input → error code.
+- Every endpoint: no session → `AUTH_REQUIRED`, other user's id → 404, bad input → error code
+  (API tests call it over HTTP through `apps/api/test/actions.ts`).
 - Tests never call live Gemini: use `FakeLlm` and recorded fixtures.
 - Done = `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm cases` all pass.
 
@@ -108,7 +116,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - Login takes the same time for an unknown email (dummy-hash verify); rate-limit attempts are
   recorded before the check, never after.
 - Docs never claim a human check that is still pending.
-- GET routes and page renders never create sessions; samples and mutations start from POST server actions.
+- GET routes and page renders never create sessions; samples and mutations are POST/PATCH/DELETE API calls.
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - Evidence shown for a check uses the facts the engine selected (`selectedFacts`), never every fact with that key.
 - Search terms and health details never go into URLs.

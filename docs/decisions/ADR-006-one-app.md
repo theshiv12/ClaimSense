@@ -1,5 +1,7 @@
 # ADR-006: One Next.js app for the one-night build
 
+**Status:** superseded by ADR-009 (29 Oct 2026): the backend is now an Express API in `apps/api`.
+
 **Decision:** server actions in `apps/web` replace the planned NestJS API; files are processed in memory
 and never stored; the LLM chat becomes a remedies panel + room simulator.
 **Why:** one deploy, no cold starts between services, no token passing, no file storage, no background

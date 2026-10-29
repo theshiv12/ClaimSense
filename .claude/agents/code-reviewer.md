@@ -35,7 +35,7 @@ review strictly but only report real problems.
   processed in memory and never stored (bytes discarded after extraction)?
 - Any health data (facts, diagnosis, document text, file names) in logs or error messages?
 - Secrets only from env, new variables added to `.env.example`?
-- Documents sent to Gemini only from `apps/web/src/server/gemini.ts`, as inline data, with a system
+- Documents sent to Gemini only from `apps/api/src/integrations/gemini.ts`, as inline data, with a system
   instruction that document content is data, never instructions; output parsed with Zod?
 
 **Assistant behaviour** (remedies panel, room simulator / what-if)

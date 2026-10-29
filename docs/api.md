@@ -1,22 +1,51 @@
-# Server actions (the app's API)
+# REST API (`apps/api`, Express 5)
 
-Every action runs on the server, validates its input with a Zod schema from `@claimsense/shared`,
-resolves the current user from the session cookie, and returns
-`{ ok: true, data } | { ok: false, code: ErrorCode }`. Any id that is malformed or owned by another
-user gives `NOT_FOUND` (the page renders 404).
+The browser calls these on the web domain (`/api/*`, forwarded by `apps/web/src/proxy.ts`). Server
+components call `API_ORIGIN` directly with the session cookie (ADR-009).
 
-| Action | Input | Returns | Error codes |
+Every request is validated with a Zod schema from `@claimsense/shared`: ids come from the path, values from
+the JSON body. The session comes from the `cs_session` cookie. Every response body is
+`{ ok: true, data } | { ok: false, code: ErrorCode }`. A malformed id, or one owned by another user, gives
+`NOT_FOUND` (404), never 403.
+
+**Status per code** (`apps/api/src/core/errors.ts`):
+
+| Status | Codes |
+|---|---|
+| 400 | `VALIDATION_FAILED`, `PDF_PASSWORD_PROTECTED` |
+| 401 | `AUTH_REQUIRED`, `AUTH_INVALID` |
+| 404 | `NOT_FOUND`, `PLAN_NOT_FOUND` |
+| 409 | `EMAIL_TAKEN`, `DOCUMENT_LIMIT_REACHED` |
+| 413 | `FILE_TOO_LARGE` |
+| 415 | `FILE_TYPE_NOT_ALLOWED` |
+| 422 | `LLM_OUTPUT_INVALID` |
+| 429 | `RATE_LIMITED`, `AI_QUOTA_EXCEEDED` |
+| 503 | `LLM_UNAVAILABLE` |
+| 500 | `INTERNAL_ERROR` |
+
+**Writes** (POST, PATCH, DELETE) must come from `WEB_ORIGIN`. A cross-site write gets 401 `AUTH_REQUIRED`.
+
+| Endpoint | Body | Returns (`data`) | Errors |
 |---|---|---|---|
-| `signup` | email, password (≥ 8, with a number), displayName?, adultAttested | session cookie | `VALIDATION_FAILED`, `EMAIL_TAKEN` |
-| `login` | email, password | session cookie | `AUTH_INVALID` (same for unknown email and wrong password), `RATE_LIMITED` |
-| `logout` | none | cookie cleared, session deleted | none |
-| `startSample` | caseId `A`–`D` | guest session + claim id | `NOT_FOUND` |
-| `createClaim` | planId, subject {relation, treatment}, consent {analysis: true, retention, improve}, admissionDate, room | claim id | `AUTH_REQUIRED`, `VALIDATION_FAILED`, `PLAN_NOT_FOUND` |
-| `uploadAndExtract` | claimId, file (PDF/JPEG/PNG ≤ 4 MB) | facts + warnings | `NOT_FOUND`, `FILE_TOO_LARGE`, `FILE_TYPE_NOT_ALLOWED`, `DOCUMENT_LIMIT_REACHED`, `PDF_PASSWORD_PROTECTED`, `LLM_UNAVAILABLE`, `AI_QUOTA_EXCEEDED`, `LLM_OUTPUT_INVALID` |
-| `confirmFact` / `editFact` / `addFact` | claimId, factId?, value | fact | `NOT_FOUND`, `VALIDATION_FAILED` |
-| `runCheck` | claimId | estimate (saved) | `NOT_FOUND` |
-| `simulateRoom` | claimId, category, rentPerDayPaise | scenario estimate (not saved) | `NOT_FOUND`, `VALIDATION_FAILED` |
-| `deleteClaim` | claimId | none | `NOT_FOUND` |
-| `deleteMe` | none | none; everything for the user is deleted and the session ends | none |
+| `POST /api/auth/signup` | email, password (≥ 8, with a number), displayName?, adultAttested | `null` + session cookie | `VALIDATION_FAILED`, `EMAIL_TAKEN` |
+| `POST /api/auth/login` | email, password | `null` + session cookie | `AUTH_INVALID` (same for unknown email and wrong password), `RATE_LIMITED` |
+| `POST /api/auth/logout` | none | `null`; cookie cleared, session deleted | none |
+| `GET /api/auth/me` | none | `CurrentUserView` or `null` (never creates a session) | none |
+| `POST /api/samples/:caseId` | none (`A`–`D`) | `{ claimId }` + guest session if none | `VALIDATION_FAILED`, `RATE_LIMITED` |
+| `GET /api/plans` | none | `PlanOption[]` | none |
+| `GET /api/claims` | none | `ClaimSummary[]` (My claims) | `AUTH_REQUIRED` |
+| `POST /api/claims` | planId, subject {relation, treatment}, consent {analysis: true, retention, improve}, admissionDate?, room? | `{ claimId }` | `AUTH_REQUIRED`, `VALIDATION_FAILED`, `PLAN_NOT_FOUND` |
+| `GET /api/claims/:claimId` | none | `ClaimView` | `NOT_FOUND` |
+| `DELETE /api/claims/:claimId` | none | `null` | `NOT_FOUND` |
+| `DELETE /api/me` | none | `null`; everything for the user is deleted and the session ends | `AUTH_REQUIRED` |
+| `GET /api/claims/:claimId/facts` | none | `StoredFactView[]` | `NOT_FOUND` |
+| `POST /api/claims/:claimId/facts` | key, head, value | `{ fact }` | `NOT_FOUND`, `VALIDATION_FAILED` |
+| `PATCH /api/claims/:claimId/facts/:factId` | value | `{ fact }` (user-corrected) | `NOT_FOUND`, `VALIDATION_FAILED` |
+| `POST /api/claims/:claimId/facts/:factId/confirm` | none | `{ fact }` | `NOT_FOUND` |
+| `POST /api/claims/:claimId/documents` | multipart `file` (PDF/JPEG/PNG ≤ 4 MB) | `UploadResultView` (facts + warnings) | `NOT_FOUND`, `FILE_TOO_LARGE`, `FILE_TYPE_NOT_ALLOWED`, `DOCUMENT_LIMIT_REACHED`, `PDF_PASSWORD_PROTECTED`, `LLM_UNAVAILABLE`, `AI_QUOTA_EXCEEDED`, `LLM_OUTPUT_INVALID` |
+| `GET /api/claims/:claimId/estimate` | none | `EstimateView` (estimate, plan, remedies, evidence, needsYou); saved if the facts changed | `NOT_FOUND` |
+| `POST /api/claims/:claimId/estimate` | none | `{ estimate }` (saved) | `NOT_FOUND` |
+| `POST /api/claims/:claimId/simulate-room` | category, rentPerDayPaise | `{ estimate }` (not saved) | `NOT_FOUND`, `VALIDATION_FAILED` |
+| `GET /healthz` | none | `{ ok: true }` | none |
 
-Read paths are server components that call the same owner-scoped finders in `src/server/scope.ts`.
+The response types are in `packages/shared/src/api-views.ts`.
