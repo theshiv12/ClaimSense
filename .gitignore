@@ -23,3 +23,6 @@ ai-audit/
 # test output
 playwright-report/
 test-results/
+
+# symlinked node_modules (worktrees)
+node_modules
