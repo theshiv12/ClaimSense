@@ -184,3 +184,18 @@ Written by the autopilot run; not yet human-approved. Plan T variants as noted; 
 | TC-SIM-01 | Twin sharing ₹4,500/day on Case B | Case B, shared 450000 | T | claimed 22750000; payable 21790000; out of pocket 960000 | Case B simulator |
 | TC-SIM-02 | Simulator does not change the input | Case B | T | original facts unchanged | Case B simulator |
 | TC-SIM-03 | Simulator with unknown days | Case B, days null | T | R6 unknown, likely_partial | R6 |
+| TC-R2-09 | Admission missing | admissionDate null | T | unknown, missing `admission_date` | R2 |
+| TC-R2-10 | Admission before inception | adm 2025-01-09 | T | fail, `R2_BEFORE_INCEPTION` | Engine decision 7 |
+| TC-R3-14 | Listed, inception missing | cataract, firstInceptionDate null | T | unknown, missing `first_inception_date` | R3 |
+| TC-R3-15 | Listed, plan doesn't exempt accidents | cataract + accident, month 14 | T, `accidentExempt: false` | fail | plan difference |
+| TC-R3-16 | Listed, accident unknown inside wait | cataract, isAccident null, month 14 | T | unknown, missing `is_accident` | R3 |
+| TC-R4-09 | PED, inception missing | exists true, firstInceptionDate null | T | unknown, missing `first_inception_date` | R4 |
+| TC-R6-17 | ICU with an ICU cap | icu 2000000 × 1; icu line 2000000 | T, `icuCapPaise` 1000000 | deduction 1000000 (icu head at cap) | Engine decision 5 |
+| TC-R6-18 | % plan, ICU with no ICU % | icu, rent 2000000 | T, pct 100 bps, `icuBps` null | pass | Engine decision 5 |
+| TC-R6-19 | Tier plan, ICU with a cap | SI 30000000, icu 1500000 × 1 | tiers, `icuCapPaise` 1000000 | deduction 500000 | ADR-007 |
+| TC-R6-20 | Category tier, category missing | SI 50000000, category null | tiers | unknown, missing `room_category` | ADR-007 |
+| TC-R6-21 | Over cap but nothing to cut | rent 700000; only implants on the bill | T | pass, 0 | R6 |
+| TC-R6-22 | Empty bill | no line items | T | unknown, missing `bill_line_item` | Engine decision 8 |
+| TC-R7-06 | Two co-pay tiers | age 80; tiers 61 → 2000, 76 → 3000; running 1000000 | T variant | deduction 300000 (highest tier that applies) | R7 |
+| TC-ENG-06 | Stated total above the line items | Case D with totalPaise 8100000 | T | claimed 8100000 (an `other` line of 100000) | Engine |
+| TC-SIM-04 | Simulator edge cases | ICU stay moved to a shared room; no room line; total null | T | room line replaced; others kept; total stays null | Simulator |

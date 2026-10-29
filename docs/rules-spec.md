@@ -50,7 +50,8 @@ Anything else becomes null, so the rule that needs it returns `unknown`.
 - **Months:** a wait of N months ends on the same calendar date N months after inception. Admission
   **on** that date passes (inclusive). Month-end example: 31 Jan + 1 month = 28/29 Feb (date-fns `addMonths`).
 - **Days:** a wait of 30 days: admission on inception + 30 days passes; on day 29 it fails.
-- **Rounding:** proportionate amounts use `floor(amount × cap ÷ rent)` per head. Co-pay uses
+- **Rounding:** proportionate amounts use one `floor(associated total × cap ÷ rent)` (changed 29 Oct 2026 from
+  "per head": flooring each head gives Case B ₹0.01 more deduction than its own worked arithmetic). Co-pay uses
   `floor(running × bps ÷ 10000)`. Rounding always favours the insurer and is never more than 1 paise per head.
 
 ## Verdict

@@ -5,7 +5,3 @@ export type EligibilityRule = (facts: ClaimFacts, plan: PlanConfig) => RuleResul
 
 /** R6–R8: amount rules, applied to the running amount in waterfall order. */
 export type AmountRule = (facts: ClaimFacts, plan: PlanConfig, runningPaise: Paise) => RuleResult;
-
-export const notImplemented = (): never => {
-  throw new Error('not implemented');
-};

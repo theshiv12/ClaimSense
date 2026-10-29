@@ -39,6 +39,9 @@ export const FACT_VALUE_SCHEMAS = {
   bill_line_item: PaiseSchema,
 } satisfies Record<FactKey, z.ZodType>;
 
+/** The normalised value type of one fact key. */
+export type FactValueOf<K extends FactKey> = z.infer<(typeof FACT_VALUE_SCHEMAS)[K]>;
+
 export const FactValueSchema = z.union([z.string(), z.number(), z.boolean()]).nullable();
 export type FactValue = z.infer<typeof FactValueSchema>;
 
