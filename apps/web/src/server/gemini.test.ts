@@ -1,6 +1,4 @@
-import { LlmExtractionSchema } from '@claimsense/shared';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 import { geminiFixture } from '../../test/fake-llm';
 import { createGeminiLlm, RESPONSE_SCHEMA, SYSTEM_INSTRUCTION, type InteractionsCreate } from './gemini';
 import { LlmError } from './llm';
@@ -63,6 +61,5 @@ describe('gemini response schema', () => {
     expect(items.required).toEqual(expect.arrayContaining(['key', 'valueText', 'sourceQuote', 'page']));
     const long = { documentType: 'other', facts: [{ key: 'diagnosis', head: 'none', valueText: 'x', status: 'found', sourceQuote: 'q'.repeat(501), page: 1, confidence: 'high' }] };
     await expect(fake([answer(long)]).llm.extract(pdf)).rejects.toEqual(new LlmError('LLM_OUTPUT_INVALID'));
-    void z;
   });
 });
