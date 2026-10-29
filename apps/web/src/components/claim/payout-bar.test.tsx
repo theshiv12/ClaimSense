@@ -25,3 +25,25 @@ describe('PayoutBar', () => {
     expect(screen.queryByTestId('payout-payable')).toBeNull();
   });
 });
+
+describe('PayoutBar breakdown', () => {
+  it('TC-UI-09 splits what you pay into its causes, with a legend', () => {
+    // you pay 34,200 = 24,600 room rent + 9,600 non-payables → 71.93% / 28.07% of the you-pay segment.
+    render(
+      <PayoutBar
+        claimedPaise={24_000_000}
+        payablePaise={20_580_000}
+        breakdown={[
+          { label: 'Room-rent deduction', paise: 2_460_000 },
+          { label: 'Non-payables', paise: 960_000 },
+        ]}
+      />,
+    );
+    expect(screen.getByTestId('payout-you-pay').style.width).toBe('14.25%');
+    expect(screen.getByTestId('payout-part-0').style.width).toBe('71.93%');
+    expect(screen.getByTestId('payout-part-1').style.width).toBe('28.07%');
+    expect(screen.getByText('Paid by insurer')).toBeTruthy();
+    expect(screen.getByText('Room-rent deduction ₹24,600')).toBeTruthy();
+    expect(screen.getByText('Non-payables ₹9,600')).toBeTruthy();
+  });
+});

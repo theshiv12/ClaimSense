@@ -318,3 +318,14 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-ENV-06 | Password with unencoded `@`, `/`, `#`, `:` or a bare `%` | `mongodb+srv://u:p@ss@h.net/` (and `p/ss`, `p#ss`, `p:ss`, `p%zz`) | `mongoUriProblem` | `unencoded_password`; `p%40ss` passes | Unit |
 | TC-ENV-07 | No host | `mongodb+srv://u:p@/` | `mongoUriProblem` | `no_host` | Unit |
 | TC-ENV-08 | The hint never contains the URI | each problem | `mongoUriHint(problem)` | a fix-it sentence that names `MONGODB_URI` and contains no part of the value | Unit |
+
+## Figma layouts (*autopilot*, `feat/figma-layouts`)
+
+Layout follows the Figma file "ClaimSense web app — MVP screens". Where Figma conflicts with the rules spec or
+golden rules (twin-sharing ₹2,30,400, a free-text chat, "read by Claude", 10 MB, 30-day retention), the spec wins.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-09 | The payout bar splits what you pay into its causes, with a legend (Figma 04) | Case B: claimed ₹2,40,000, payable ₹2,05,800, breakdown room-rent ₹24,600 + non-payables ₹9,600 | render `PayoutBar` with `breakdown` | `payout-you-pay` is still 14.25%; inside it room-rent is 71.93% and non-payables 28.07% (24,600 ÷ 34,200; 9,600 ÷ 34,200, rounded to 2 dp); legend reads "Paid by insurer", "Room-rent deduction ₹24,600", "Non-payables ₹9,600" | Component |
+| TC-UI-10 | The step bar shows where you are, with a word and not colour alone (Figma 02–04) | current step "Confirm facts" | render `StepBar` | four steps in order; Set up and Upload marked done (icon + "done" for screen readers); Confirm facts has `aria-current="step"` | Component |
+| TC-UI-11 | Evidence for a cut shows the policy clause and the line from the user's own document (Figma 04) | an R6 deduction; a usable room-rent fact with quote "Room charges (Single AC) 7,000 × 5" on page 1; an unusable fact | render `EvidencePanel` | "From your policy · p.5" with the clause quote; "From your documents · p.1" with the fact quote; the unusable fact's quote is not shown | Component |
