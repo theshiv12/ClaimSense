@@ -290,3 +290,5 @@ Written by the autopilot run; not yet human-approved. Vitest + Testing Library (
 | TC-UI-05 | RoomSimulator | Case B claim, simulate stub returns the twin-sharing estimate | choose "Twin sharing", ₹4,500/day, submit | stub called with `shared`, 450000 paise; shows "₹2,17,900 of ₹2,27,500", "you pay ₹9,600", "saves ₹24,600" and "Assumes other charges stay the same" | UI |
 | TC-UI-06 | RoomSimulator errors | stub returns `{ ok: false }`; rent field empty | submit | an error message; the stub is not called with an empty rent | UI |
 | TC-UI-07 | FactRow | an unverified document fact; a verified one | render, click Confirm | "Please check" vs "Verified" with icon; quote and page shown; Confirm calls the action with claim and fact ids | UI |
+| TC-UI-08 | Waiting-period results put medical advice first (review fix) | R2, R3, R4 `fail` inside a wait | render CheckRow | the line "Medical advice comes first" is shown | UI |
+| TC-AUTH-13 | A signed-in user opening a sample keeps their session (review fix) | signed-up user | `startSample('B')` | same user, same session; the sample claim is theirs | API |

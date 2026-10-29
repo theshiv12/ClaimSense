@@ -35,3 +35,13 @@ describe('CheckRow', () => {
     expect(screen.getByText(/Room rent per day, Days in room/)).toBeTruthy();
   });
 });
+
+describe('CheckRow waiting periods', () => {
+  it('TC-UI-08 puts medical advice first when a waiting period is not over', () => {
+    for (const [ruleId, reasonCode] of [['R2', 'R2_WITHIN_INITIAL_WAIT'], ['R3', 'R3_WITHIN_WAIT'], ['R4', 'R4_WITHIN_PED_WAIT']] as const) {
+      render(<CheckRow result={result({ ruleId, outcome: 'fail', reasonCode, params: { waitEnds: '2027-01-10', months: 24, days: 30, condition: 'Cataract' } })} />);
+      expect(screen.getByText(/Medical advice comes first/)).toBeTruthy();
+      cleanup();
+    }
+  });
+});
