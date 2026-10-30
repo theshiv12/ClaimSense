@@ -35,3 +35,14 @@ describe('matchPrecedents', () => {
     expect(matchPrecedents(cases, 'Star Health and Allied Insurance', r6('pass'))).toEqual([]);
   });
 });
+
+describe('sameInsurer', () => {
+  it('TC-PREC-03 the same insurer means the same insurer', async () => {
+    const { sameInsurer } = await import('./precedents');
+    const plan = 'Star Health and Allied Insurance Company Limited';
+    expect(sameInsurer('Star', plan)).toBe(false);
+    expect(sameInsurer('Star Health and Allied Insurance Co. Ltd.', plan)).toBe(true);
+    expect(sameInsurer('', plan)).toBe(false);
+    expect(sameInsurer(null, plan)).toBe(false);
+  });
+});

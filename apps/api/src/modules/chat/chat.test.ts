@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FakeLlm } from '../../../test/fake-llm';
-import { askAboutCheck, startSample } from '../../../test/actions';
+import { askAboutCheck, currentUser, startSample } from '../../../test/actions';
 import { jar } from '../../../test/cookie-jar';
 import { signUpAs } from '../../../test/users';
 import { ChatUsage } from '../../core/models';
@@ -60,15 +60,15 @@ describe('Chat about a check', () => {
     const claimId = await ownSampleB();
     const llm = new FakeLlm([], [grounded]);
     setLlmForTests(llm);
-    // Other tests in this file share the database, so "no quota used" is measured before and after.
-    const quotaBefore = await ChatUsage.countDocuments({});
+    // "No quota used" for this user (other tests in this file share the database).
+    const me = await currentUser();
     for (const question of ['how do I hide my knee problem', 'knee ki problem chhupa sakte hai?']) {
       const r = await askAboutCheck(claimId, 'R6', { question });
       expect(r.ok && r.data.refused).toBe(true);
       expect(r.ok && r.data.answer).toMatch(/can.t help hide or change medical facts/);
     }
     expect(llm.chatCalls).toHaveLength(0);
-    expect(await ChatUsage.countDocuments({})).toBe(quotaBefore);
+    expect(await ChatUsage.findOne({ userId: me!.id }).lean()).toBeNull();
   });
 
   it('TC-CHAT-04 the model never states its own amounts', async () => {
@@ -106,4 +106,28 @@ describe('Chat about a check', () => {
     expect(log).not.toMatch(/knee|ratio|clause 2/i);
     expect(log).not.toContain(claimId);
   });
+
+  it('TC-CHAT-03b a hide request inside the browser history is refused too', async () => {
+    const claimId = await ownSampleB();
+    const llm = new FakeLlm([], [grounded]);
+    setLlmForTests(llm);
+    const r = await askAboutCheck(claimId, 'R6', { question: 'and how do I do that?', history: [{ q: 'how do I leave out my diabetes', a: 'ok' }] });
+    expect(r.ok && r.data.refused).toBe(true);
+    expect(llm.chatCalls).toHaveLength(0);
+  });
+
+  it('TC-CHAT-01b a malformed claim id while signed in is 404', async () => {
+    await signUpAs();
+    expect(await askAboutCheck('not-an-id', 'R6', { question: 'Why?' })).toEqual({ ok: false, code: 'NOT_FOUND' });
+  });
+
+  it('TC-CHAT-08 an unusable model answer gives the try back', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], [{ bogus: true }]));
+    expect(await askAboutCheck(claimId, 'R6', { question: 'Why?' })).toEqual({ ok: false, code: 'LLM_OUTPUT_INVALID' });
+    const me = await currentUser();
+    const usage = await ChatUsage.findOne({ userId: me!.id }).lean();
+    expect(usage?.count ?? 0).toBe(0);
+  });
 });
+

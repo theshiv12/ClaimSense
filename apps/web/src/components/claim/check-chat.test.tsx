@@ -38,4 +38,16 @@ describe('CheckChat', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ask' }));
     expect(await screen.findByText(/Create an account to ask about your own checks/)).toBeTruthy();
   });
+
+  it('TC-UI-CHAT-03 honest and accessible: no similar-cases chip without cases, status region, roles, consent', async () => {
+    const ask = vi.fn().mockResolvedValue({ ok: true, data: reply });
+    render(<CheckChat claimId="c1" ruleId="R6" outcome="deduction" hasCases={false} ask={ask} />);
+    expect(screen.queryByRole('button', { name: 'What happened in similar cases?' })).toBeNull();
+    expect(screen.getByRole('status')).toBeTruthy(); // present before the first answer, so it is announced
+    expect(screen.getByText(/lines quoted from your documents/)).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Why was this cut?' }));
+    expect(await screen.findByText('You asked:')).toBeTruthy();
+    expect(screen.getByText('Answer:')).toBeTruthy();
+  });
 });
+

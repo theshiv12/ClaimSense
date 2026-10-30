@@ -27,4 +27,10 @@ describe('SimilarCases', () => {
     render(<SimilarCases cases={[]} />);
     expect(screen.getByText(/No reviewed cases yet/)).toBeTruthy();
   });
+
+  it('TC-UI-PREC-02 the decision link says it opens a new tab', () => {
+    render(<SimilarCases cases={[won]} />);
+    expect(screen.getByRole('link', { name: /opens in a new tab/ })).toBeTruthy();
+  });
 });
+

@@ -40,3 +40,15 @@ describe('Precedent catalog', () => {
     expect(PrecedentCatalogSchema.safeParse({ version: 1, cases: [draft] }).success).toBe(false);
   });
 });
+
+describe('Committed precedent config', () => {
+  it('TC-SH-PREC-04 every precedent config file is valid', async () => {
+    const { readFileSync, readdirSync } = await import('node:fs');
+    const root = new URL('../../../config/', import.meta.url);
+    const read = (path: string): unknown => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
+    expect(PrecedentCatalogSchema.safeParse(read('precedents.json')).success).toBe(true);
+    const drafts = readdirSync(new URL('precedents/drafts/', root)).filter((f) => f.endsWith('.json'));
+    expect(drafts.length).toBeGreaterThan(0);
+    for (const f of drafts) expect(DraftPrecedentCatalogSchema.safeParse(read(`precedents/drafts/${f}`)).success, f).toBe(true);
+  });
+});
