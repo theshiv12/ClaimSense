@@ -23,6 +23,7 @@ export function ExplainEstimate({ claimId, explain = explainEstimate }: { claimI
   const run = async () => {
     setBusy(true);
     setError(null);
+    setNeedsAccount(false);
     const r = await explain({ claimId });
     setBusy(false);
     if (r.ok) setReply(r.data);
@@ -38,7 +39,8 @@ export function ExplainEstimate({ claimId, explain = explainEstimate }: { claimI
       <p role="status" className="sr-only">
         {busy ? 'Thinking…' : ''}
       </p>
-      {reply ? <AnswerBubble reply={reply} /> : null}
+      {/* Always present, so screen readers announce the answer when it arrives. */}
+      <div aria-live="polite">{reply ? <AnswerBubble reply={reply} /> : null}</div>
       {needsAccount ? (
         <p role="alert" className="rounded-lg bg-bg px-3 py-2 text-sm text-ink">
           Create an account to get an explanation of your own estimate. Samples never call the AI.{' '}

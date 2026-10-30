@@ -1,6 +1,8 @@
 import { simulateFacts, toClaimFacts } from '@claimsense/rules';
 import {
   explain,
+  FACT_LABELS,
+  formatDate,
   formatInr,
   LlmChatAnswerSchema,
   RULE_TITLES,
@@ -118,35 +120,54 @@ export const checkSources = (view: Pick<EstimateView, 'evidence' | 'remedies' | 
 
 const amounts = (e: Estimate) => `${formatInr(e.payablePaise)} of ${formatInr(e.claimedPaise)} likely paid, you pay ${formatInr(e.outOfPocketPaise)}`;
 
+const TRUE_ONLY = 'This only applies if it is true: a false cause or disclosure can get the claim rejected and the policy cancelled.';
+const MEDICAL_FIRST = 'Medical advice comes first: never delay treatment your doctor says you need because of cover.';
+const WAITS: RuleId[] = ['R2', 'R3', 'R4'];
+
 /** FR-17: the engine's answer to one hypothetical change, in fixed words. The model is never asked. */
-export const whatIfText = (before: Estimate, after: Estimate, req: WhatIfRequest): string => {
+export const whatIfText = (before: Estimate, after: Estimate, req: WhatIfRequest, patch: WhatIfRequest['patch'] = req.patch): string => {
   const same = before.payablePaise === after.payablePaise && before.claimedPaise === after.claimedPaise && before.verdict === after.verdict;
   const changed = after.results.filter((r) => before.results.find((b) => b.ruleId === r.ruleId)?.outcome !== r.outcome);
+  const label = req.afterWait && patch.admissionDate ? `admission on ${formatDate(patch.admissionDate)} (when the waiting period ends)` : req.label;
   return [
-    `What if ${req.label}: ${same ? `No change: ${amounts(after)}.` : `${amounts(after)} (now ${amounts(before)}). ${VERDICT_WORDS[after.verdict]}.`}`,
+    `What if ${label}: ${same ? `No change: ${amounts(after)}.` : `${amounts(after)} (now ${amounts(before)}). ${VERDICT_WORDS[after.verdict]}.`}`,
     ...(changed.length > 0 ? [`Checks that change: ${changed.map((r) => `${RULE_TITLES[r.ruleId]} → ${OUTCOME_WORDS[r.outcome]}`).join('; ')}.`] : []),
-    ...(req.patch.room ? ['Assumes other charges stay the same.'] : []),
+    ...(patch.room ? ['Assumes other charges stay the same.'] : []),
+    ...(patch.isAccident !== undefined || patch.pedDisclosed !== undefined ? [TRUE_ONLY] : []),
+    ...(patch.admissionDate ? [MEDICAL_FIRST] : []),
     'A what-if only: nothing is saved.',
   ].join(' ');
 };
 
 const answerWhatIf = async (user: CurrentUserView, claimId: string, view: EstimateView, req: WhatIfRequest, ruleId: RuleId): Promise<ChatReplyView> => {
+  const fixed = (text: string) => reply(`What if ${req.label}: ${text}`, false, [], 'whatif');
+  const plan = getPlan(view.claim.planId) ?? fail('PLAN_NOT_FOUND');
+  const facts = toClaimFacts(await listFacts(user.id, claimId), view.claim.planId);
+  // Never a ward room for an ICU stay (CLAUDE.md): the two are capped differently.
+  if (req.patch.room && facts.room.category === 'icu' && req.patch.room.category !== 'icu') {
+    // No amounts and no echo of the typed rent: there is nothing to compare.
+    return reply('An ICU stay can’t be compared with a ward room; the policy caps them differently. Ask the hospital what an ICU day costs instead.', false, [], 'whatif');
+  }
   let patch = req.patch;
   if (req.afterWait) {
+    // A waiting period we cannot work out is not "no waiting period".
+    const unknownWaits = view.estimate.results.filter((r) => WAITS.includes(r.ruleId) && r.outcome === 'unknown');
+    if (unknownWaits.length > 0) {
+      const needed = [...new Set(unknownWaits.flatMap((r) => r.missingFacts))].map((k) => FACT_LABELS[k]);
+      return fixed(`we can’t work out the waiting period yet. Add: ${needed.join(', ')}.`);
+    }
     // The latest date a failing waiting period ends, from the engine's own params.
     const ends = view.estimate.results
-      .filter((r) => r.outcome === 'fail' && typeof r.params.waitEnds === 'string')
+      .filter((r) => WAITS.includes(r.ruleId) && r.outcome === 'fail' && typeof r.params.waitEnds === 'string')
       .map((r) => r.params.waitEnds as string)
       .sort()
       .at(-1);
-    if (!ends) return reply(`What if ${req.label}: no waiting period stands in the way of this claim, so there is nothing to move.`, false, [], 'whatif');
+    if (!ends) return fixed('none of this claim’s waiting periods is still running, so there is no date to move to.');
     patch = { admissionDate: ends };
   }
-  const plan = getPlan(view.claim.planId) ?? fail('PLAN_NOT_FOUND');
-  const facts = toClaimFacts(await listFacts(user.id, claimId), view.claim.planId);
   const after = simulateFacts(facts, plan, patch, view.estimate.factsVersion);
   console.info(`[chat] rule=${ruleId} whatif=true`);
-  return reply(whatIfText(view.estimate, after, req), false, [], 'whatif');
+  return reply(whatIfText(view.estimate, after, req, patch), false, [], 'whatif');
 };
 
 export const askAboutCheck = async (user: CurrentUserView, claimId: string, ruleId: RuleId, input: ChatAskInput): Promise<ChatReplyView> => {

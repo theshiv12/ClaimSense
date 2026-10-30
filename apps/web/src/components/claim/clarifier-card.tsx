@@ -23,6 +23,7 @@ export function ClarifierCard({ claimId, clarifiers, add = addFact }: { claimId:
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
   const toAsk = clarifiers.filter((c) => c.mode === 'ask');
 
   const save = async () => {
@@ -30,15 +31,22 @@ export function ClarifierCard({ claimId, clarifiers, add = addFact }: { claimId:
     if (values.length === 0) return setError('Answer at least one question.');
     setBusy(true);
     setError(null);
+    setSaved(false);
+    let savedAny = false;
     for (const v of values) {
       const r = await add({ claimId, key: v.key, head: 'none', value: v.value });
       if (!r.ok) {
-        setBusy(false);
-        return setError(ERROR_MESSAGES[r.code]);
+        setError(ERROR_MESSAGES[r.code]);
+        break;
       }
+      savedAny = true;
     }
     setBusy(false);
-    router.refresh();
+    // Whatever was saved changes the estimate, even if a later answer failed.
+    if (savedAny) {
+      setSaved(true);
+      router.refresh();
+    }
   };
 
   return (
@@ -65,6 +73,9 @@ export function ClarifierCard({ claimId, clarifiers, add = addFact }: { claimId:
         ),
       )}
       {error ? <ErrorText>{error}</ErrorText> : null}
+      <p role="status" className="text-sm text-pass-fg">
+        {saved ? 'Saved. The estimate is updated.' : ''}
+      </p>
       {toAsk.length > 0 ? (
         <Button disabled={busy} onClick={() => void save()}>
           Save answers

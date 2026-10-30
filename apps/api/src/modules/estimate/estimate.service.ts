@@ -6,6 +6,7 @@ import { findClaim, latestEstimate, listFacts } from '../../core/scope';
 import { evidenceFor } from '../../lib/evidence';
 import { getPlan, remedies } from '../../lib/plans';
 import { matchPrecedents, precedents as reviewedCases } from '../../lib/precedents';
+import { pendingDocumentKeys } from './pending';
 
 const loadClaim = async (userId: string, claimId: string) => {
   const claim = (await findClaim(userId, claimId)) ?? fail('NOT_FOUND');
@@ -65,8 +66,8 @@ export const estimateView = async (userId: string, claimId: string): Promise<Est
     remedies: forResults,
     evidence,
     precedents,
-    // FR-6: at most 2 questions; a value a document already gave (waiting for the user's check) is confirmed.
-    clarifiers: pickClarifiers(estimate.results, new Set(facts.filter((f) => f.status === 'found' && !isUsable(f)).map((f) => f.key))).map((c) => ({
+    // FR-6: at most 2 questions; a key any document has a value for is confirmed on the facts page, never asked.
+    clarifiers: pickClarifiers(estimate.results, pendingDocumentKeys(facts)).map((c) => ({
       ...c,
       question: CLARIFIER_QUESTIONS[c.key] ?? FACT_LABELS[c.key],
     })),

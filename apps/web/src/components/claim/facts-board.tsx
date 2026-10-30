@@ -1,7 +1,7 @@
 'use client';
 import { BillHead, FactKey, type ActionResult, type FactValue } from '@claimsense/shared';
 import Link from 'next/link';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import * as api from '@/lib/api/client';
 import { documentSummaries, toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, HEAD_LABELS } from '@/lib/labels';
@@ -32,7 +32,7 @@ const MAX_BYTES = 4 * 1024 * 1024;
 // A read is up to two Gemini calls of 60 s (primary, then fallback) plus PDF reading; past this, stop waiting.
 const UPLOAD_TIMEOUT_MS = 150_000;
 const TIMED_OUT =
-  'Reading this document took too long. If it finishes, its facts appear when you reload this page. Meanwhile you can enter the facts yourself below.';
+  'Reading this document took too long. If it finishes, its facts appear when you reload this page, so please don’t upload the same file again. Meanwhile you can enter the facts yourself below.';
 const MAX_SIDE = 2000;
 
 /** Photos are resized in the browser (longest side ≤ 2000 px) to stay under the 4 MB limit. */
@@ -86,6 +86,16 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
   // after the time limit is ignored.
   const [elapsed, setElapsed] = useState(0);
   const attempt = useRef(0);
+  const timers = useRef<{ ticker?: ReturnType<typeof setInterval>; timer?: ReturnType<typeof setTimeout> }>({});
+  // Leaving the page mid-read: stop the timers and ignore whatever answers later.
+  useEffect(
+    () => () => {
+      clearInterval(timers.current.ticker);
+      clearTimeout(timers.current.timer);
+      attempt.current++;
+    },
+    [],
+  );
 
   const upload = async (file: File | undefined) => {
     if (!file) return;
@@ -101,6 +111,7 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
     const mine = ++attempt.current;
     const startedAt = Date.now();
     const ticker = setInterval(() => setElapsed(Math.round((Date.now() - startedAt) / 1000)), 1000);
+    timers.current.ticker = ticker;
     const timer = setTimeout(() => {
       if (attempt.current !== mine) return;
       attempt.current++; // whatever answers later is ignored
@@ -109,6 +120,7 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
       setError(TIMED_OUT);
       setManual(true);
     }, UPLOAD_TIMEOUT_MS);
+    timers.current.timer = timer;
     const r = await actions.upload(form);
     clearTimeout(timer);
     clearInterval(ticker);

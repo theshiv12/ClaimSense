@@ -1,7 +1,7 @@
 # ADR-011: What-ifs, clarifier, plain-language explanation, conversation evals, printable summary
 
-**Date:** 30 Oct 2026 · **Status:** accepted (requested by the human; requirement text drafted by the AI and
-pending the human's approval in `docs/prd.md`)
+**Date:** 30 Oct 2026 · **Status:** proposed: built at the human's request, but the FR-6/11/12/17/18 text and
+their test cases (`docs/test-cases.md`, *autopilot*) were drafted by the AI and still need the human's approval.
 
 **Decisions.**
 
@@ -10,10 +10,15 @@ pending the human's approval in `docs/prd.md`)
    declared, sum insured). `simulateFacts` (packages/rules) applies that one change and re-runs `estimate`.
    The reply is fixed text with before/after amounts. The model is never asked, so no AI quota is used and no
    amount can come from it (golden rule 1). `simulateRoom` now delegates to `simulateFacts`.
+   A wrong parse is worse than none: negation, more than one change, compound or unmarked amounts and rents under
+   ₹100/day return null (the grounded answer takes over). "What if I say/write it was an accident" is a hide
+   request (golden rule 10). Accident and declaration what-ifs say they only count if true; date what-ifs carry the
+   medical-advice line and name the date; an unknown waiting period is never reported as "no wait"; a ward-room
+   what-if is refused for an ICU stay.
 2. **Clarifier (FR-6).** `pickClarifiers` (packages/rules, pure) ranks missing facts by how many Unknown checks
    they block and returns at most 2. Bill lines are never asked (they need the hospital's estimate). A fact a
-   document already gave, still waiting for the user's check, becomes "confirm it on the facts page", so a
-   question can never override a document (Engine decision 13).
+   document has any value for (even two that disagree) becomes "confirm it on the facts page", so a question can
+   never override a document (Engine decision 13).
 3. **Plain-language explanation (FR-11).** `POST /api/claims/:id/explain` reuses the check chat's grounded
    pipeline (`runGrounded`: quota → Gemini → `finalize` with the `vet.ts` allow-list) with the whole estimate as
    sources (`S-VERDICT`, `S-CHECK-R1..R8`, remedies), all built in code from the engine's output.

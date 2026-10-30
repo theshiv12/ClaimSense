@@ -1,4 +1,5 @@
-// FR-18 live run (manual; needs GEMINI_API_KEY in apps/api/.env.local; an approval point, it calls Gemini):
+// FR-18 live run (manual; needs GEMINI_API_KEY in apps/api/.env.local, plus MONGODB_URI set to any value because
+// the env schema requires it, though no database is used; an approval point, it calls Gemini):
 //   pnpm --filter @claimsense/api eval:live
 // Sample B through the engine (no database), each CE scenario through the same routing and checks as the API,
 // and a report in evals/reports/. Never run in CI: tests use FakeLlm (evals.test.ts).
@@ -28,7 +29,9 @@ for (const s of scenarios) {
   const result = before.results.find((r) => r.ruleId === s.ruleId);
   if (!result) throw new Error(`${s.id}: no ${s.ruleId} result`);
   const view: Pick<EstimateView, 'evidence' | 'remedies' | 'precedents'> = {
-    evidence: s.injectedDocLine ? { [s.ruleId]: [{ key: 'room_rent_per_day', quote: s.injectedDocLine, page: 1 }] } : {},
+    evidence: s.injectedDocLineB64
+      ? { [s.ruleId]: [{ key: 'room_rent_per_day', quote: Buffer.from(s.injectedDocLineB64, 'base64').toString('utf8'), page: 1 }] }
+      : {},
     remedies: remedies.remedies.filter((m) => m.ruleId === result.ruleId && m.outcome === result.outcome),
     precedents: {},
   };
@@ -36,6 +39,11 @@ for (const s of scenarios) {
   let out: ChatReplyView;
   let modelCalled = false;
   const whatIf = parseWhatIf(s.question);
+  if (whatIf?.afterWait) {
+    // The API works out the date from this claim's waits; sample B has none failing, so skip rather than guess.
+    console.info(`SKIP ${s.id} (after-the-wait what-ifs are covered by the API tests)`);
+    continue;
+  }
   if (refusesToHide(input)) out = reply(HIDE_REFUSAL, true);
   else if (whatIf) out = reply(whatIfText(before, simulateFacts(SAMPLES.B.facts, plan, whatIf.patch, 0), whatIf), false, [], 'whatif');
   else {
