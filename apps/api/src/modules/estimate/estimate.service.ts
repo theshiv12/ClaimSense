@@ -1,5 +1,5 @@
-import { estimate as runEngine, isUsable, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
-import { EstimateSchema, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
+import { estimate as runEngine, isUsable, pickClarifiers, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
+import { CLARIFIER_QUESTIONS, EstimateSchema, FACT_LABELS, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
 import { fail } from '../../core/errors';
 import { EstimateModel } from '../../core/models';
 import { findClaim, latestEstimate, listFacts } from '../../core/scope';
@@ -65,6 +65,11 @@ export const estimateView = async (userId: string, claimId: string): Promise<Est
     remedies: forResults,
     evidence,
     precedents,
+    // FR-6: at most 2 questions; a value a document already gave (waiting for the user's check) is confirmed.
+    clarifiers: pickClarifiers(estimate.results, new Set(facts.filter((f) => f.status === 'found' && !isUsable(f)).map((f) => f.key))).map((c) => ({
+      ...c,
+      question: CLARIFIER_QUESTIONS[c.key] ?? FACT_LABELS[c.key],
+    })),
     needsYou: facts.filter((f) => f.status === 'found' && !isUsable(f)).length,
   };
 };

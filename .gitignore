@@ -30,3 +30,4 @@ node_modules
 # Playwright
 apps/web/test-results/
 apps/web/playwright-report/
+apps/api/evals/reports/
