@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { deleteClaim, deleteMe } from '@/server/actions/claims';
+import { deleteClaim, deleteMe } from '@/lib/api/client';
 import { ERROR_MESSAGES } from '@/lib/labels';
 import { Button } from '../ui/button';
 import { ErrorText } from '../ui/field';

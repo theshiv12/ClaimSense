@@ -1,5 +1,5 @@
 import { formatDate, formatInr } from '@/lib/format';
-import type { ClaimSummary } from '@/server/views';
+import type { ClaimSummary } from '@claimsense/shared';
 import { ButtonLink } from '../ui/button';
 import { Chip } from '../ui/chip';
 import { DeleteClaimButton } from './delete-buttons';

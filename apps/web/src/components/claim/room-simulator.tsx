@@ -1,17 +1,17 @@
 'use client';
-import type { ActionResult, Estimate, RoomCategory } from '@claimsense/shared';
+import type { Estimate, RoomCategory } from '@claimsense/shared';
 import { useId, useState } from 'react';
-import { formatInr, rupeesToPaise } from '@/lib/format';
+import { simulateRoom } from '@/lib/api/client';
+import { rupeesToPaise } from '@/lib/format';
 import { ERROR_MESSAGES, ROOM_LABELS } from '@/lib/labels';
 import { Button } from '../ui/button';
 import { ErrorText, Field, inputClass } from '../ui/field';
-
-type Simulate = (input: { claimId: string; category: RoomCategory; rentPerDayPaise: number }) => Promise<ActionResult<{ estimate: Estimate }>>;
+import { ScenarioResult, type Simulate } from './scenario-result';
 
 const CATEGORIES: RoomCategory[] = ['general', 'shared', 'single', 'deluxe', 'suite'];
 
 /** What-if for a cheaper (or dearer) room. Re-runs the rules engine on the server; nothing is saved. */
-export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { claimId: string; currentOutOfPocketPaise: number; simulate: Simulate }) {
+export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate = simulateRoom }: { claimId: string; currentOutOfPocketPaise: number; simulate?: Simulate }) {
   const id = useId();
   const [category, setCategory] = useState<RoomCategory>('shared');
   const [rent, setRent] = useState('4500');
@@ -33,7 +33,6 @@ export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { 
     else setError(`We could not run this scenario. ${ERROR_MESSAGES[r.code]}`);
   };
 
-  const saving = result ? currentOutOfPocketPaise - result.outOfPocketPaise : 0;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 [&>button]:col-span-2">
@@ -54,15 +53,7 @@ export function RoomSimulator({ claimId, currentOutOfPocketPaise, simulate }: { 
         </Button>
       </div>
       {error ? <ErrorText>{error}</ErrorText> : null}
-      {result ? (
-        <div aria-live="polite" className="rounded-lg bg-bg p-4 text-sm">
-          <p className="text-base font-semibold text-ink">{`${formatInr(result.payablePaise)} of ${formatInr(result.claimedPaise)}`}</p>
-          <p className="text-muted">
-            likely paid; you pay {formatInr(result.outOfPocketPaise)}
-            {saving > 0 ? ` — saves ${formatInr(saving)}` : ''}
-          </p>
-        </div>
-      ) : null}
+      {result ? <ScenarioResult result={result} currentOutOfPocketPaise={currentOutOfPocketPaise} /> : null}
       <p className="text-xs text-muted">Assumes other charges stay the same. Ask the hospital for its tariff for the room you choose.</p>
     </div>
   );

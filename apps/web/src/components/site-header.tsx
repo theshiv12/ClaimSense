@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { currentUser } from '@/server/auth';
-import { logoutAndGoHome } from '@/server/actions/navigation';
+import { currentUser } from '@/lib/api/server';
+import { LogoutButton } from './forms/logout-button';
 import { buttonClass } from './ui/button';
 import { Brand } from './ui/brand';
 
 export async function SiteHeader() {
-  const user = await currentUser().catch(() => null);
+  const user = await currentUser();
   return (
     <header className="border-b border-border bg-white">
       <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-10" aria-label="Main">
@@ -16,9 +16,7 @@ export async function SiteHeader() {
               <Link className="text-muted hover:text-ink" href="/claims">My claims</Link>
               {user.isGuest ? <Link className="text-muted hover:text-ink" href="/signup">Create account</Link> : null}
               {user.email ? <span className="hidden text-muted md:inline">{user.email}</span> : null}
-              <form action={logoutAndGoHome}>
-                <button type="submit" className={buttonClass('secondary')}>{user.isGuest ? 'End sample' : 'Log out'}</button>
-              </form>
+              <LogoutButton label={user.isGuest ? 'End sample' : 'Log out'} />
             </>
           ) : (
             <>

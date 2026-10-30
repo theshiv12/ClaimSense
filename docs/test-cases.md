@@ -241,7 +241,7 @@ cookies faked in memory. "A" and "B" are two signed-up users.
 ## Extraction: pdf-text, quote-verify, normalise, gemini, uploadAndExtract (autopilot, 29 Oct 2026)
 
 Written by the autopilot run; not yet human-approved. No network: `FakeLlm` and hand-written fixtures in
-`apps/web/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
+`apps/api/test/fixtures/gemini/` (shape of a Gemini response; not live-recorded, see ADR-008).
 
 | ID | Requirement | Given | When | Then | Type |
 |---|---|---|---|---|---|
@@ -345,3 +345,69 @@ golden rules (twin-sharing ₹2,30,400, a free-text chat, "read by Claude", 10 M
 | TC-UI-17 | Consent switches are announced as switches; the required one is marked required | setup form | render | three `role="switch"`; the analysis switch has `aria-required="true"` | Component |
 | TC-ENV-09 | An `@` in the query string is not a password | `mongodb://localhost:27017/db?appName=a@b` | `mongoUriProblem` | `null` | Unit |
 | TC-GEM-01b | (strengthens TC-GEM-01/05, needs human sign-off) the schema sent equals Zod's JSON schema with only bound keywords removed, built independently in the test; key/head/status/confidence enums and every property name survive | `LlmExtractionSchema` | build request | equals the test-built expected schema; enums present; property names equal the Zod shape keys | Unit |
+
+## Express API migration (*autopilot*, `feat/express-api`, ADR-009)
+
+The server actions became REST endpoints in `apps/api` (docs/api.md). Every server test moved with its ID and
+its assertions: it calls the endpoints over HTTP through `apps/api/test/actions.ts`, which keeps the old action
+names and the same `ActionResult`. Where each one lives now:
+
+| IDs | Was | Now |
+|---|---|---|
+| TC-AUTH-* | `apps/web/src/server/auth.test.ts` | `apps/api/src/modules/auth/auth.test.ts` |
+| TC-ACT-08 | `server/navigation.test.ts` | `modules/auth/navigation.test.ts` |
+| TC-ACT-01..07 | `server/actions.test.ts` | `modules/claims/actions.test.ts` |
+| TC-OWN-* | `server/ownership.test.ts` | `modules/claims/ownership.test.ts` |
+| review fixes | `server/review-fixes.test.ts` | `modules/claims/review-fixes.test.ts` |
+| TC-EXT-* | `server/extract.test.ts`, `extract-review.test.ts` | `modules/extraction/` |
+| TC-UI-14 | `server/views.test.ts` | `modules/estimate/views.test.ts` |
+| TC-GEM-* | `server/gemini.test.ts` | `integrations/gemini.test.ts` |
+| TC-NORM-*, TC-QV-*, TC-ENV-* | `server/normalize`, `quote-verify`, `lib/mongo-uri` tests | `apps/api/src/lib/` |
+
+New, for the HTTP boundary:
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-API-01 | Health check | the app | GET `/healthz` | 200 `{ ok: true }`, no cookie | API |
+| TC-API-02 | Error codes map to HTTP statuses | no session; bad input; a foreign claim id; a taken email | POST `/api/claims`; POST `/api/auth/signup` bad body; GET `/api/claims/<other>`; signup twice | 401 `AUTH_REQUIRED`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND`; 409 `EMAIL_TAKEN`; body is always the `ActionResult` | API |
+| TC-API-03 | Writes from another site are refused (CSRF; replaces Next's server-action origin check) | a signed-in user | POST `/api/claims` with `Origin: https://evil.example` | 401 `AUTH_REQUIRED`, nothing created (the closed ErrorCode set has no 403 code: TC-SH-05) | API |
+| TC-API-04 | Reads never create sessions (CLAUDE.md) | no cookie | GET `/api/auth/me`, `/api/plans`, `/healthz` | no `Set-Cookie` on any of them | API |
+| TC-API-05 | The session cookie keeps its flags behind the proxy | signup | POST `/api/auth/signup` | `Set-Cookie: cs_session=…; HttpOnly; Secure; SameSite=Lax; Path=/` | API |
+| TC-API-06 | Request logs never contain bodies, queries or health data (golden rule 6) | a fact with a diagnosis | POST `/api/claims/:id/facts` with `{ value: 'Osteoarthritis' }` and `?q=knee` | the log line has method, route pattern, status and ms only; no "Osteoarthritis", no "knee", no claim id | API |
+| TC-API-07 | Over-size uploads are refused before reading | a 4 MB + 1 byte file | POST `/api/claims/:id/documents` | 413 `FILE_TOO_LARGE` | API |
+| TC-API-08 | Unknown routes and malformed JSON | the app | GET `/api/nope`; POST `/api/claims` with `{bad json` | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED` | API |
+| TC-API-09 | Plans list for the setup form | the app | GET `/api/plans` | `[{ planId: 'star-fho', name: '<planName> (<wordingVersion>)' }]` from the plan config | API |
+
+### Review fixes (code-reviewer on `feat/express-api`)
+
+**Decision on malformed ids.** A path id of 1–64 characters that isn't the user's is `NOT_FOUND` (golden rule 5, as
+before). An id longer than 64 stays `VALIDATION_FAILED`, exactly as the server actions returned it (TC-ACT-07). A
+path that can't be decoded is `NOT_FOUND`. Pages show 404 for every bad id.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-API-03b | Every cross-site signal is refused; same-origin and Origin-less (server) calls pass; the configured origin is normalised | signed-in user | POST `/api/claims` with `Sec-Fetch-Site: cross-site`; `Origin: null`; no Origin; `webOrigin('http://localhost:3000/')` | 401 `AUTH_REQUIRED`; 401; 200; `http://localhost:3000` | API |
+| TC-API-11 | The per-IP sample limit uses the client IP the web proxy vouches for, never a client-sent `X-Forwarded-For` | `TRUST_PROXY=loopback`, proxy secret set | 21 sample starts from the same proxied client IP, each with a different spoofed XFF; then one with a wrong proxy key | the 21st is 429 `RATE_LIMITED`; with a wrong key the proxied IP header is ignored (another bucket) | API |
+| TC-API-12 | Undecodable path → 404; broken multipart → 400; an upload to someone else's claim is refused before the body is read | signed-in user | GET `/api/claims/%E0%A4%A`; POST `/documents` with a truncated multipart body; POST `/documents` to a foreign claim | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND` | API |
+| TC-UI-18 | The sample button goes where the API says | `startSample` ok / `RATE_LIMITED` / another error | click | `/claims/<id>`; `/?sample=busy`; `/` | Component |
+
+## "What can I do?" fix-it panel (*autopilot*, docs/one-night-build.md §1: remedies panel + room simulator; no chat)
+
+Case B arithmetic for the room preset (docs/rules-spec.md; SI ₹3L → cap ₹5,000/day): room 5,000 × 5 = 25,000 is within
+the cap, so no R6 cut; bill 2,40,000 − 35,000 + 25,000 = **2,30,000**; payable 2,30,000 − 9,600 = **2,20,400**; you pay
+**9,600**; saves 34,200 − 9,600 = **24,600**.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-FIX-01 | The button opens that check's own remedies | `CheckRow` R6 deduction, remedies: 3 for R6 deduction, 1 for R7 | click "What can I do?" | `aria-expanded` true; the 3 R6 titles shown, not the R7 one; click again closes | Component |
+| TC-FIX-02 | R6 deduction: one-click room within the limit, run by the engine | R6 deduction, `capPerDayPaise` 500000; `simulate` returns the Case B twin-sharing-at-cap estimate | click "Try a room within the limit" | `simulate({ claimId, category: 'shared', rentPerDayPaise: 500000 })`; "₹2,20,400 of ₹2,30,000", "you pay ₹9,600", "saves ₹24,600", "Assumes other charges stay the same" | Component |
+| TC-FIX-03 | Unknown: go and add the missing facts | R6 unknown, missing `room_rent_per_day`, `room_days` | open the panel | links "Add Room rent per day" → `/claims/c1/facts?add=room_rent_per_day` and "Add Days in room" → `?add=room_days` | Component |
+| TC-FIX-04 | Fail: escalation steps, medical advice first, disclaimer | R2 fail inside the initial wait | open the panel | "Medical advice comes first" shown before the remedies; Insurance Ombudsman step; disclaimer; no "approved" | Component |
+| TC-FIX-05 | No empty promise | a pass row; a row with no remedies | render | no "What can I do?" button | Component |
+| TC-FIX-06 | The facts page opens the form for the fact asked for | `FactsBoard initialAddKey="room_days"`; then `initialAddKey="not_a_key"` | render | form open with "Days in room" selected; an invalid key leaves the form closed | Component |
+| TC-E2E-04 | The whole thing in a browser | sample B | "What can I do?" on Room rent limit → "Try a room within the limit" | R6 remedy "Choose a room within your policy's limit" visible; "₹2,20,400 of ₹2,30,000"; "you pay ₹9,600"; never "approved" | E2E |
+| TC-R6-24 | A deduction names the room head it judged (review fix) | plan T with ICU cap ₹8,000; ward single ₹7,000 × 1; ICU ₹10,000 × 1 | R6 | `params.roomHead` 'room' (cap 500000); 'icu' (cap 800000, cut 200000) | Unit |
+| TC-FIX-06b | A pending document value is confirmed, not overridden (Engine decision 13) | a found, unconfirmed document fact for `room_days` | `FactsBoard initialAddKey="room_days"` | form stays closed; notice "Days in room was read from your document: confirm it or correct it below" | Component |
+| TC-FIX-07 | No ward-room preset for an ICU stay (review fix) | R6 deduction with `roomHead: 'icu'` | open the panel | remedies shown; no "Try a room within the limit" | Component |
+| TC-FIX-08 | Distinct panel names; `aria-controls` never dangles | R6 deduction | before and after opening | no `aria-controls` while closed; once open it is the id of region "What you can do: Room rent limit" (the panel unmounts when closed: TC-FIX-01 requires its text to disappear, so keeping it mounted-but-hidden was dropped) | Component |
+| TC-FIX-09 | Unknown: enter facts exactly as the documents show (golden rule 10) | R6 unknown | open the panel | "Enter each one exactly as your documents show" | Component |

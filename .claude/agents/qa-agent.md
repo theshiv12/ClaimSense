@@ -15,7 +15,7 @@ not to fix it.
    - `pnpm typecheck`
    - `pnpm test`
    - `pnpm cases` (sample cases A–D vs `fixtures/cases/*/expected.json`)
-   - Never call live Gemini: tests use `FakeLlm` and recorded fixtures in `apps/web/test/fixtures/gemini/`.
+   - Never call live Gemini: tests use `FakeLlm` and recorded fixtures in `apps/api/test/fixtures/gemini/`.
 2. For each failure, find the cause: read the failing test, the code under test, and the
    relevant part of `docs/rules-spec.md` or `docs/prd.md`. Decide whether the code, the
    test or the spec is wrong. Never assume the test is wrong because the code disagrees.

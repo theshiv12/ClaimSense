@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { filterClaims } from '@/lib/claim-stats';
-import type { ClaimSummary } from '@/server/views';
+import type { ClaimSummary } from '@claimsense/shared';
 import { Card } from '../ui/card';
 import { inputClass } from '../ui/field';
 import { ClaimRow } from './claim-row';

@@ -1,6 +1,5 @@
-import type { Estimate } from '@claimsense/shared';
+import type { Estimate, EstimateView } from '@claimsense/shared';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
 import { CheckRow } from '@/components/claim/check-row';
 import { ClaimBar } from '@/components/claim/claim-bar';
 import { DeleteClaimButton, DeleteMyDataButton } from '@/components/claim/delete-buttons';
@@ -8,15 +7,12 @@ import { Disclaimer } from '@/components/claim/disclaimer';
 import { EvidencePanel } from '@/components/claim/evidence-panel';
 import { PayoutBar, type PayoutPart } from '@/components/claim/payout-bar';
 import { RejectionSteps } from '@/components/claim/rejection-steps';
-import { RemediesPanel } from '@/components/claim/remedies-panel';
 import { RoomSimulator } from '@/components/claim/room-simulator';
 import { VerdictHeadline } from '@/components/claim/verdict-headline';
 import { buttonClass } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatDate } from '@/lib/format';
-import { simulateRoom } from '@/server/actions/estimate';
-import { currentUser } from '@/server/auth';
-import { estimateView } from '@/server/views';
+import { apiPage } from '@/lib/api/server';
 
 /** What makes up "you pay", from the engine's own amounts; whatever is left is not covered until checks clear. */
 const breakdownOf = (e: Estimate): PayoutPart[] => {
@@ -33,16 +29,12 @@ const breakdownOf = (e: Estimate): PayoutPart[] => {
 
 export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>) {
   const { id } = await params;
-  const user = await currentUser();
-  if (!user) redirect(`/login?next=/claims/${id}`);
-  const view = await estimateView(user.id, id);
-  if (!view) notFound();
-  const { claim, plan, estimate, remedies, evidence, needsYou } = view;
+  const { claim, plan, estimate, remedies, evidence, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
   const notPassed = estimate.results.filter((r) => r.outcome !== 'pass');
   const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
     <>
-      <ClaimBar step="estimate" claimId={id} pendingFacts={needsYou} subject={`For ${claim.subject?.relation} · ${claim.subject?.treatment}${sample}`}>
+      <ClaimBar step="estimate" claimId={id} pendingFacts={needsYou} subject={`For ${claim.relation} · ${claim.treatment}${sample}`}>
         <DeleteMyDataButton />
       </ClaimBar>
       <main className="mx-auto grid max-w-[1440px] gap-5 px-4 py-6 sm:px-10 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -62,7 +54,15 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
             </div>
             <ul>
               {estimate.results.map((r) => (
-                <CheckRow key={r.ruleId} result={r} actionHref={remedies.some((m) => m.ruleId === r.ruleId) ? '#remedies' : undefined} />
+                <CheckRow
+                  key={r.ruleId}
+                  result={r}
+                  fix={{
+                    claimId: id,
+                    remedies: remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
+                    currentOutOfPocketPaise: estimate.outOfPocketPaise,
+                  }}
+                />
               ))}
             </ul>
           </Card>
@@ -80,7 +80,7 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
           <Card>
             <h2 className="mb-1 text-lg font-semibold text-ink">Compare room types</h2>
             <p className="mb-4 text-sm text-muted">The room changes more than the room charge: other charges are cut in proportion when the room is over the limit.</p>
-            <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} simulate={simulateRoom} />
+            <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} />
           </Card>
 
           {notPassed.map((r) => (
@@ -88,11 +88,6 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
               <EvidencePanel result={r} lines={evidence[r.ruleId] ?? []} />
             </Card>
           ))}
-
-          <Card>
-            <h2 id="remedies" className="mb-3 scroll-mt-6 text-lg font-semibold text-ink">What you can do</h2>
-            <RemediesPanel remedies={remedies} />
-          </Card>
 
           <Card>
             <h2 className="mb-3 text-lg font-semibold text-ink">If the claim is rejected later</h2>

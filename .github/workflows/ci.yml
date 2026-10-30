@@ -74,4 +74,14 @@ jobs:
       image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v7
-      - run: semgrep scan --config p/typescript --config p/nodejsscan --config p/secrets --error --exclude node_modules --exclude 'apps/web/test/fixtures'
+      # The njsscan "good_helmet_checks" rules are informational: they report that helmet's headers ARE set
+      # (apps/api/src/app.ts). --error would make that a failure, so exactly those rule ids are excluded.
+      - run: >-
+          semgrep scan --config p/typescript --config p/nodejsscan --config p/secrets --error
+          --exclude node_modules --exclude 'apps/api/test/fixtures'
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_x_powered_by
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_dns_prefetch
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_hsts
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_ienoopen
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_nosniff
+          --exclude-rule ajinabraham.njsscan.good.good_helmet_checks.helmet_header_xss_filter

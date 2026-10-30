@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { ClaimBar } from '@/components/claim/claim-bar';
 import { NewClaimForm } from '@/components/forms/new-claim-form';
-import { currentUser } from '@/server/auth';
-import { listPlans } from '@/server/plans';
+import type { PlanOption } from '@claimsense/shared';
+import { apiPage, currentUser } from '@/lib/api/server';
 
 export default async function NewClaimPage() {
   const user = await currentUser();
   if (!user || user.isGuest) redirect('/signup?next=/claims/new');
-  const plans = listPlans().map((p) => ({ planId: p.planId, name: `${p.planName} (${p.wordingVersion})` }));
+  const plans = await apiPage<PlanOption[]>('/api/plans', '/claims/new');
   return (
     <>
       <ClaimBar step="setup" />

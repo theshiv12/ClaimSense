@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { ERROR_MESSAGES } from '@/lib/labels';
-import { login, signup } from '@/server/actions/auth';
+import { login, signup } from '@/lib/api/client';
 import { Button } from '../ui/button';
 import { ErrorText, Field, inputClass } from '../ui/field';
 

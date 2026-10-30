@@ -2,6 +2,7 @@
 import { BillHead, FactKey, type ActionResult, type FactValue } from '@claimsense/shared';
 import Link from 'next/link';
 import { useId, useState } from 'react';
+import * as api from '@/lib/api/client';
 import { documentSummaries, toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, HEAD_LABELS } from '@/lib/labels';
 import { buttonClass, Button } from '../ui/button';
@@ -18,10 +19,13 @@ type UploadResult = Promise<ActionResult<{ facts: WireFact[]; needsYou: number; 
 interface Props {
   claimId: string;
   initial: StoredFactView[];
-  actions: FactActions & {
+  /** Defaults to the REST API (lib/api/client); tests pass fakes. */
+  actions?: FactActions & {
     add: (input: { claimId: string; key: FactKey; head: BillHead; value: FactValue }) => FactResult;
     upload: (form: FormData) => UploadResult;
   };
+  /** From "What can I do?" (`?add=<key>`): open the manual form on this fact. Anything not a FactKey is ignored. */
+  initialAddKey?: string;
 }
 
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -46,14 +50,26 @@ const WARNINGS: Record<string, string> = {
   NO_TEXT_LAYER: 'This is a photo or scan, so quotes cannot be checked automatically. Please confirm each fact.',
 };
 
-export function FactsBoard({ claimId, initial, actions }: Props) {
+const API_ACTIONS: NonNullable<Props['actions']> = {
+  confirm: api.confirmFact,
+  edit: api.editFact,
+  add: api.addFact,
+  upload: api.uploadAndExtract,
+};
+
+export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAddKey }: Props) {
+  const parsedAsk = FactKey.safeParse(initialAddKey);
+  // A value read from a document and still waiting for the user's check is confirmed or corrected in place,
+  // not overridden by a new user-stated value (Engine decision 13; golden rule 10).
+  const pendingAsk = parsedAsk.success && initial.some((f) => f.key === parsedAsk.data && f.status === 'found' && !f.usable);
+  const asked = pendingAsk ? { success: false as const } : parsedAsk;
   const id = useId();
   const [facts, setFacts] = useState(initial);
   const [notice, setNotice] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [manual, setManual] = useState(false);
+  const [manual, setManual] = useState(asked.success);
   const [busy, setBusy] = useState(false);
-  const [key, setKey] = useState<FactKey>('sum_insured');
+  const [key, setKey] = useState<FactKey>(asked.success ? asked.data : 'sum_insured');
   const [head, setHead] = useState<BillHead>('room');
   const [text, setText] = useState('');
 
@@ -138,6 +154,11 @@ export function FactsBoard({ claimId, initial, actions }: Props) {
           <div>
             <h1 className="text-2xl font-bold text-ink">Check what we found</h1>
             <p className="text-sm text-muted">The estimate uses only confirmed facts. Correct anything that’s wrong. We never guess.</p>
+            {pendingAsk && parsedAsk.success ? (
+              <p role="status" className="mt-2 rounded-lg bg-warn-bg px-3 py-2 text-sm text-warn-fg">
+                {`${FACT_LABELS[parsedAsk.data]} was read from your document: confirm it or correct it below.`}
+              </p>
+            ) : null}
           </div>
           {needsYou > 0 ? <Chip tone="warn">{needsYou} need you</Chip> : <Chip tone="pass">All facts usable</Chip>}
         </div>

@@ -1,5 +1,5 @@
 import type { RuleResult } from '@claimsense/shared';
-import type { EvidenceLine } from '@/lib/evidence';
+import type { EvidenceLine } from '@claimsense/shared';
 import { explain, FACT_LABELS, RULE_TITLES } from '@/lib/labels';
 
 /** Why a check came out this way: the plan clause and the document lines the engine used (Figma 04; see lib/evidence). */

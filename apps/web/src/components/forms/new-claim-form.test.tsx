@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NewClaimForm } from './new-claim-form';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock('@/server/actions/claims', () => ({ createClaim: vi.fn() }));
+vi.mock('@/lib/api/client', () => ({ createClaim: vi.fn() }));
 afterEach(cleanup);
 
 describe('NewClaimForm', () => {

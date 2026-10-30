@@ -5,6 +5,7 @@ packages:
 allowBuilds:
   unrs-resolver: true # native resolver for eslint-config-next's import plugin
   mongodb-memory-server: true # downloads the mongod binary used by tests
+  esbuild: true # native binary used by tsx (api dev) and tsup (api build)
   '@google/genai': false # postinstall not needed
   protobufjs: false # postinstall not needed
 

@@ -7,13 +7,14 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "dev": "pnpm --filter @claimsense/web dev",
+    "dev": "pnpm --parallel --filter @claimsense/api --filter @claimsense/web run dev",
     "build": "pnpm -r --if-present run build",
     "lint": "pnpm --filter @claimsense/web exec next typegen && eslint .",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "test:cov": "pnpm -r run test:cov",
-    "cases": "pnpm --filter @claimsense/rules run cases"
+    "cases": "pnpm --filter @claimsense/rules run cases",
+    "check:env": "pnpm --filter @claimsense/api run check:env"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
