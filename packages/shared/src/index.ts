@@ -10,3 +10,4 @@ export * from './llm-extraction.schema';
 export * from './remedies.schema';
 export * from './actions.schema';
 export * from './api-views';
+export * from './explain';
