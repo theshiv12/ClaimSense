@@ -121,6 +121,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - A page with a bad or undecodable id shows 404; test helpers never encode a different contract than `docs/api.md`.
 - Per-IP limits use the client IP the web proxy vouches for (`X-CS-Client-IP` + `PROXY_SECRET`), never `X-Forwarded-For`.
 - No simulation (ADR-012): amounts shown are always the engine's estimate of the real facts, never of hypothetical ones.
+- Removing a feature never removes its safety guard: a what-if still gets the truthfulness and doctor lines in code, whoever answers it.
 - Code checks on model output are allow-lists built only from trusted sources (engine, plan config, catalog), never document text or browser history.
 - Parsers of user text return null on negation, ambiguity or more than one match: a wrong parse is worse than none.
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.

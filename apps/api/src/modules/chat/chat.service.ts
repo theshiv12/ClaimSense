@@ -17,17 +17,20 @@ import { fail } from '../../core/errors';
 import { ChatUsage } from '../../core/models';
 import { getLlm, LlmError } from '../../integrations/llm';
 import { estimateView } from '../estimate/estimate.service';
-import { asksToHide, vetAnswer } from './vet';
+import { asksToHide, asksWhatIf, vetAnswer } from './vet';
 
 // "Ask about this check" (ADR-010). The model may only explain the numbered sources built here; every answer is
 // checked in code before it reaches the user (golden rules 1 and 10). Hide requests never reach the model: fixed
-// text answers them. A what-if question is an ordinary question (simulation was removed, ADR-012). Nothing is stored.
+// text answers them. A what-if is never computed (ADR-012): the model explains, and code adds the truthfulness and
+// doctor lines to it whoever answers. Nothing is stored.
 
 const DISCLAIMER = 'Estimate, not a guarantee. Only your insurer decides. Not medical or legal advice.';
 export const SAFE_REPLY =
   'I can only explain what is in your policy, your documents and this check. For the amounts, see the estimate above; only your insurer decides.';
 export const HIDE_REFUSAL =
   "I can't help hide or change medical facts. A false or missing disclosure can get the claim rejected and the policy cancelled. The steps above are what you can do.";
+const TRUE_ONLY = 'This only applies if it is true: a false cause or disclosure can get the claim rejected and the policy cancelled.';
+const MEDICAL_FIRST = 'Medical advice comes first: never delay treatment your doctor says you need because of cover.';
 
 export const VERDICT_WORDS: Record<Estimate['verdict'], string> = {
   likely_payable: 'Likely paid in full',
@@ -49,21 +52,23 @@ const takeChatQuota = async (userId: Types.ObjectId) => {
   return { ok, refund };
 };
 
-export const reply = (answer: string, refused: boolean, citations: ChatReplyView['citations'] = []): ChatReplyView => ({
-  answer: `${answer}\n\n${DISCLAIMER}`,
+export const reply = (answer: string, refused: boolean, citations: ChatReplyView['citations'] = [], notes: string[] = []): ChatReplyView => ({
+  answer: [answer, ...(notes.length ? [notes.join('\n')] : []), DISCLAIMER].join('\n\n'),
   refused,
   citations,
 });
 
-/** The model's raw output → what the user may see: Zod, the allow-list checks (vet.ts), known citations only. */
-export const finalize = (raw: LlmChatAnswer, sources: ChatSource[]): ChatReplyView => {
-  if (!vetAnswer(raw.answer, sources)) return reply(SAFE_REPLY, true);
+/** The model's raw output → what the user may see: Zod, the allow-list checks (vet.ts), known citations only, and
+ *  for a what-if the truthfulness and doctor lines (added here, so they never depend on the model). */
+export const finalize = (raw: LlmChatAnswer, sources: ChatSource[], question = ''): ChatReplyView => {
+  const notes = asksWhatIf(question) ? [TRUE_ONLY, MEDICAL_FIRST] : [];
+  if (!vetAnswer(raw.answer, sources)) return reply(SAFE_REPLY, true, [], notes);
   const byId = new Map(sources.map((s) => [s.id, s]));
   const citations = [...new Set(raw.citations)].flatMap((id) => {
     const s = byId.get(id);
     return s ? [{ id: s.id, label: s.label, kind: s.kind }] : [];
   });
-  return reply(raw.answer.trim(), raw.refused, citations);
+  return reply(raw.answer.trim(), raw.refused, citations, notes);
 };
 
 /** Hiding or changing facts, in the question or the browser's history (untrusted too): refused without the model. */
@@ -85,7 +90,7 @@ export const runGrounded = async (user: CurrentUserView, sources: ChatSource[], 
     await quota.refund(); // an unusable answer is not the user's fault, as when gemini.ts cannot parse it
     return fail('LLM_OUTPUT_INVALID');
   }
-  const out = finalize(parsed.data, sources);
+  const out = finalize(parsed.data, sources, input.question);
   console.info(`[chat] ${tag} refused=${out.refused} cited=${out.citations.length}${out.refused && !parsed.data.refused ? ' guard=output' : ''}`);
   return out;
 };

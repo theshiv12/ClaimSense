@@ -41,7 +41,7 @@ for (const s of scenarios) {
   else {
     modelCalled = true;
     const sources = checkSources(view, result);
-    out = finalize(LlmChatAnswerSchema.parse(await llm.answer({ sources, ...input })), sources);
+    out = finalize(LlmChatAnswerSchema.parse(await llm.answer({ sources, ...input })), sources, input.question);
   }
   const problems = checkExpectations(s, out, modelCalled);
   results.push({ id: s.id, ok: problems.length === 0, problems, refused: out.refused });

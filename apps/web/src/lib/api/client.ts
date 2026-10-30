@@ -36,7 +36,6 @@ export const editFact = ({ claimId, factId, value }: { claimId: string; factId: 
 export const addFact = ({ claimId, ...rest }: { claimId: string; key: string; head: string; value: unknown }): R<{ fact: WireFact }> =>
   call('POST', `/api/claims/${id(claimId)}/facts`, rest);
 
-
 /** Multipart upload; the bytes are read, extracted and discarded by the API (golden rule 9). */
 export const uploadAndExtract = async (form: FormData): R<UploadResultView> => {
   const claimId = form.get('claimId');

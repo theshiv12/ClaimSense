@@ -160,7 +160,7 @@
       "ruleId": "R6",
       "outcome": "deduction",
       "title": "Choose a room within your policy's limit",
-      "body": "A room above the limit also cuts associated charges in proportion. A room within the cap removes this deduction: ask the hospital for its room tariff and which rooms fall within your limit."
+      "body": "A room above the limit also cuts associated charges in proportion. A room within the cap removes this deduction: ask the hospital for its room tariff and which rooms fall within your limit. If your doctor says you need ICU, do not change the room for cover; ask what an ICU day costs."
     },
     {
       "id": "r6-deduction-billing",

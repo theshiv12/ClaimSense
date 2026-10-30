@@ -3,7 +3,6 @@ import type { ChatReplyView } from '@claimsense/shared';
 // Shared by the CI evals (src/modules/chat/evals.test.ts, FakeLlm) and the live run (evals/live.ts, Gemini).
 
 export interface EvalExpect {
-  kind?: 'answer';
   refused?: boolean;
   modelCalled?: boolean;
   citesKinds?: string[];

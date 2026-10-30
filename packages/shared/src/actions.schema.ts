@@ -42,4 +42,3 @@ export const ClaimIdInputSchema = z.object({ claimId: Id });
 export const FactIdInputSchema = z.object({ claimId: Id, factId: Id });
 export const EditFactInputSchema = z.object({ claimId: Id, factId: Id, value: FactValueSchema });
 export const AddFactInputSchema = z.object({ claimId: Id, key: FactKey, head: BillHead, value: FactValueSchema });
-export const SimulateRoomInputSchema = z.object({ claimId: Id, category: RoomCategory, rentPerDayPaise: MaxPaise });

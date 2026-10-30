@@ -40,6 +40,6 @@ The web app has **no database, no Gemini and no secrets**. Its only setting is `
 ## Tests (written first, see the `tdd` skill)
 
 - Vitest + Testing Library for components with logic (CheckRow states, PayoutBar widths).
-- Client components that call the API take an injectable action prop (`actions`, `simulate`) so tests pass fakes;
+- Client components that call the API take an injectable action prop (`actions`, `ask`) so tests pass fakes;
   the API itself is tested in `apps/api`.
 - Test what the user sees (text, roles), not implementation details.
