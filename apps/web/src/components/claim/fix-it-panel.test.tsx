@@ -87,3 +87,35 @@ describe('What can I do?', () => {
     expect(screen.queryByRole('button', { name: 'What can I do?' })).toBeNull();
   });
 });
+
+describe('What can I do? (review fixes)', () => {
+  it('TC-FIX-07 never offers a ward room for an ICU stay', async () => {
+    const icuCut = result({ ...r6Cut, params: { ...r6Cut.params, roomHead: 'icu', capPerDayPaise: 800_000 } });
+    render(<ul><CheckRow result={icuCut} fix={fix(R6_REMEDIES)} /></ul>);
+    await userEvent.click(screen.getByRole('button', { name: 'What can I do?' }));
+    expect(screen.getByText(R6_REMEDIES[0]!.title)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Try a room within the limit' })).toBeNull();
+  });
+
+  it('TC-FIX-08 each panel is named after its check; closing keeps the panel and its result', async () => {
+    const scenario = { claimedPaise: 23_000_000, payablePaise: 22_040_000, outOfPocketPaise: 960_000, verdict: 'likely_partial' } as Estimate;
+    const simulate = vi.fn().mockResolvedValue({ ok: true, data: { estimate: scenario } });
+    render(<ul><CheckRow result={r6Cut} fix={fix(R6_REMEDIES, simulate)} /></ul>);
+    const button = screen.getByRole('button', { name: 'What can I do?' });
+    expect(document.getElementById(button.getAttribute('aria-controls')!)).not.toBeNull();
+    await userEvent.click(button);
+    expect(screen.getByRole('region', { name: 'What you can do: Room rent limit' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Try a room within the limit' }));
+    await screen.findByText('₹2,20,400 of ₹2,30,000');
+    await userEvent.click(button); // close
+    await userEvent.click(button); // reopen
+    expect(screen.getByText('₹2,20,400 of ₹2,30,000')).toBeTruthy();
+  });
+
+  it('TC-FIX-09 unknown: says to enter facts exactly as the documents show', async () => {
+    const unknown = result({ outcome: 'unknown', reasonCode: 'R6_UNKNOWN', missingFacts: ['room_days'] });
+    render(<ul><CheckRow result={unknown} fix={fix([remedy('r6-unknown-rent', 'R6', 'unknown', 'Add the room rent per day and number of days')])} /></ul>);
+    await userEvent.click(screen.getByRole('button', { name: 'What can I do?' }));
+    expect(screen.getByText(/Enter each one exactly as your documents show/)).toBeTruthy();
+  });
+});
