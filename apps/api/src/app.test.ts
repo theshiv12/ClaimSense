@@ -145,3 +145,14 @@ describe('HTTP boundary review fixes', () => {
     expect([foreign.status, foreign.body]).toEqual([404, { ok: false, code: 'NOT_FOUND' }]);
   });
 });
+
+describe('Simulation removed', () => {
+  it('TC-SIM-01 there is no simulation endpoint', async () => {
+    await signUpAs();
+    const c = await createClaim(claimInput);
+    if (!c.ok) throw new Error(c.code);
+    const r = await send('post', `/api/claims/${c.data.claimId}/simulate-room`, { category: 'shared', rentPerDayPaise: 450_000 });
+    expect([r.status, r.body]).toEqual([404, { ok: false, code: 'NOT_FOUND' }]);
+  });
+});
+

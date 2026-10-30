@@ -192,5 +192,14 @@ describe('Chat about a check', () => {
     expect(r.ok && r.data.answer).toMatch(/ICU stay can.t be compared with a ward room/);
     expect(r.ok && r.data.answer).not.toMatch(/₹\d/);
   });
+
+  it('TC-SIM-02 a what-if question is an ordinary grounded question', async () => {
+    const claimId = await ownSampleB();
+    const llm = new FakeLlm([], [grounded]);
+    setLlmForTests(llm);
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
+    expect(llm.chatCalls).toHaveLength(1);
+    expect(r.ok && r.data.refused).toBe(false);
+  });
 });
 
