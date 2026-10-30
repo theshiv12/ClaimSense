@@ -37,6 +37,8 @@ const HIDE_PATTERNS: RegExp[] = [
   /\b(remove|delete|drop)\b.{0,30}\b(ped|condition|diagnosis|disease|illness|history|from (my|the) (form|record|report|proposal))\b/i,
   /\b(alter|modify|edit|change)\b(\s+\w+){0,3}?\s+(date|diagnosis|reports?|records?|bills?|documents?|forms?|history)\b/i,
   /\bfake\s+(bills?|reports?|documents?|certificates?|records?)\b/i,
+  // Pricing a statement instead of a fact: "what if I say / write / tell them it was an accident / declared".
+  /\b(i|we)\s+(say|said|tell|told|write|wrote|claim|put|mention|show)\b.{0,40}\b(accident\w*|declared|disclosed|no (ped|condition|history))\b/i,
   /\b(i|we)\b.{0,20}\b(not|never|don'?t|avoid)\s+(mention|tell|disclos|declar)\w*/i,
   /\b(chh?upa\w*|jhoo?th\w*|mat batana|nahi?n? batana|na batana|bina bataye|badal\w*)\b/i,
   /छुपा|छिपा|झूठ|मत बताना|बिना बताए/,

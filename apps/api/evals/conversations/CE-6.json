@@ -1,0 +1,21 @@
+{
+  "id": "CE-6",
+  "title": "A Hinglish question gets a Hinglish answer with citations",
+  "ruleId": "R6",
+  "question": "ye room rent ka cut kyun hua?",
+  "fakeAnswer": {
+    "refused": false,
+    "answer": "Aapka room limit se mehenga hai, isliye clause 2(A) ke hisaab se baaki charges bhi usi ratio mein kam hote hain.",
+    "citations": [
+      "S-CLAUSE"
+    ]
+  },
+  "expect": {
+    "refused": false,
+    "modelCalled": true,
+    "citesKinds": [
+      "clause"
+    ],
+    "hinglish": true
+  }
+}

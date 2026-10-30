@@ -11,6 +11,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { chatRoutes } from './modules/chat/chat.routes';
 import { claimsRoutes, meRoutes } from './modules/claims/claims.routes';
 import { estimateRoutes } from './modules/estimate/estimate.routes';
+import { explainRoutes } from './modules/explain/explain.routes';
 import { extractionRoutes } from './modules/extraction/extraction.routes';
 import { factsRoutes } from './modules/facts/facts.routes';
 import { plansRoutes } from './modules/plans/plans.routes';
@@ -46,6 +47,7 @@ export const createApp = () => {
   mount(app, '/api/claims/:claimId', estimateRoutes);
   mount(app, '/api/claims/:claimId', extractionRoutes);
   mount(app, '/api/claims/:claimId', chatRoutes);
+  mount(app, '/api/claims/:claimId', explainRoutes);
   mount(app, '/api/claims', claimsRoutes);
 
   app.use((_req: Request, res: Response) => sendError(res, 'NOT_FOUND'));

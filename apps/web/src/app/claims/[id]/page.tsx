@@ -1,6 +1,8 @@
 import type { Estimate, EstimateView } from '@claimsense/shared';
 import Link from 'next/link';
 import { CheckRow } from '@/components/claim/check-row';
+import { ClarifierCard } from '@/components/claim/clarifier-card';
+import { ExplainEstimate } from '@/components/claim/explain-estimate';
 import { ClaimBar } from '@/components/claim/claim-bar';
 import { DeleteClaimButton, DeleteMyDataButton } from '@/components/claim/delete-buttons';
 import { Disclaimer } from '@/components/claim/disclaimer';
@@ -30,7 +32,7 @@ const breakdownOf = (e: Estimate): PayoutPart[] => {
 
 export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>) {
   const { id } = await params;
-  const { claim, plan, estimate, remedies, evidence, precedents, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
+  const { claim, plan, estimate, remedies, evidence, precedents, clarifiers, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
   const explained = checksWithEvidence(estimate.results);
   const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
@@ -44,7 +46,13 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
           <Card className="space-y-6 sm:p-7">
             <VerdictHeadline estimate={estimate} eyebrow={`Likely payout · ${plan.planName} · rules as of ${formatDate(plan.rulesAsOf)}`} />
             <PayoutBar claimedPaise={estimate.claimedPaise} payablePaise={estimate.payablePaise} breakdown={breakdownOf(estimate)} />
+            <div className="flex flex-wrap items-start justify-between gap-3 border-t border-border pt-4">
+              <ExplainEstimate claimId={id} />
+              <Link className={buttonClass('ghost')} href={`/claims/${id}/summary`}>Summary to print or save as PDF</Link>
+            </div>
           </Card>
+
+          {clarifiers.length > 0 ? <ClarifierCard claimId={id} clarifiers={clarifiers} /> : null}
 
           <Card flush className="overflow-hidden">
             <div className="px-5 pb-2 pt-5">

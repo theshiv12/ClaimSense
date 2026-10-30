@@ -1,0 +1,26 @@
+{
+  "id": "CE-1",
+  "title": "Why was this cut? cites the clause",
+  "ruleId": "R6",
+  "question": "Why was this cut?",
+  "fakeAnswer": {
+    "refused": false,
+    "answer": "Your room is over the limit in clause 2(A), so the other charges are cut in the same ratio.",
+    "citations": [
+      "S-CLAUSE",
+      "S-REASON",
+      "S-NOPE"
+    ]
+  },
+  "expect": {
+    "kind": "answer",
+    "refused": false,
+    "modelCalled": true,
+    "citesKinds": [
+      "clause"
+    ],
+    "notCitedIds": [
+      "S-NOPE"
+    ]
+  }
+}

@@ -43,10 +43,11 @@ the JSON body. The session comes from the `cs_session` cookie. Every response bo
 | `PATCH /api/claims/:claimId/facts/:factId` | value | `{ fact }` (user-corrected) | `NOT_FOUND`, `VALIDATION_FAILED` |
 | `POST /api/claims/:claimId/facts/:factId/confirm` | none | `{ fact }` | `NOT_FOUND` |
 | `POST /api/claims/:claimId/documents` | multipart `file` (PDF/JPEG/PNG ≤ 4 MB) | `UploadResultView` (facts + warnings) | `NOT_FOUND`, `FILE_TOO_LARGE`, `FILE_TYPE_NOT_ALLOWED`, `DOCUMENT_LIMIT_REACHED`, `PDF_PASSWORD_PROTECTED`, `LLM_UNAVAILABLE`, `AI_QUOTA_EXCEEDED`, `LLM_OUTPUT_INVALID` |
-| `GET /api/claims/:claimId/estimate` | none | `EstimateView` (estimate, plan, remedies, evidence, precedents, needsYou); saved if the facts changed | `NOT_FOUND` |
+| `GET /api/claims/:claimId/estimate` | none | `EstimateView` (estimate, plan, remedies, evidence, precedents, clarifiers (≤ 2, FR-6), needsYou); saved if the facts changed | `NOT_FOUND` |
 | `POST /api/claims/:claimId/estimate` | none | `{ estimate }` (saved) | `NOT_FOUND` |
 | `POST /api/claims/:claimId/simulate-room` | category, rentPerDayPaise | `{ estimate }` (not saved) | `NOT_FOUND`, `VALIDATION_FAILED` |
-| `POST /api/claims/:claimId/checks/:ruleId/chat` | question (≤ 500), history (≤ 4 turns) | `ChatReplyView` (answer + cited sources; grounded, never stored; ADR-010) | `AUTH_REQUIRED` (incl. guests), `NOT_FOUND` (foreign claim or a passing check), `VALIDATION_FAILED`, `AI_QUOTA_EXCEEDED`, `LLM_UNAVAILABLE`, `LLM_OUTPUT_INVALID` |
+| `POST /api/claims/:claimId/checks/:ruleId/chat` | question (≤ 500), history (≤ 4 turns) | `ChatReplyView` (answer + cited sources; grounded, never stored; ADR-010). A typed what-if (FR-17) is answered by the engine instead: `kind: 'whatif'`, no AI quota | `AUTH_REQUIRED` (incl. guests), `NOT_FOUND` (foreign claim or a passing check), `VALIDATION_FAILED`, `AI_QUOTA_EXCEEDED`, `LLM_UNAVAILABLE`, `LLM_OUTPUT_INVALID` |
+| `POST /api/claims/:claimId/explain` | question? (default "Explain my estimate in simple words."), history | `ChatReplyView` (grounded on the whole estimate; FR-11, ADR-011) | as the check chat |
 | `GET /healthz` | none | `{ ok: true }` | none |
 
 The response types are in `packages/shared/src/api-views.ts`.

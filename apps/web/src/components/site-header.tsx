@@ -7,7 +7,7 @@ import { Brand } from './ui/brand';
 export async function SiteHeader() {
   const user = await currentUser();
   return (
-    <header className="border-b border-border bg-white">
+    <header className="border-b border-border bg-white print:hidden">
       <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-10" aria-label="Main">
         <Brand />
         <div className="flex items-center gap-5 text-sm">

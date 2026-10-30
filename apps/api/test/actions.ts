@@ -60,3 +60,7 @@ export const openSample = async (form: FormData): Promise<never> => {
 /** "Ask about this check" (ADR-010): one grounded question about one rule of one claim. */
 export const askAboutCheck = (claimId: string, ruleId: string, body: unknown): R<ChatReplyView> =>
   call('post', `/api/claims/${encodeURIComponent(claimId)}/checks/${encodeURIComponent(ruleId)}/chat`, body);
+
+/** FR-11: "Explain my estimate in simple words". */
+export const explainEstimate = (claimId: string, body: unknown): R<ChatReplyView> =>
+  call('post', `/api/claims/${encodeURIComponent(claimId)}/explain`, body);

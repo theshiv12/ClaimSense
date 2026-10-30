@@ -122,6 +122,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - Per-IP limits use the client IP the web proxy vouches for (`X-CS-Client-IP` + `PROXY_SECRET`), never `X-Forwarded-For`.
 - What-if presets take their numbers from engine params and respect the room R6 judged (never a ward room for an ICU stay).
 - Code checks on model output are allow-lists built only from trusted sources (engine, plan config, catalog), never document text or browser history.
+- Parsers of user text return null on negation, ambiguity or more than one match; what-ifs about medical facts or dates carry the truthfulness and doctor warnings.
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - Evidence shown for a check uses the facts the engine selected (`selectedFacts`), never every fact with that key.
 - Search terms and health details never go into URLs.

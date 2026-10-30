@@ -13,6 +13,9 @@ src/modules/<name>/      <name>.routes.ts   paths + middleware; ids from req.par
                          <name>.service.ts  business logic; gets ids/values/SessionPort, never req/res
                          *.test.ts          over HTTP (test/actions.ts keeps the old action names)
 src/modules/chat/        grounded "Ask about this check" (ADR-010): sources → Gemini → checked in code; never stored
+src/modules/whatif/      parseWhatIf: typed what-ifs recognised in code, answered by simulateFacts (FR-17, ADR-011)
+src/modules/explain/     "Explain my estimate" on the same grounded pipeline (FR-11)
+evals/                   CE-1..6 scenarios (CI via evals.test.ts) + live.ts (manual, real Gemini)
 src/integrations/        gemini.ts (ONLY @google/genai importer: extract + answer), llm.ts, pdf-text.ts
 src/lib/                 pure helpers: quote-verify, normalize, evidence, mongo-uri, plans, precedents, samples, expiry
 test/                    global-setup (memory MongoDB), setup (one DB per file), http + actions + users helpers,

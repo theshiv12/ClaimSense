@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "check:env": "node --env-file-if-exists=.env.local scripts/check-env.mjs"
+    "check:env": "node --env-file-if-exists=.env.local scripts/check-env.mjs",
+    "eval:live": "tsx --env-file-if-exists=.env.local evals/live.ts"
   },
   "dependencies": {
     "@claimsense/rules": "workspace:*",

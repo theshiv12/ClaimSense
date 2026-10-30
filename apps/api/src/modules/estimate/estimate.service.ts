@@ -1,11 +1,12 @@
-import { estimate as runEngine, isUsable, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
-import { EstimateSchema, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
+import { estimate as runEngine, isUsable, pickClarifiers, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
+import { CLARIFIER_QUESTIONS, EstimateSchema, FACT_LABELS, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
 import { fail } from '../../core/errors';
 import { EstimateModel } from '../../core/models';
 import { findClaim, latestEstimate, listFacts } from '../../core/scope';
 import { evidenceFor } from '../../lib/evidence';
 import { getPlan, remedies } from '../../lib/plans';
 import { matchPrecedents, precedents as reviewedCases } from '../../lib/precedents';
+import { pendingDocumentKeys } from './pending';
 
 const loadClaim = async (userId: string, claimId: string) => {
   const claim = (await findClaim(userId, claimId)) ?? fail('NOT_FOUND');
@@ -65,6 +66,11 @@ export const estimateView = async (userId: string, claimId: string): Promise<Est
     remedies: forResults,
     evidence,
     precedents,
+    // FR-6: at most 2 questions; a key any document has a value for is confirmed on the facts page, never asked.
+    clarifiers: pickClarifiers(estimate.results, pendingDocumentKeys(facts)).map((c) => ({
+      ...c,
+      question: CLARIFIER_QUESTIONS[c.key] ?? FACT_LABELS[c.key],
+    })),
     needsYou: facts.filter((f) => f.status === 'found' && !isUsable(f)).length,
   };
 };
