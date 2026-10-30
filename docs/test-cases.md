@@ -411,3 +411,29 @@ the cap, so no R6 cut; bill 2,40,000 − 35,000 + 25,000 = **2,30,000**; payable
 | TC-FIX-07 | No ward-room preset for an ICU stay (review fix) | R6 deduction with `roomHead: 'icu'` | open the panel | remedies shown; no "Try a room within the limit" | Component |
 | TC-FIX-08 | Distinct panel names; `aria-controls` never dangles | R6 deduction | before and after opening | no `aria-controls` while closed; once open it is the id of region "What you can do: Room rent limit" (the panel unmounts when closed: TC-FIX-01 requires its text to disappear, so keeping it mounted-but-hidden was dropped) | Component |
 | TC-FIX-09 | Unknown: enter facts exactly as the documents show (golden rule 10) | R6 unknown | open the panel | "Enter each one exactly as your documents show" | Component |
+
+## "Ask about this check" chat + similar Ombudsman cases (*autopilot*, ADR-010)
+
+Grounded Q&A: Gemini answers only from the sources the API sends (the check's reason, clause, the user's own
+document lines, catalog remedies, reviewed precedents), cites them by id, and never states amounts or verdicts of
+its own. Precedents load only when a human has verified them (like plan configs).
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-SH-PREC-01 | A reviewed precedent loads | entry with https `sourceUrl`, `verifiedBy`, R6 deduction | `PrecedentCatalogSchema` | parses | Unit |
+| TC-SH-PREC-02 | Unreviewed or unsafe entries never load | `needsReview: true`; `verifiedBy: null`; `http://` source; duplicate ids | `PrecedentCatalogSchema` | each rejected | Unit |
+| TC-SH-PREC-03 | Drafts hold what a human must check | draft with `needsReview`, `verifiedBy: null`, a note | `DraftPrecedentCatalogSchema` | parses; the same entry fails the loadable schema | Unit |
+| TC-PREC-01 | Matching: same rule and outcome, same insurer first, max 3, stable | 5 R6-deduction cases (2 Star Health), 1 R4 case | `matchPrecedents('Star Health…', R6 deduction)` | 3 cases, both Star Health first, then by decision date (newest) then id; no R4 | Unit |
+| TC-PREC-02 | Nothing for a pass | R6 pass | `matchPrecedents` | `[]` | Unit |
+| TC-CHAT-01 | Session before input; owner scoping | no session; guest (sample); another user's claim; bad rule id; a 501-char question; a pass check | POST `/api/claims/:id/checks/:ruleId/chat` | 401; 401; 404; 400; 400; 404 | API |
+| TC-CHAT-02 | Grounded answer with citations | own claim with an R6 cut; FakeLlm answers citing `S-CLAUSE` and `S-REM-r6-deduction-room` | ask "Why was this cut?" | FakeLlm got sources incl. `S-REASON`, `S-CLAUSE`, `S-REM-*`; reply cites "Clause 2(A)" and the remedy; ends with the disclaimer | API |
+| TC-CHAT-03 | Never help hide or change facts (golden rule 10) | own claim | ask "how do I hide my knee problem" (and Hinglish "chhupa") | fixed refusal; FakeLlm never called; no quota used | API |
+| TC-CHAT-04 | The model never states its own amounts | FakeLlm answers "₹50,000 will be paid" citing `S-X` | ask | reply is the fixed safe answer; no citations | API |
+| TC-CHAT-05 | Never "approved" | FakeLlm answers "Your claim is approved" | ask | fixed safe answer | API |
+| TC-CHAT-06 | Daily chat quota, refunded on failure | `AI_DAILY_CHATS_PER_USER` = 20 | 1st ask fails with LlmError, then 20 asks, then 1 more | the failed try is refunded; the 21st answered ask is 429 `AI_QUOTA_EXCEEDED` | API |
+| TC-CHAT-07 | Logs never hold the question or answer | ask "my knee hurts, why the cut?" | log lines | only `[chat] … refused=false cited=n` and `[http]`; no "knee" | API |
+| TC-GEM-06 | Chat request shape | `createGeminiLlm().answer` | call | sources and question as text parts; chat system instruction says untrusted + no amounts/verdicts; JSON schema; `store: false`; fallback on 429 | Unit |
+| TC-UI-CHAT-01 | Ask and see cited sources | `CheckChat` with a fake `ask` | click the "Why was this cut?" chip | `ask` called with that question; answer and citation chips shown; consent line present | Component |
+| TC-UI-CHAT-02 | Errors and quota | `ask` returns `AI_QUOTA_EXCEEDED` / `AUTH_REQUIRED` | ask | quota message; "Create an account to ask" for guests | Component |
+| TC-UI-PREC-01 | Similar cases | 1 complainant-won case; none | render `SimilarCases` | forum, date, result chip with icon + word, "Read the decision" link with `rel="noopener noreferrer"`, "Past decisions do not bind your insurer"; empty → "No reviewed cases yet" | Component |
+| TC-E2E-05 | Chat in the browser | signed-up user, own claim with an R6 cut, API with `LLM_FAKE=1` | open What can I do? → "Why was this cut?" | a grounded answer citing the clause appears; never "approved" | E2E |

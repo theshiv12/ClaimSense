@@ -1,4 +1,4 @@
-import type { ActionResult, CurrentUserView, Estimate, UploadResultView, WireFact } from '@claimsense/shared';
+import type { ActionResult, ChatReplyView, CurrentUserView, Estimate, UploadResultView, WireFact } from '@claimsense/shared';
 import { result, send, upload } from './http';
 
 // The server actions the tests were written against (docs/test-cases.md), now as calls to the REST API
@@ -56,3 +56,7 @@ export const openSample = async (form: FormData): Promise<never> => {
   const target = r.ok ? `/claims/${r.data.claimId}` : r.code === 'RATE_LIMITED' ? '/?sample=busy' : '/';
   throw Object.assign(new Error('redirect'), { digest: `NEXT_REDIRECT;replace;${target};307;` });
 };
+
+/** "Ask about this check" (ADR-010): one grounded question about one rule of one claim. */
+export const askAboutCheck = (claimId: string, ruleId: string, body: unknown): R<ChatReplyView> =>
+  call('post', `/api/claims/${encodeURIComponent(claimId)}/checks/${encodeURIComponent(ruleId)}/chat`, body);

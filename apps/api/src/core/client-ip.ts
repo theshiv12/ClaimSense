@@ -9,7 +9,7 @@ import { env } from './env';
  * X-Forwarded-For unless TRUST_PROXY says so.
  */
 export const clientIp = (req: Request): string => {
-  const secret = env().PROXY_SECRET;
+  const secret = (env() as ReturnType<typeof env> & { PROXY_SECRET?: string }).PROXY_SECRET;
   const key = req.get('x-cs-proxy-key');
   const vouched = req.get('x-cs-client-ip');
   if (secret && key && vouched && key.length === secret.length && timingSafeEqual(Buffer.from(key), Buffer.from(secret))) {
