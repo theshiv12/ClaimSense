@@ -34,5 +34,14 @@ export type LlmChatAnswer = z.infer<typeof LlmChatAnswerSchema>;
 export interface ChatReplyView {
   answer: string;
   refused: boolean;
+  /** 'whatif': amounts from the engine for one hypothetical change (FR-17), computed in code, not by the model. */
+  kind?: 'answer' | 'whatif';
   citations: { id: string; label: string; kind: ChatSource['kind'] }[];
 }
+
+/** FR-11: "Explain my estimate in simple words" (same pipeline and checks as the check chat). */
+export const ExplainInputSchema = z.object({
+  question: z.string().trim().min(2).max(CHAT_QUESTION_MAX).default('Explain my estimate in simple words.'),
+  history: ChatAskInputSchema.shape.history,
+});
+

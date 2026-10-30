@@ -1,0 +1,16 @@
+{
+  "id": "CE-2",
+  "title": "A what-if is answered by the engine, not the model",
+  "ruleId": "R6",
+  "question": "what if it was an accident?",
+  "fakeAnswer": null,
+  "expect": {
+    "kind": "whatif",
+    "refused": false,
+    "modelCalled": false,
+    "contains": [
+      "₹2,05,800 of ₹2,40,000"
+    ]
+  },
+  "_arithmetic": "Case B: no waiting rule fails, so an accident changes nothing: ₹2,05,800 of ₹2,40,000 (docs/rules-spec.md)."
+}

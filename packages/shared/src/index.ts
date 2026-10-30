@@ -13,3 +13,4 @@ export * from './api-views';
 export * from './explain';
 export * from './precedent.schema';
 export * from './chat.schema';
+export * from './clarifier';

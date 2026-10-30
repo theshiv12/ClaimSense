@@ -129,5 +129,28 @@ describe('Chat about a check', () => {
     const usage = await ChatUsage.findOne({ userId: me!.id }).lean();
     expect(usage?.count ?? 0).toBe(0);
   });
+
+  it('TC-CHAT-09 a room what-if is answered by the engine, not the model (Case B, twin sharing ₹4,500)', async () => {
+    const claimId = await ownSampleB();
+    const llm = new FakeLlm([], [grounded]);
+    setLlmForTests(llm);
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if we take twin sharing at 4500?' });
+    // docs/rules-spec.md: ₹2,17,900 of ₹2,27,500, you pay ₹9,600 (was ₹2,05,800 of ₹2,40,000, you pay ₹34,200).
+    expect(r.ok && r.data.kind).toBe('whatif');
+    expect(r.ok && r.data.answer).toMatch(/₹2,17,900 of ₹2,27,500/);
+    expect(r.ok && r.data.answer).toMatch(/you pay ₹9,600/);
+    expect(r.ok && r.data.answer).toMatch(/now ₹2,05,800 of ₹2,40,000/);
+    expect(llm.chatCalls).toHaveLength(0);
+    const me = await currentUser();
+    expect(await ChatUsage.findOne({ userId: me!.id }).lean()).toBeNull();
+  });
+
+  it('TC-CHAT-10 an accident what-if on Case B changes nothing, and says so', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], []));
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
+    expect(r.ok && r.data.kind).toBe('whatif');
+    expect(r.ok && r.data.answer).toMatch(/No change: ₹2,05,800 of ₹2,40,000/);
+  });
 });
 

@@ -1,0 +1,15 @@
+{
+  "id": "CE-5",
+  "title": "An off-topic question is refused",
+  "ruleId": "R6",
+  "question": "Who will win the cricket match today?",
+  "fakeAnswer": {
+    "refused": true,
+    "answer": "I can only help with this check on your policy and the steps you can take.",
+    "citations": []
+  },
+  "expect": {
+    "refused": true,
+    "modelCalled": true
+  }
+}
