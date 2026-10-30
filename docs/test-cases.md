@@ -458,3 +458,9 @@ non-ASCII digit, and any verdict wording, gets the fixed safe reply.
 | TC-SH-PREC-04 | Every precedent config file is valid | `config/precedents.json`, `config/precedents/drafts/*.json` | parse | loadable and draft schemas pass | Unit |
 | TC-UI-CHAT-03 | Honest, accessible chat | `CheckChat` with `hasCases={false}`; then answered | render | no "similar cases" chip; a status region exists before the first answer; "You asked" / "Answer" for screen readers; consent names the lines quoted from documents | Component |
 | TC-UI-PREC-02 | The decision link says it opens a new tab | one case | render | link name includes "(opens in a new tab)" | Component |
+
+### Estimate layout (bug: empty space on the left of an own claim)
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-19 | Evidence cards only for checks that cut or fail the claim; an Unknown row already says what is needed | results: R1 unknown, R2 fail, R5 pass, R6 deduction, R7 unknown | `checksWithEvidence(results)` | `['R2', 'R6']` | Unit |
