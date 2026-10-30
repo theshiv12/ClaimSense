@@ -11,6 +11,7 @@ import { RoomSimulator } from '@/components/claim/room-simulator';
 import { VerdictHeadline } from '@/components/claim/verdict-headline';
 import { buttonClass } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { checksWithEvidence } from '@/lib/estimate-layout';
 import { formatDate } from '@/lib/format';
 import { apiPage } from '@/lib/api/server';
 
@@ -30,7 +31,7 @@ const breakdownOf = (e: Estimate): PayoutPart[] => {
 export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>) {
   const { id } = await params;
   const { claim, plan, estimate, remedies, evidence, precedents, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
-  const notPassed = estimate.results.filter((r) => r.outcome !== 'pass');
+  const explained = checksWithEvidence(estimate.results);
   const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
     <>
@@ -84,7 +85,7 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
             <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} />
           </Card>
 
-          {notPassed.map((r) => (
+          {explained.map((r) => (
             <Card key={r.ruleId}>
               <EvidencePanel result={r} lines={evidence[r.ruleId] ?? []} />
             </Card>
