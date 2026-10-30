@@ -57,3 +57,6 @@ export const uploadAndExtract = async (form: FormData): R<UploadResultView> => {
 /** "Ask about this check" (ADR-010): a grounded answer with its cited sources. Never stored. */
 export const askAboutCheck = ({ claimId, ruleId, ...body }: { claimId: string; ruleId: string; question: string; history: { q: string; a: string }[] }): R<ChatReplyView> =>
   call('POST', `/api/claims/${id(claimId)}/checks/${id(ruleId)}/chat`, body);
+
+/** FR-11: "Explain my estimate in simple words", grounded on the whole estimate. */
+export const explainEstimate = ({ claimId }: { claimId: string }): R<ChatReplyView> => call('POST', `/api/claims/${id(claimId)}/explain`, {});

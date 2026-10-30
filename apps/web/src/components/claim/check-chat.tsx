@@ -6,6 +6,7 @@ import { askAboutCheck } from '@/lib/api/client';
 import { ERROR_MESSAGES } from '@/lib/labels';
 import { Button, buttonClass } from '../ui/button';
 import { ErrorText, inputClass } from '../ui/field';
+import { AnswerBubble } from './answer-bubble';
 
 type Ask = (input: { claimId: string; ruleId: string; question: string; history: { q: string; a: string }[] }) => Promise<ActionResult<ChatReplyView>>;
 type Outcome = Exclude<RuleResult['outcome'], 'pass'>;
@@ -69,20 +70,7 @@ export function CheckChat({ claimId, ruleId, outcome, hasCases = false, ask = as
               <p className="ml-auto w-fit max-w-[90%] rounded-lg bg-teal px-3 py-2 text-sm text-white">
                 <span className="sr-only">You asked:</span> {t.q}
               </p>
-              <div className="max-w-[95%] space-y-2 rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink">
-                <p className="whitespace-pre-line">
-                  <span className="sr-only">Answer:</span> {t.reply.answer}
-                </p>
-                {t.reply.citations.length > 0 ? (
-                  <ul className="flex flex-wrap gap-1" aria-label="Sources">
-                    {t.reply.citations.map((c) => (
-                      <li key={c.id} className="rounded-full border border-border bg-bg px-2 py-0.5 text-xs text-muted">
-                        {c.label}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
+              <AnswerBubble reply={t.reply} />
             </li>
           ))}
         </ol>
