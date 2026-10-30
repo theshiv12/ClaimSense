@@ -1,7 +1,7 @@
 'use client';
 import { BillHead, FactKey, type ActionResult, type FactValue } from '@claimsense/shared';
 import Link from 'next/link';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import * as api from '@/lib/api/client';
 import { documentSummaries, toView, type StoredFactView, type WireFact } from '@/lib/fact-view';
 import { ERROR_MESSAGES, FACT_LABELS, HEAD_LABELS } from '@/lib/labels';
@@ -29,6 +29,10 @@ interface Props {
 }
 
 const MAX_BYTES = 4 * 1024 * 1024;
+// A read is up to two Gemini calls of 60 s (primary, then fallback) plus PDF reading; past this, stop waiting.
+const UPLOAD_TIMEOUT_MS = 150_000;
+const TIMED_OUT =
+  'Reading this document took too long. If it finishes, its facts appear when you reload this page. Meanwhile you can enter the facts yourself below.';
 const MAX_SIDE = 2000;
 
 /** Photos are resized in the browser (longest side ≤ 2000 px) to stay under the 4 MB limit. */
@@ -78,6 +82,11 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
   const docs = documentSummaries(facts);
   const replace = (f: StoredFactView) => setFacts((all) => all.map((x) => (x.id === f.id ? f : x)));
 
+  // How long the current read has run, shown while waiting; and which attempt is current, so a late answer
+  // after the time limit is ignored.
+  const [elapsed, setElapsed] = useState(0);
+  const attempt = useRef(0);
+
   const upload = async (file: File | undefined) => {
     if (!file) return;
     setError(null);
@@ -88,7 +97,22 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
     form.set('claimId', claimId);
     form.set('file', blob, 'document');
     setBusy(true);
+    setElapsed(0);
+    const mine = ++attempt.current;
+    const startedAt = Date.now();
+    const ticker = setInterval(() => setElapsed(Math.round((Date.now() - startedAt) / 1000)), 1000);
+    const timer = setTimeout(() => {
+      if (attempt.current !== mine) return;
+      attempt.current++; // whatever answers later is ignored
+      clearInterval(ticker);
+      setBusy(false);
+      setError(TIMED_OUT);
+      setManual(true);
+    }, UPLOAD_TIMEOUT_MS);
     const r = await actions.upload(form);
+    clearTimeout(timer);
+    clearInterval(ticker);
+    if (attempt.current !== mine) return;
     setBusy(false);
     if (!r.ok) {
       setError(ERROR_MESSAGES[r.code]);
@@ -138,6 +162,10 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
           >
             {busy ? 'Reading…' : 'Upload a document'}
           </label>
+          <p role="status" className="text-xs font-semibold text-ink">
+            {busy ? `Reading your document… ${elapsed} s` : ''}
+          </p>
+          {busy ? <p className="text-xs text-muted">This can take up to 2 minutes when the AI service is busy.</p> : null}
           <p className="text-xs text-muted">Policy schedule and the hospital’s estimate. PDF, JPG, PNG · up to 4 MB each, 8 per check. Files are read, then discarded.</p>
           <Button variant="secondary" className="w-full" onClick={() => setManual((m) => !m)}>
             Enter facts yourself
