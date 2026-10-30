@@ -12,8 +12,9 @@ src/core/                env, db, models/, errors (ActionError, fail, STATUS), h
 src/modules/<name>/      <name>.routes.ts   paths + middleware; ids from req.params, values from req.body
                          <name>.service.ts  business logic; gets ids/values/SessionPort, never req/res
                          *.test.ts          over HTTP (test/actions.ts keeps the old action names)
-src/integrations/        gemini.ts (ONLY @google/genai importer), llm.ts, pdf-text.ts
-src/lib/                 pure helpers: quote-verify, normalize, evidence, mongo-uri, plans, samples, expiry
+src/modules/chat/        grounded "Ask about this check" (ADR-010): sources → Gemini → checked in code; never stored
+src/integrations/        gemini.ts (ONLY @google/genai importer: extract + answer), llm.ts, pdf-text.ts
+src/lib/                 pure helpers: quote-verify, normalize, evidence, mongo-uri, plans, precedents, samples, expiry
 test/                    global-setup (memory MongoDB), setup (one DB per file), http + actions + users helpers,
                          fake-llm, fixtures/gemini (recorded responses, synthetic documents only)
 ```

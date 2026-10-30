@@ -1,4 +1,4 @@
-import type { ActionResult, Estimate, RoomCategory, UploadResultView, WireFact } from '@claimsense/shared';
+import type { ActionResult, ChatReplyView, Estimate, RoomCategory, UploadResultView, WireFact } from '@claimsense/shared';
 
 // The browser's side of the REST API (docs/api.md). Requests go to /api/* on this site; Next rewrites them
 // to the API (ADR-009), so the session cookie stays first-party. Same names and ActionResult as the old
@@ -53,3 +53,7 @@ export const uploadAndExtract = async (form: FormData): R<UploadResultView> => {
     return { ok: false, code: 'INTERNAL_ERROR' };
   }
 };
+
+/** "Ask about this check" (ADR-010): a grounded answer with its cited sources. Never stored. */
+export const askAboutCheck = ({ claimId, ruleId, ...body }: { claimId: string; ruleId: string; question: string; history: { q: string; a: string }[] }): R<ChatReplyView> =>
+  call('POST', `/api/claims/${id(claimId)}/checks/${id(ruleId)}/chat`, body);

@@ -8,6 +8,7 @@ import { requestLog } from './core/logger';
 import { sameOriginWrites } from './core/origin';
 import { loadUser } from './core/session';
 import { authRoutes } from './modules/auth/auth.routes';
+import { chatRoutes } from './modules/chat/chat.routes';
 import { claimsRoutes, meRoutes } from './modules/claims/claims.routes';
 import { estimateRoutes } from './modules/estimate/estimate.routes';
 import { extractionRoutes } from './modules/extraction/extraction.routes';
@@ -44,6 +45,7 @@ export const createApp = () => {
   mount(app, '/api/claims/:claimId/facts', factsRoutes);
   mount(app, '/api/claims/:claimId', estimateRoutes);
   mount(app, '/api/claims/:claimId', extractionRoutes);
+  mount(app, '/api/claims/:claimId', chatRoutes);
   mount(app, '/api/claims', claimsRoutes);
 
   app.use((_req: Request, res: Response) => sendError(res, 'NOT_FOUND'));

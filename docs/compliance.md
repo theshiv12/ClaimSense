@@ -10,3 +10,7 @@
   may read it. So the demo accepts **synthetic documents only**, the consent screen says so, and a
   real launch would need Gemini's paid tier.
 - **Accepted risk:** sign-up with a taken email returns `EMAIL_TAKEN`, revealing that an account exists.
+
+- **Check chat (ADR-010):** a signed-up user's question and that check's text (reason, clause quote, their document
+  lines, remedies, reviewed cases) are sent to Gemini's free tier to answer it. Files are not sent; nothing is stored;
+  this is disclosed under the chat box.

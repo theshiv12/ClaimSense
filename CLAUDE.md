@@ -41,7 +41,8 @@ in their own document), and what they can do about it. Hackathon MVP, solo, dead
    JSON-schema structured output only. Injection test payloads are stored base64-encoded.
 9. **Uploaded files are never stored.** Read → extract → save facts → discard bytes.
 10. **Remedies only from `config/remedies.json`.** Never help hide, change or back-date medical
-    facts. Labels never say "approved"; every result shows the disclaimer.
+    facts. Labels never say "approved"; every result shows the disclaimer. The check chat (ADR-010) may only
+    explain its sources and the engine's results; it never adds remedies, amounts or verdicts.
 
 ## Repo layout
 
@@ -120,6 +121,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - A page with a bad or undecodable id shows 404; test helpers never encode a different contract than `docs/api.md`.
 - Per-IP limits use the client IP the web proxy vouches for (`X-CS-Client-IP` + `PROXY_SECRET`), never `X-Forwarded-For`.
 - What-if presets take their numbers from engine params and respect the room R6 judged (never a ward room for an ICU stay).
+- Code checks on model output are allow-lists built only from trusted sources (engine, plan config, catalog), never document text or browser history.
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - Evidence shown for a check uses the facts the engine selected (`selectedFacts`), never every fact with that key.
 - Search terms and health details never go into URLs.

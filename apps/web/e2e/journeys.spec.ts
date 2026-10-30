@@ -85,3 +85,22 @@ test('TC-E2E-04 What can I do? on the room-rent cut → a room within the limit'
   await expect(roomRow.getByText(/you pay ₹9,600/)).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/approved/i);
 });
+
+test('TC-E2E-05 ask about the room-rent cut and get a grounded answer', async ({ page }) => {
+  // A signed-up user's own copy of sample B (guests cannot use the chat). The API runs with LLM_FAKE=1 in e2e.
+  await page.goto('/signup');
+  await page.getByLabel('Email').fill(`e2e-chat-${Date.now()}@example.test`);
+  await page.getByLabel('Password').fill('correct-horse-9');
+  await page.getByLabel('I am 18 or older.').check();
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page).toHaveURL(/\/claims$/);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'See a sample (knee replacement)' }).click();
+  await expect(page).toHaveURL(/\/claims\/[a-f0-9]{24}$/);
+  const roomRow = page.getByRole('listitem').filter({ hasText: 'Room rent limit' });
+  await roomRow.getByRole('button', { name: 'What can I do?' }).click();
+  await roomRow.getByRole('button', { name: 'Why was this cut?' }).click();
+  await expect(roomRow.getByText(/costs more than the limit in your policy/)).toBeVisible();
+  await expect(roomRow.getByText('Clause 2(A), page 5')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText(/approved/i);
+});

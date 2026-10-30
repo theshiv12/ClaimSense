@@ -10,3 +10,6 @@ export * from './llm-extraction.schema';
 export * from './remedies.schema';
 export * from './actions.schema';
 export * from './api-views';
+export * from './explain';
+export * from './precedent.schema';
+export * from './chat.schema';
