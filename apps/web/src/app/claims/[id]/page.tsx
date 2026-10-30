@@ -29,7 +29,7 @@ const breakdownOf = (e: Estimate): PayoutPart[] => {
 
 export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>) {
   const { id } = await params;
-  const { claim, plan, estimate, remedies, evidence, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
+  const { claim, plan, estimate, remedies, evidence, precedents, needsYou } = await apiPage<EstimateView>(`/api/claims/${encodeURIComponent(id)}/estimate`, `/claims/${id}`);
   const notPassed = estimate.results.filter((r) => r.outcome !== 'pass');
   const sample = claim.sampleCaseId ? ` · sample ${claim.sampleCaseId} (made-up documents)` : '';
   return (
@@ -61,6 +61,7 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
                     claimId: id,
                     remedies: remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
                     currentOutOfPocketPaise: estimate.outOfPocketPaise,
+                    precedents: precedents[r.ruleId] ?? [],
                   }}
                 />
               ))}

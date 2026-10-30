@@ -60,13 +60,15 @@ describe('Chat about a check', () => {
     const claimId = await ownSampleB();
     const llm = new FakeLlm([], [grounded]);
     setLlmForTests(llm);
+    // Other tests in this file share the database, so "no quota used" is measured before and after.
+    const quotaBefore = await ChatUsage.countDocuments({});
     for (const question of ['how do I hide my knee problem', 'knee ki problem chhupa sakte hai?']) {
       const r = await askAboutCheck(claimId, 'R6', { question });
       expect(r.ok && r.data.refused).toBe(true);
       expect(r.ok && r.data.answer).toMatch(/can.t help hide or change medical facts/);
     }
     expect(llm.chatCalls).toHaveLength(0);
-    expect(await ChatUsage.countDocuments({})).toBe(0);
+    expect(await ChatUsage.countDocuments({})).toBe(quotaBefore);
   });
 
   it('TC-CHAT-04 the model never states its own amounts', async () => {

@@ -1,10 +1,11 @@
 import { estimate as runEngine, isUsable, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
-import { EstimateSchema, type Estimate, type EstimateView, type EvidenceLine, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
+import { EstimateSchema, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
 import { fail } from '../../core/errors';
 import { EstimateModel } from '../../core/models';
 import { findClaim, latestEstimate, listFacts } from '../../core/scope';
 import { evidenceFor } from '../../lib/evidence';
 import { getPlan, remedies } from '../../lib/plans';
+import { matchPrecedents, precedents as reviewedCases } from '../../lib/precedents';
 
 const loadClaim = async (userId: string, claimId: string) => {
   const claim = (await findClaim(userId, claimId)) ?? fail('NOT_FOUND');
@@ -44,7 +45,13 @@ export const estimateView = async (userId: string, claimId: string): Promise<Est
   );
   // The document lines behind each check that did not pass (Figma 04 evidence panel).
   const evidence: Partial<Record<RuleId, EvidenceLine[]>> = {};
-  for (const r of estimate.results) if (r.outcome !== 'pass') evidence[r.ruleId] = evidenceFor(r, facts);
+  // Reviewed public decisions on the same rule and outcome (ADR-010).
+  const precedents: Partial<Record<RuleId, Precedent[]>> = {};
+  for (const r of estimate.results) {
+    if (r.outcome === 'pass') continue;
+    evidence[r.ruleId] = evidenceFor(r, facts);
+    precedents[r.ruleId] = matchPrecedents(reviewedCases, plan.insurer, r);
+  }
   return {
     claim: {
       id: String(claim._id),
@@ -57,6 +64,7 @@ export const estimateView = async (userId: string, claimId: string): Promise<Est
     estimate,
     remedies: forResults,
     evidence,
+    precedents,
     needsYou: facts.filter((f) => f.status === 'found' && !isUsable(f)).length,
   };
 };

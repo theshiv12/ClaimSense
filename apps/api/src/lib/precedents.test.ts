@@ -27,7 +27,8 @@ describe('matchPrecedents', () => {
   it('TC-PREC-01 same rule and outcome, same insurer first, max 3, stable order', () => {
     // Star Health first (newest first), then the rest by date (newest), ties by id: b, c.
     expect(matchPrecedents(cases, 'Star Health and Allied Insurance', r6('deduction')).map((p) => p.id)).toEqual(['star-new', 'star-old', 'b']);
-    expect(matchPrecedents(cases, 'Someone Else', r6('deduction')).map((p) => p.id)).toEqual(['star-new', 'b', 'c']);
+    // No matching insurer: newest first (b and c, Jun 2024, ties by id), then star-new (Feb 2024).
+    expect(matchPrecedents(cases, 'Someone Else', r6('deduction')).map((p) => p.id)).toEqual(['b', 'c', 'star-new']);
   });
 
   it('TC-PREC-02 nothing for a pass', () => {

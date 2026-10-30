@@ -84,3 +84,5 @@ export const EstimateModel = model('Estimate', estimateSchema);
 const usageSchema = new Schema({ userId: owner, day: { type: String, required: true }, count: { type: Number, default: 0 }, expiresAt: ttl });
 usageSchema.index({ userId: 1, day: 1 }, { unique: true });
 export const ExtractionUsage = model('ExtractionUsage', usageSchema);
+/** Chat questions per user per UTC day (ADR-010), counted like extractions; never the questions themselves. */
+export const ChatUsage = model('ChatUsage', usageSchema.clone());

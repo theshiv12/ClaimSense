@@ -41,7 +41,8 @@ in their own document), and what they can do about it. Hackathon MVP, solo, dead
    JSON-schema structured output only. Injection test payloads are stored base64-encoded.
 9. **Uploaded files are never stored.** Read → extract → save facts → discard bytes.
 10. **Remedies only from `config/remedies.json`.** Never help hide, change or back-date medical
-    facts. Labels never say "approved"; every result shows the disclaimer.
+    facts. Labels never say "approved"; every result shows the disclaimer. The check chat (ADR-010) may only
+    explain its sources and the engine's results; it never adds remedies, amounts or verdicts.
 
 ## Repo layout
 

@@ -19,6 +19,7 @@ const api = spawn('pnpm', ['--filter', '@claimsense/api', 'exec', 'tsx', 'src/se
     PORT: apiPort,
     WEB_ORIGIN: `http://localhost:${port}`,
     PROXY_SECRET: proxySecret,
+    LLM_FAKE: '1', // canned grounded chat answer (apps/api/src/integrations/llm.ts); refused in production
   },
 });
 const next = spawn('pnpm', ['exec', 'next', 'start', '-p', port], {

@@ -1,6 +1,7 @@
 import type { Estimate, RuleResult } from './rule-result.schema';
 import type { FactKey } from './fact-key';
 import type { Fact } from './fact.schema';
+import type { Precedent } from './precedent.schema';
 import type { Remedy } from './remedies.schema';
 
 // Response shapes of the REST API (docs/api.md), shared by apps/api and apps/web. Bodies are always
@@ -53,6 +54,8 @@ export interface EstimateView {
   estimate: Estimate;
   remedies: Remedy[];
   evidence: Partial<Record<RuleResult['ruleId'], EvidenceLine[]>>;
+  /** Reviewed public decisions on the same rule and outcome (ADR-010), per check that did not pass. */
+  precedents: Partial<Record<RuleResult['ruleId'], Precedent[]>>;
   needsYou: number;
 }
 

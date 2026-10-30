@@ -1,22 +1,26 @@
 'use client';
-import type { Estimate, Remedy, RuleResult } from '@claimsense/shared';
+import type { Estimate, Precedent, Remedy, RuleResult } from '@claimsense/shared';
 import Link from 'next/link';
 import { useState } from 'react';
 import { simulateRoom } from '@/lib/api/client';
 import { formatInr } from '@/lib/format';
 import { ERROR_MESSAGES, explain, FACT_LABELS, RULE_TITLES } from '@/lib/labels';
 import { Button, buttonClass } from '../ui/button';
+import { CheckChat } from './check-chat';
 import { ErrorText } from '../ui/field';
 import { Disclaimer } from './disclaimer';
 import { RejectionSteps } from './rejection-steps';
 import { RemediesPanel } from './remedies-panel';
 import { ScenarioResult, type Simulate } from './scenario-result';
+import { SimilarCases } from './similar-cases';
 
 export interface FixItProps {
   claimId: string;
   /** This rule's remedies for this outcome, from config/remedies.json only (golden rule 10). */
   remedies: Remedy[];
   currentOutOfPocketPaise: number;
+  /** Reviewed public decisions on the same rule and outcome (config/precedents.json, ADR-010). */
+  precedents?: Precedent[];
   simulate?: Simulate;
 }
 
@@ -25,7 +29,7 @@ export interface FixItProps {
  * One concrete next step per outcome: a room within the limit (R6 cut on a ward room), the missing facts
  * (unknown), or the escalation path (fail). Amounts come from the engine via the API, never from here.
  */
-export function FixItPanel({ id, result, claimId, remedies, currentOutOfPocketPaise, simulate = simulateRoom }: FixItProps & { id: string; result: RuleResult }) {
+export function FixItPanel({ id, result, claimId, remedies, currentOutOfPocketPaise, precedents = [], simulate = simulateRoom }: FixItProps & { id: string; result: RuleResult }) {
   const [scenario, setScenario] = useState<Estimate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -83,6 +87,13 @@ export function FixItPanel({ id, result, claimId, remedies, currentOutOfPocketPa
           <h4 className="text-sm font-semibold text-ink">If the insurer rejects or cuts the claim</h4>
           <RejectionSteps />
         </div>
+      ) : null}
+
+      {result.outcome !== 'pass' ? (
+        <>
+          <SimilarCases cases={precedents} />
+          <CheckChat claimId={claimId} ruleId={result.ruleId} outcome={result.outcome} />
+        </>
       ) : null}
 
       <Disclaimer />

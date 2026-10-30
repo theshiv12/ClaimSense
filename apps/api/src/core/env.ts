@@ -14,6 +14,7 @@ const EnvSchema = z.object({
   MAX_UPLOAD_MB: z.coerce.number().positive().max(4).default(4),
   MAX_FILES_PER_CLAIM: z.coerce.number().int().positive().default(8),
   AI_DAILY_EXTRACTIONS_PER_USER: z.coerce.number().int().nonnegative().default(6),
+  AI_DAILY_CHATS_PER_USER: z.coerce.number().int().nonnegative().default(20),
   PORT: z.coerce.number().int().positive().default(4000),
   /** The web app's origin: the only one allowed to send writes (core/origin.ts). Normalised, so a trailing slash is fine. */
   WEB_ORIGIN: z.url().default('http://localhost:3000').transform((u) => new URL(u).origin),
