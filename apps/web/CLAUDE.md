@@ -11,7 +11,8 @@ src/lib/api/server.ts    server components: apiGet / apiPage (401 → /login, 40
 src/lib/api/client.ts    client components: signup, createClaim, addFact, uploadAndExtract… → ActionResult
 src/lib/sample-preview.ts landing card: sample B through the pure rules engine (no API call)
 src/components/ui/       Button, Chip, Card, Field, Toggle, Segmented (no business logic)
-src/components/claim/    FactRow, CheckRow (+ FixItPanel "What can I do?"), PayoutBar, Quote, RoomSimulator, ScenarioResult, RemediesPanel, ClaimRow
+src/components/claim/    FactRow, CheckRow (+ FixItPanel "What can I do?"), PayoutBar, Quote, RoomSimulator, ScenarioResult, RemediesPanel,
+                         ClaimRow, CheckChat + AnswerBubble, ClarifierCard, ExplainEstimate, SummaryView (/claims/[id]/summary)
 ```
 
 The web app has **no database, no Gemini and no secrets**. Its only setting is `API_ORIGIN`
