@@ -1,25 +1,22 @@
 {
   "id": "CE-2",
-  "title": "A what-if is not computed: it is an ordinary grounded question, and an invented amount never reaches the user",
+  "title": "A what-if is not computed: an ordinary grounded answer, with the truthfulness and doctor lines added in code",
   "ruleId": "R6",
   "question": "what if it was an accident?",
   "fakeAnswer": {
     "refused": false,
-    "answer": "If it was an accident you would get ₹2,40,000.",
+    "answer": "Your room is over the limit in clause 2(A), so the other charges are cut in the same ratio.",
     "citations": [
-      "S-REASON"
+      "S-CLAUSE"
     ]
   },
   "expect": {
-    "kind": "answer",
-    "refused": true,
+    "refused": false,
     "modelCalled": true,
     "contains": [
-      "I can only explain what is in your policy"
-    ],
-    "notContains": [
-      "2,40,000"
+      "This only applies if it is true",
+      "Medical advice comes first"
     ]
   },
-  "_note": "Simulation was removed (ADR-012): the engine no longer answers hypotheticals, and the vet.ts allow-list replaces any amount the model invents (₹2,40,000 is not in the trusted sources for R6)."
+  "_note": "Simulation was removed (ADR-012): the engine no longer answers hypotheticals. The model may only repeat amounts from its trusted sources, and code adds the two warning lines to every what-if."
 }

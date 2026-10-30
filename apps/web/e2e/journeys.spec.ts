@@ -64,6 +64,16 @@ test('TC-E2E-02 sign up → new check → manual facts → estimate; TC-E2E-03 a
   await other.close();
 });
 
+test('TC-E2E-04 What can I do? on the room-rent cut shows the catalog remedy (the simulator step was removed)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'See a sample (knee replacement)' }).click();
+  await expect(page).toHaveURL(/\/claims\/[a-f0-9]{24}$/);
+  const roomRow = page.getByRole('listitem').filter({ hasText: 'Room rent limit' });
+  await roomRow.getByRole('button', { name: 'What can I do?' }).click();
+  await expect(roomRow.getByText("Choose a room within your policy's limit")).toBeVisible();
+  await expect(page.locator('body')).not.toContainText(/approved/i);
+});
+
 test('TC-E2E-05 ask about the room-rent cut and get a grounded answer', async ({ page }) => {
   // A signed-up user's own copy of sample B (guests cannot use the chat). The API runs with LLM_FAKE=1 in e2e.
   await page.goto('/signup');

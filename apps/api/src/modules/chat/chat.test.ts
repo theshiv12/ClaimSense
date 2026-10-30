@@ -138,5 +138,36 @@ describe('Chat about a check', () => {
     expect(llm.chatCalls).toHaveLength(1);
     expect(r.ok && r.data.refused).toBe(false);
   });
-});
 
+  // The old FR-17 guard, kept in code after simulation was removed (ADR-012, code-review fix).
+  const TRUE_ONLY = 'This only applies if it is true: a false cause or disclosure can get the claim rejected and the policy cancelled.';
+  const MEDICAL_FIRST = 'Medical advice comes first: never delay treatment your doctor says you need because of cover.';
+
+  it('TC-NOSIM-03 a what-if gets the truthfulness and doctor lines in code', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], [grounded]));
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
+    expect(r.ok && r.data.answer).toBe(`${grounded.answer}\n\n${TRUE_ONLY}\n${MEDICAL_FIRST}\n\n${DISCLAIMER}`);
+    const me = await currentUser();
+    expect((await ChatUsage.findOne({ userId: me!.id }).lean())?.count).toBe(1);
+  });
+
+  it('TC-NOSIM-04 an ordinary question gets neither line', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], [grounded]));
+    const r = await askAboutCheck(claimId, 'R6', { question: 'Why was this cut?' });
+    expect(r.ok && r.data.answer).toBe(`${grounded.answer}\n\n${DISCLAIMER}`);
+  });
+
+  it('TC-NOSIM-05 the lines stay when the answer is replaced by the safe reply', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], [{ refused: false, answer: 'If it was an accident you would get ₹2,40,000.', citations: [] }]));
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
+    if (!r.ok) throw new Error(r.code);
+    expect(r.data.answer).toMatch(SAFE);
+    expect(r.data.answer).toContain(TRUE_ONLY);
+    expect(r.data.answer).toContain(MEDICAL_FIRST);
+    expect(r.data.answer.endsWith(DISCLAIMER)).toBe(true);
+    expect(r.data.answer).not.toContain('2,40,000');
+  });
+});

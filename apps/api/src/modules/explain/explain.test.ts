@@ -69,5 +69,12 @@ describe('Explain my estimate', () => {
     for (let i = 0; i < 20; i++) expect((await explainEstimate(claimId, {})).ok).toBe(true);
     expect(await explainEstimate(claimId, {})).toEqual({ ok: false, code: 'AI_QUOTA_EXCEEDED' });
   });
-});
 
+  it('TC-NOSIM-06 a what-if gets the truthfulness and doctor lines here too', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], [{ refused: false, answer: 'The room is over the limit.', citations: ['S-CHECK-R6'] }]));
+    const r = await explainEstimate(claimId, { question: 'Suppose I am admitted after the waiting period?' });
+    expect(r.ok && r.data.answer).toContain('This only applies if it is true');
+    expect(r.ok && r.data.answer).toContain('Medical advice comes first');
+  });
+});
