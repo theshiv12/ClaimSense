@@ -40,11 +40,12 @@ export function CheckRow({ result, fix }: { result: RuleResult; fix?: FixItProps
         {cut ? <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-sm font-semibold text-warn-fg">−{formatInr(result.deductionPaise)}</span> : null}
         <StatusChip outcome={result.outcome} />
         {canFix ? (
-          <Button variant="secondary" className="py-1.5" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((o) => !o)}>
+          <Button variant="secondary" className="py-1.5" aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={() => setOpen((o) => !o)}>
             What can I do?
           </Button>
         ) : null}
       </div>
+      {/* Mounted only while open; aria-controls is set only then, so it always points at a real element. */}
       {canFix && open ? (
         <div className="basis-full">
           <FixItPanel id={panelId} result={result} {...fix} />

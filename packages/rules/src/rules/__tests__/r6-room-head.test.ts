@@ -1,3 +1,4 @@
+import type { PlanConfig } from '@claimsense/shared';
 import { describe, expect, it } from 'vitest';
 import { facts, testPlan } from '../../../test/factories';
 import { r6RoomRent } from '../r6-room-rent';
@@ -5,7 +6,8 @@ import { r6RoomRent } from '../r6-room-rent';
 // docs/test-cases.md TC-R6-24: a deduction says which head it judged, so the UI never offers a ward room
 // for an ICU stay. Plan T with an ICU cap of ₹8,000/day (ward cap stays ₹5,000/day).
 const base = testPlan();
-const plan = { ...base, roomRent: { ...base.roomRent, kind: 'fixed_per_day' as const, capPaise: 500_000, icuCapPaise: 800_000 } };
+const clause = { clauseId: 'T-6', page: 1, quote: 'Room rent up to Rs. 5,000 per day; ICU up to Rs. 8,000 per day.', source: 'wording' as const };
+const plan: PlanConfig = { ...base, roomRent: { kind: 'fixed_per_day', capPaise: 500_000, icuCapPaise: 800_000, clause } };
 
 describe('R6 room head', () => {
   it('TC-R6-24 reports the room head it judged (room or icu)', () => {

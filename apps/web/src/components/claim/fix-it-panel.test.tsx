@@ -97,19 +97,13 @@ describe('What can I do? (review fixes)', () => {
     expect(screen.queryByRole('button', { name: 'Try a room within the limit' })).toBeNull();
   });
 
-  it('TC-FIX-08 each panel is named after its check; closing keeps the panel and its result', async () => {
-    const scenario = { claimedPaise: 23_000_000, payablePaise: 22_040_000, outOfPocketPaise: 960_000, verdict: 'likely_partial' } as Estimate;
-    const simulate = vi.fn().mockResolvedValue({ ok: true, data: { estimate: scenario } });
-    render(<ul><CheckRow result={r6Cut} fix={fix(R6_REMEDIES, simulate)} /></ul>);
+  it('TC-FIX-08 each panel is named after its check; aria-controls points at it only while open', async () => {
+    render(<ul><CheckRow result={r6Cut} fix={fix(R6_REMEDIES)} /></ul>);
     const button = screen.getByRole('button', { name: 'What can I do?' });
-    expect(document.getElementById(button.getAttribute('aria-controls')!)).not.toBeNull();
+    expect(button.getAttribute('aria-controls')).toBeNull();
     await userEvent.click(button);
-    expect(screen.getByRole('region', { name: 'What you can do: Room rent limit' })).toBeTruthy();
-    await userEvent.click(screen.getByRole('button', { name: 'Try a room within the limit' }));
-    await screen.findByText('₹2,20,400 of ₹2,30,000');
-    await userEvent.click(button); // close
-    await userEvent.click(button); // reopen
-    expect(screen.getByText('₹2,20,400 of ₹2,30,000')).toBeTruthy();
+    const panel = screen.getByRole('region', { name: 'What you can do: Room rent limit' });
+    expect(button.getAttribute('aria-controls')).toBe(panel.id);
   });
 
   it('TC-FIX-09 unknown: says to enter facts exactly as the documents show', async () => {

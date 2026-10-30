@@ -58,7 +58,11 @@ const API_ACTIONS: NonNullable<Props['actions']> = {
 };
 
 export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAddKey }: Props) {
-  const asked = FactKey.safeParse(initialAddKey);
+  const parsedAsk = FactKey.safeParse(initialAddKey);
+  // A value read from a document and still waiting for the user's check is confirmed or corrected in place,
+  // not overridden by a new user-stated value (Engine decision 13; golden rule 10).
+  const pendingAsk = parsedAsk.success && initial.some((f) => f.key === parsedAsk.data && f.status === 'found' && !f.usable);
+  const asked = pendingAsk ? { success: false as const } : parsedAsk;
   const id = useId();
   const [facts, setFacts] = useState(initial);
   const [notice, setNotice] = useState<string[]>([]);
@@ -150,6 +154,11 @@ export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAdd
           <div>
             <h1 className="text-2xl font-bold text-ink">Check what we found</h1>
             <p className="text-sm text-muted">The estimate uses only confirmed facts. Correct anything that’s wrong. We never guess.</p>
+            {pendingAsk && parsedAsk.success ? (
+              <p role="status" className="mt-2 rounded-lg bg-warn-bg px-3 py-2 text-sm text-warn-fg">
+                {`${FACT_LABELS[parsedAsk.data]} was read from your document: confirm it or correct it below.`}
+              </p>
+            ) : null}
           </div>
           {needsYou > 0 ? <Chip tone="warn">{needsYou} need you</Chip> : <Chip tone="pass">All facts usable</Chip>}
         </div>

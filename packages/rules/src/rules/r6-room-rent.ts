@@ -76,5 +76,6 @@ export const r6RoomRent: AmountRule = (f, plan, runningPaise) => {
   const associated = associatedPaise - Math.floor((associatedPaise * capPaise) / rent);
   const roomCut = roomPaise - Math.min(roomPaise, capPaise * days);
   const total = Math.min(roomCut + associated, runningPaise);
-  return deduct(b, total, 'R6_ROOM_OVER_CAP', 'R6_WITHIN_CAP', { ...params, roomDeductionPaise: roomCut, associatedDeductionPaise: associated });
+  // roomHead says which room was judged, so a what-if never offers a ward room for an ICU stay.
+  return deduct(b, total, 'R6_ROOM_OVER_CAP', 'R6_WITHIN_CAP', { ...params, roomHead, roomDeductionPaise: roomCut, associatedDeductionPaise: associated });
 };

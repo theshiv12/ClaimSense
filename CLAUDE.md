@@ -119,6 +119,7 @@ node scripts/check-ai-config.mjs           # AI config sanity check (add it to c
 - GET routes and page renders never create sessions; samples and mutations are POST/PATCH/DELETE API calls.
 - A page with a bad or undecodable id shows 404; test helpers never encode a different contract than `docs/api.md`.
 - Per-IP limits use the client IP the web proxy vouches for (`X-CS-Client-IP` + `PROXY_SECRET`), never `X-Forwarded-For`.
+- What-if presets take their numbers from engine params and respect the room R6 judged (never a ward room for an ICU stay).
 - A fact is verified only if its quote is on its stated page **and** its value is readable from that quote.
 - Evidence shown for a check uses the facts the engine selected (`selectedFacts`), never every fact with that key.
 - Search terms and health details never go into URLs.
