@@ -390,3 +390,19 @@ path that can't be decoded is `NOT_FOUND`. Pages show 404 for every bad id.
 | TC-API-11 | The per-IP sample limit uses the client IP the web proxy vouches for, never a client-sent `X-Forwarded-For` | `TRUST_PROXY=loopback`, proxy secret set | 21 sample starts from the same proxied client IP, each with a different spoofed XFF; then one with a wrong proxy key | the 21st is 429 `RATE_LIMITED`; with a wrong key the proxied IP header is ignored (another bucket) | API |
 | TC-API-12 | Undecodable path → 404; broken multipart → 400; an upload to someone else's claim is refused before the body is read | signed-in user | GET `/api/claims/%E0%A4%A`; POST `/documents` with a truncated multipart body; POST `/documents` to a foreign claim | 404 `NOT_FOUND`; 400 `VALIDATION_FAILED`; 404 `NOT_FOUND` | API |
 | TC-UI-18 | The sample button goes where the API says | `startSample` ok / `RATE_LIMITED` / another error | click | `/claims/<id>`; `/?sample=busy`; `/` | Component |
+
+## "What can I do?" fix-it panel (*autopilot*, docs/one-night-build.md §1: remedies panel + room simulator; no chat)
+
+Case B arithmetic for the room preset (docs/rules-spec.md; SI ₹3L → cap ₹5,000/day): room 5,000 × 5 = 25,000 is within
+the cap, so no R6 cut; bill 2,40,000 − 35,000 + 25,000 = **2,30,000**; payable 2,30,000 − 9,600 = **2,20,400**; you pay
+**9,600**; saves 34,200 − 9,600 = **24,600**.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-FIX-01 | The button opens that check's own remedies | `CheckRow` R6 deduction, remedies: 3 for R6 deduction, 1 for R7 | click "What can I do?" | `aria-expanded` true; the 3 R6 titles shown, not the R7 one; click again closes | Component |
+| TC-FIX-02 | R6 deduction: one-click room within the limit, run by the engine | R6 deduction, `capPerDayPaise` 500000; `simulate` returns the Case B twin-sharing-at-cap estimate | click "Try a room within the limit" | `simulate({ claimId, category: 'shared', rentPerDayPaise: 500000 })`; "₹2,20,400 of ₹2,30,000", "you pay ₹9,600", "saves ₹24,600", "Assumes other charges stay the same" | Component |
+| TC-FIX-03 | Unknown: go and add the missing facts | R6 unknown, missing `room_rent_per_day`, `room_days` | open the panel | links "Add Room rent per day" → `/claims/c1/facts?add=room_rent_per_day` and "Add Days in room" → `?add=room_days` | Component |
+| TC-FIX-04 | Fail: escalation steps, medical advice first, disclaimer | R2 fail inside the initial wait | open the panel | "Medical advice comes first" shown before the remedies; Insurance Ombudsman step; disclaimer; no "approved" | Component |
+| TC-FIX-05 | No empty promise | a pass row; a row with no remedies | render | no "What can I do?" button | Component |
+| TC-FIX-06 | The facts page opens the form for the fact asked for | `FactsBoard initialAddKey="room_days"`; then `initialAddKey="not_a_key"` | render | form open with "Days in room" selected; an invalid key leaves the form closed | Component |
+| TC-E2E-04 | The whole thing in a browser | sample B | "What can I do?" on Room rent limit → "Try a room within the limit" | R6 remedy "Choose a room within your policy's limit" visible; "₹2,20,400 of ₹2,30,000"; "you pay ₹9,600"; never "approved" | E2E |

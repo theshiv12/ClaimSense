@@ -71,3 +71,17 @@ test('TC-E2E-02 sign up → new check → manual facts → estimate; TC-E2E-03 a
   await expect(otherPage.getByText('Not found')).toBeVisible();
   await other.close();
 });
+
+test('TC-E2E-04 What can I do? on the room-rent cut → a room within the limit', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'See a sample (knee replacement)' }).click();
+  await expect(page).toHaveURL(/\/claims\/[a-f0-9]{24}$/);
+  const roomRow = page.getByRole('listitem').filter({ hasText: 'Room rent limit' });
+  await roomRow.getByRole('button', { name: 'What can I do?' }).click();
+  await expect(roomRow.getByText("Choose a room within your policy's limit")).toBeVisible();
+  await roomRow.getByRole('button', { name: 'Try a room within the limit' }).click();
+  // Case B at the ₹5,000 cap: ₹2,20,400 of ₹2,30,000, you pay ₹9,600 (docs/test-cases.md TC-FIX).
+  await expect(roomRow.getByText('₹2,20,400 of ₹2,30,000')).toBeVisible();
+  await expect(roomRow.getByText(/you pay ₹9,600/)).toBeVisible();
+  await expect(page.locator('body')).not.toContainText(/approved/i);
+});
