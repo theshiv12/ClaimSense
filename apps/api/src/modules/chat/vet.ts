@@ -16,10 +16,16 @@ const VERDICT =
 const digitsOf = (text: string) => [...text.matchAll(ASCII_NUMBER)].map((m) => m[0].replace(/,/g, ''));
 
 /** True when the answer may be shown: only trusted numbers, no number words or other scripts' digits, no verdict. */
+// Every pattern here is linear: no nested quantifiers, wildcards bounded ({0,30}); input length is capped below.
+const MAX_ANSWER = 1200; // LlmChatAnswerSchema's bound, enforced again here
+
 export const vetAnswer = (answer: string, sources: ChatSource[]): boolean => {
+  if (answer.length > MAX_ANSWER) return false;
   const trusted = new Set(sources.filter((s) => s.kind !== 'document').flatMap((s) => [...digitsOf(s.label), ...digitsOf(s.text)]));
+  // nosemgrep: ajinabraham.njsscan.dos.regex_dos.regex_dos -- linear patterns, input ≤ 1200 chars (see above)
   if (NON_ASCII_DIGIT.test(answer) || NUMBER_WORDS.test(answer)) return false;
   if (digitsOf(answer).some((n) => !trusted.has(n))) return false;
+  // nosemgrep: ajinabraham.njsscan.dos.regex_dos.regex_dos -- linear pattern, input ≤ 1200 chars (see above)
   return !VERDICT.test(answer.replace(PRE_AUTH, ''));
 };
 
