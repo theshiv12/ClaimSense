@@ -1,4 +1,39 @@
 import type { ChatSource } from '@claimsense/shared';
 
-export const vetAnswer = (_answer: string, _sources: ChatSource[]): boolean => true;
-export const asksToHide = (_question: string): boolean => false;
+// The chat's checks in code (ADR-010), separate so each is unit-tested. Allow-lists, not deny-lists: the model's
+// text may only carry numbers the TRUSTED sources contain (engine reason, plan clause, catalog remedies, reviewed
+// cases), never numbers from the user's documents or browser, and never a verdict (golden rules 1, 8, 10).
+
+const ASCII_NUMBER = /\d[\d,]*(?:\.\d+)?/g;
+const NON_ASCII_DIGIT = /(?![0-9])\p{Nd}/u;
+// Amounts written in words or units are never needed to explain a check, and cannot be compared to the sources.
+const NUMBER_WORDS = /\b(hundred|thousand|lakhs?|lacs?|crores?|millions?|billions?|percent|per\s?cent)\b|₨/i;
+// Claim outcomes are the engine's alone. "pre-approval" / "pre-authorisation" (cashless) is a step, not a verdict.
+const PRE_AUTH = /\bpre-?(approv\w*|authori[sz]\w*)/gi;
+const VERDICT =
+  /\b(approv\w*|sanction\w*|guarantee\w*|(will|would|shall|is|are|gets?|got)\s+(?:be\s+)?(?:definitely\s+|surely\s+|fully\s+)?(?:approved|rejected|denied|accepted|sanctioned|paid|covered|settled|reimbursed))\b|\bpass ho\w*|\bmil ja\w*/i;
+
+const digitsOf = (text: string) => [...text.matchAll(ASCII_NUMBER)].map((m) => m[0].replace(/,/g, ''));
+
+/** True when the answer may be shown: only trusted numbers, no number words or other scripts' digits, no verdict. */
+export const vetAnswer = (answer: string, sources: ChatSource[]): boolean => {
+  const trusted = new Set(sources.filter((s) => s.kind !== 'document').flatMap((s) => [...digitsOf(s.label), ...digitsOf(s.text)]));
+  if (NON_ASCII_DIGIT.test(answer) || NUMBER_WORDS.test(answer)) return false;
+  if (digitsOf(answer).some((n) => !trusted.has(n))) return false;
+  return !VERDICT.test(answer.replace(PRE_AUTH, ''));
+};
+
+// Asking to hide, leave out, change or back-date medical facts (English, Hinglish, Hindi). Refused before any AI
+// call (golden rule 10). Narrow on purpose: "does the rent lie within", "why does the policy not mention ICU" pass.
+const HIDE_PATTERNS: RegExp[] = [
+  /\b(hide|conceal|cover up|leave out|omit|lying|lie to|back-?dat\w*|falsif\w*|forge\w*|tamper\w*)\b/i,
+  /\bskip\s+(mention\w*|tell\w*|disclos\w*|declar\w*)/i,
+  /\b(remove|delete|drop)\b.{0,30}\b(ped|condition|diagnosis|disease|illness|history|from (my|the) (form|record|report|proposal))\b/i,
+  /\b(alter|modify|edit|change)\b(\s+\w+){0,3}?\s+(date|diagnosis|reports?|records?|bills?|documents?|forms?|history)\b/i,
+  /\bfake\s+(bills?|reports?|documents?|certificates?|records?)\b/i,
+  /\b(i|we)\b.{0,20}\b(not|never|don'?t|avoid)\s+(mention|tell|disclos|declar)\w*/i,
+  /\b(chh?upa\w*|jhoo?th\w*|mat batana|nahi?n? batana|na batana|bina bataye|badal\w*)\b/i,
+  /छुपा|छिपा|झूठ|मत बताना|बिना बताए/,
+];
+
+export const asksToHide = (question: string): boolean => HIDE_PATTERNS.some((p) => p.test(question));

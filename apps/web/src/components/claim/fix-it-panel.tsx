@@ -92,7 +92,7 @@ export function FixItPanel({ id, result, claimId, remedies, currentOutOfPocketPa
       {result.outcome !== 'pass' ? (
         <>
           <SimilarCases cases={precedents} />
-          <CheckChat claimId={claimId} ruleId={result.ruleId} outcome={result.outcome} />
+          <CheckChat claimId={claimId} ruleId={result.ruleId} outcome={result.outcome} hasCases={precedents.length > 0} />
         </>
       ) : null}
 

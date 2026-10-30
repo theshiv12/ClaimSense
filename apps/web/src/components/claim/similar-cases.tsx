@@ -36,7 +36,7 @@ export function SimilarCases({ cases }: { cases: Precedent[] }) {
                 </Chip>
                 <p className="text-muted">{c.summary}</p>
                 <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-teal hover:underline">
-                  Read the decision ({c.citation})
+                  Read the decision ({c.citation})<span className="sr-only"> (opens in a new tab)</span>
                 </a>
               </li>
             );

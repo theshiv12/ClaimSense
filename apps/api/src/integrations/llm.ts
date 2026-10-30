@@ -53,7 +53,9 @@ const e2eFake: LlmClient = {
 export const getLlm = async (): Promise<LlmClient> => {
   if (override) return override;
   if (process.env.LLM_FAKE === '1') {
-    if (process.env.NODE_ENV === 'production') throw new Error('LLM_FAKE must never be set in production');
+    // Two locks: the e2e key marker, and no sign of a real deploy. Anything else is a misconfiguration.
+    const deployed = process.env.NODE_ENV === 'production' || ['RENDER', 'VERCEL', 'RAILWAY_ENVIRONMENT'].some((k) => process.env[k]);
+    if (deployed || !process.env.GEMINI_API_KEY?.startsWith('e2e-')) throw new Error('LLM_FAKE is for e2e runs only (e2e- key, never on a deploy)');
     return e2eFake;
   }
   if (process.env.VITEST) throw new Error('Tests must use FakeLlm (setLlmForTests); live Gemini is never called in tests');

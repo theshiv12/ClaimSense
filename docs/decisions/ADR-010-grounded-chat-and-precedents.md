@@ -18,12 +18,18 @@
    outcome come from `config/precedents.json`. The claim's insurer comes first, then the newest, at most 3.
 
 **Safeguards (in code, not only in the prompt):**
-- **Hiding or changing facts** (English and common Hinglish): refused before any AI call (golden rule 10).
-- **The answer is checked before the user sees it.**
-  - Every ₹ amount or % must appear in the sources, and the answer must not say "approved". Otherwise a fixed
-    safe reply replaces it (golden rule 1).
-  - Unknown citation ids are dropped.
-  - The disclaimer is appended.
+- **Hiding or changing facts** (English, Hinglish, Hindi): refused before any AI call (golden rule 10).
+- **The answer is checked before the user sees it** (`modules/chat/vet.ts`, an allow-list):
+  - Any number in it must come from a **trusted** source: the engine's reason, the plan clause, the catalog
+    remedies or reviewed cases. Numbers from the user's document lines or browser history never count.
+  - Number words and units (lakh, thousand, percent…) and other scripts' digits are not allowed.
+  - Verdict wording ("approved", "will be paid", "rejected", "pass ho jayega"…) is not allowed;
+    "pre-approval" is.
+  - Anything else gets a fixed safe reply (golden rule 1). Unknown citation ids are dropped, and the disclaimer
+    is appended.
+- **Hiding or changing facts** is also screened in the earlier questions the browser sends. Only earlier
+  *questions* go to the model, labelled untrusted; earlier answers are never sent.
+- **The e2e fake model** (`LLM_FAKE`) runs only with an `e2e-` key and never when a deploy is detected.
 - **Sources and the question are untrusted data** for the model (golden rule 8). The JSON-schema output is
   Zod-parsed.
 - **Nothing is stored**, and logs carry only `rule`, `refused` and the citation count (golden rule 6). Uploaded

@@ -8,7 +8,8 @@ How to add one:
 1. Find the primary decision: an Insurance Ombudsman award (Council for Insurance Ombudsmen, cioins.co.in),
    an IRDAI order, or a consumer-court judgment. Secondary articles are leads, not sources.
 2. Add it to a file in `drafts/` with `needsReview: true`, `verifiedBy: null`, a `note` saying what to check, and
-   its id in `pendingHumanReview`. Drafts are validated by `DraftPrecedentCatalogSchema` and never loaded.
+   its id in `pendingHumanReview`. Every drafts file is validated by `DraftPrecedentCatalogSchema` in the test
+   suite (TC-SH-PREC-04) and never loaded by the app.
 3. A human reads the decision at `sourceUrl` (https only), checks every field (forum, date, insurer, rule, outcome,
    result, summary in plain words, citation), then moves the entry to `precedents.json` without `needsReview` and
    with `verifiedBy` set. `PrecedentCatalogSchema` refuses anything else.

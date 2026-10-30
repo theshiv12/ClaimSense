@@ -12,17 +12,19 @@ type Outcome = Exclude<RuleResult['outcome'], 'pass'>;
 
 // Suggested questions per outcome: a fixed list, so the chat starts from what the check can answer.
 const SUGGESTED: Record<Outcome, string[]> = {
-  deduction: ['Why was this cut?', 'Which clause is this?', 'What happened in similar cases?'],
-  fail: ['Why does this check fail?', 'Which clause is this?', 'What happened in similar cases?'],
-  unknown: ['What do you still need from me?', 'Which clause is this?', 'What happened in similar cases?'],
+  deduction: ['Why was this cut?', 'Which clause is this?'],
+  fail: ['Why does this check fail?', 'Which clause is this?'],
+  unknown: ['What do you still need from me?', 'Which clause is this?'],
 };
+// Offered only when there are reviewed cases: otherwise it would spend a daily AI try to hear "none yet".
+const SIMILAR = 'What happened in similar cases?';
 const MAX_TURNS = 4;
 
 /**
  * "Ask about this check" (ADR-010): grounded Q&A. The API answers only from this check's reason, clause, the
  * user's own document lines, catalog remedies and reviewed cases, and says which ones it used.
  */
-export function CheckChat({ claimId, ruleId, outcome, ask = askAboutCheck }: { claimId: string; ruleId: string; outcome: Outcome; ask?: Ask }) {
+export function CheckChat({ claimId, ruleId, outcome, hasCases = false, ask = askAboutCheck }: { claimId: string; ruleId: string; outcome: Outcome; hasCases?: boolean; ask?: Ask }) {
   const id = useId();
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState<{ q: string; reply: ChatReplyView }[]>([]);
@@ -49,20 +51,28 @@ export function CheckChat({ claimId, ruleId, outcome, ask = askAboutCheck }: { c
     <div className="space-y-3">
       <h4 className="text-sm font-semibold text-ink">Ask about this check</h4>
       <div className="flex flex-wrap gap-2">
-        {SUGGESTED[outcome].map((s) => (
+        {[...SUGGESTED[outcome], ...(hasCases ? [SIMILAR] : [])].map((s) => (
           <button key={s} type="button" disabled={busy} onClick={() => void send(s)} className="rounded-full bg-bg px-3 py-1 text-xs font-semibold text-ink hover:bg-border disabled:opacity-50">
             {s}
           </button>
         ))}
       </div>
 
+      {/* Always present, so screen readers announce what appears in it. */}
+      <p role="status" className="sr-only">
+        {busy ? 'Thinking…' : ''}
+      </p>
       {turns.length > 0 ? (
         <ol className="space-y-3" aria-live="polite">
           {turns.map((t, i) => (
             <li key={`${i}-${t.q}`} className="space-y-2">
-              <p className="ml-auto w-fit max-w-[90%] rounded-lg bg-teal px-3 py-2 text-sm text-white">{t.q}</p>
+              <p className="ml-auto w-fit max-w-[90%] rounded-lg bg-teal px-3 py-2 text-sm text-white">
+                <span className="sr-only">You asked:</span> {t.q}
+              </p>
               <div className="max-w-[95%] space-y-2 rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink">
-                <p className="whitespace-pre-line">{t.reply.answer}</p>
+                <p className="whitespace-pre-line">
+                  <span className="sr-only">Answer:</span> {t.reply.answer}
+                </p>
                 {t.reply.citations.length > 0 ? (
                   <ul className="flex flex-wrap gap-1" aria-label="Sources">
                     {t.reply.citations.map((c) => (
@@ -79,7 +89,7 @@ export function CheckChat({ claimId, ruleId, outcome, ask = askAboutCheck }: { c
       ) : null}
 
       {needsAccount ? (
-        <p className="rounded-lg bg-bg px-3 py-2 text-sm text-ink">
+        <p role="alert" className="rounded-lg bg-bg px-3 py-2 text-sm text-ink">
           Create an account to ask about your own checks. Samples never call the AI.{' '}
           <Link href="/signup" className={buttonClass('ghost', 'px-0')}>Create an account</Link>
         </p>
@@ -105,8 +115,9 @@ export function CheckChat({ claimId, ruleId, outcome, ask = askAboutCheck }: { c
         <Button type="submit" disabled={busy}>Ask</Button>
       </form>
       <p className="text-xs text-muted">
-        Your question and this check’s details (not your files) are sent to Google Gemini (free tier) to answer it. Answers explain your
-        policy; the amounts always come from the estimate above.
+        Your question, this check’s result, the policy clause and the lines quoted from your documents (not the files
+        themselves) are sent to Google Gemini (free tier) to answer it. Nothing is stored. The amounts always come from the
+        estimate above.
       </p>
     </div>
   );

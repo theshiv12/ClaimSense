@@ -5,6 +5,7 @@ import { fail } from '../../core/errors';
 import { ChatUsage } from '../../core/models';
 import { getLlm, LlmError } from '../../integrations/llm';
 import { estimateView } from '../estimate/estimate.service';
+import { asksToHide, vetAnswer } from './vet';
 
 // "Ask about this check" (ADR-010): grounded Q&A. The model may only explain the numbered sources built here;
 // every answer is checked in code before it reaches the user (golden rules 1 and 10). Nothing is stored.
@@ -14,14 +15,6 @@ const SAFE_REPLY =
   'I can only explain what is in your policy, your documents and this check. For the amounts, see the estimate above; only your insurer decides.';
 const HIDE_REFUSAL =
   "I can't help hide or change medical facts. A false or missing disclosure can get the claim rejected and the policy cancelled. The steps above are what you can do.";
-
-// Asking to hide, leave out, change or back-date facts (English and common Hinglish): refused before any AI call.
-const HIDE_INTENT =
-  /\b(hide|conceal|cover up|not (mention|tell|disclose|declare)|don'?t (mention|tell|disclose|declare)|without (telling|mentioning|disclosing)|lie|fake|forge|back-?date|change (the )?(date|diagnosis|records?|report)|chhupa\w*|chupa\w*|jhooth\w*|jhoot\w*)\b/i;
-
-/** Amounts and percentages written in a text, as digits only ("₹2,05,800" → "205800"). */
-const numbersIn = (text: string) =>
-  [...text.matchAll(/(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d+)?)|([\d,]*\d(?:\.\d+)?)\s*%/gi)].map((m) => (m[1] ?? m[2] ?? '').replace(/,/g, ''));
 
 /** One counter per user per UTC day, bumped atomically before the model is called; refunded if it fails. */
 const takeChatQuota = async (userId: Types.ObjectId) => {
@@ -50,7 +43,8 @@ export const askAboutCheck = async (user: CurrentUserView, claimId: string, rule
   const result = view.estimate.results.find((r) => r.ruleId === ruleId);
   if (!result || result.outcome === 'pass') return fail('NOT_FOUND');
 
-  if (HIDE_INTENT.test(input.question)) {
+  // The browser's history is untrusted too: a request to hide facts there is refused the same way.
+  if ([input.question, ...input.history.map((t) => t.q)].some(asksToHide)) {
     console.info(`[chat] rule=${ruleId} refused=true cited=0 guard=hide`);
     return reply(HIDE_REFUSAL, true);
   }
@@ -82,12 +76,13 @@ export const askAboutCheck = async (user: CurrentUserView, claimId: string, rule
     return fail(err instanceof LlmError ? err.code : 'LLM_UNAVAILABLE');
   }
   const parsed = LlmChatAnswerSchema.safeParse(raw);
-  if (!parsed.success) return fail('LLM_OUTPUT_INVALID');
+  if (!parsed.success) {
+    await quota.refund(); // an unusable answer is not the user's fault, as when gemini.ts cannot parse it
+    return fail('LLM_OUTPUT_INVALID');
+  }
 
-  // Checked in code, never trusted: no amount the sources do not contain, never "approved" (golden rules 1, 10).
-  const sourceNumbers = new Set(sources.flatMap((s) => numbersIn(s.text)));
-  const inventsAmount = numbersIn(parsed.data.answer).some((n) => !sourceNumbers.has(n));
-  if (inventsAmount || /\bapprov/i.test(parsed.data.answer)) {
+  // Checked in code, never trusted (vet.ts): only numbers from trusted sources, no verdict (golden rules 1, 10).
+  if (!vetAnswer(parsed.data.answer, sources)) {
     console.info(`[chat] rule=${ruleId} refused=true cited=0 guard=output`);
     return reply(SAFE_REPLY, true);
   }
