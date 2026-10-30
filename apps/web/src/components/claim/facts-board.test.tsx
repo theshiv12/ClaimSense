@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { StoredFactView } from '@/lib/fact-view';
 import { FactsBoard } from './facts-board';
@@ -30,5 +30,36 @@ describe('FactsBoard', () => {
     render(<FactsBoard claimId="c1" initial={[pending]} actions={actions} initialAddKey="room_days" />);
     expect(screen.queryByLabelText('What')).toBeNull();
     expect(screen.getByText(/Days in room was read from your document: confirm it or correct it below/)).toBeTruthy();
+  });
+});
+
+describe('FactsBoard upload wait', () => {
+  const pdf = () => new File([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])], 'a.pdf', { type: 'application/pdf' });
+
+  it('TC-UI-UPL-01 shows progress and what to expect', async () => {
+    vi.useFakeTimers();
+    const upload = vi.fn(() => new Promise<never>(() => {}));
+    render(<FactsBoard claimId="c1" initial={[]} actions={{ ...actions, upload }} />);
+    fireEvent.change(screen.getByLabelText('Upload a document'), { target: { files: [pdf()] } });
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(screen.getByRole('status').textContent).toMatch(/Reading your document… 30 s/);
+    expect(screen.getByText(/can take up to 2 minutes/)).toBeTruthy();
+    vi.useRealTimers();
+  });
+
+  it('TC-UI-UPL-02 the wait ends with a way forward; a late answer is ignored', async () => {
+    vi.useFakeTimers();
+    let answer: (v: unknown) => void = () => {};
+    const upload = vi.fn(() => new Promise((resolve) => (answer = resolve)));
+    render(<FactsBoard claimId="c1" initial={[]} actions={{ ...actions, upload }} />);
+    fireEvent.change(screen.getByLabelText('Upload a document'), { target: { files: [pdf()] } });
+    await vi.advanceTimersByTimeAsync(150_000);
+    expect(screen.getByRole('alert').textContent).toMatch(/took too long/);
+    expect(screen.getByLabelText('What')).toBeTruthy(); // manual form open
+    expect(screen.getByText('Upload a document')).toBeTruthy(); // not "Reading…" any more
+    answer({ ok: true, data: { facts: [{ id: 'late', key: 'sum_insured', head: 'none', value: 1, status: 'found', source: 'document', documentId: 'd', sourceQuote: 'q', page: 1, confidence: 'high', verification: 'exact', confirmedByUser: false }], needsYou: 0, warnings: [] } });
+    await vi.advanceTimersByTimeAsync(10);
+    expect(screen.queryByText('Document 1')).toBeNull();
+    vi.useRealTimers();
   });
 });

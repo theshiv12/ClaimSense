@@ -492,3 +492,12 @@ Hand arithmetic on the real Star FHO config (`config/plans/star-fho.json`) and f
 | TC-UI-EXPL-01 | Explain my estimate | `ExplainEstimate` with a fake `explain` | click | answer and citations shown; quota message on 429; guest prompt on 401 | Component |
 | TC-UI-CHAT-04 | What-if answers are labelled | `CheckChat`, reply kind whatif | ask | "What-if (not saved)" label | Component |
 | TC-UI-SUM-01 | Printable summary | `SummaryView` with Case B's view | render | verdict word, ₹2,05,800 of ₹2,40,000, each check with its clause, remedies, rejection steps, disclaimer, a "Download PDF" button; never "approved" | Component |
+
+### Upload never spins forever (bug: "Check what we found" kept loading)
+
+A document read is up to two Gemini calls of 60 s each (primary, then fallback) plus PDF reading.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-UI-UPL-01 | The user sees progress and what to expect | an upload that has not answered yet | 30 s pass | status reads "Reading your document… 30 s" and says it can take up to 2 minutes | Component |
+| TC-UI-UPL-02 | The wait has an end, and a way forward | an upload that never answers | 150 s pass | the button is usable again; an alert says it took too long; the manual fact form is open; a late answer is ignored | Component |
