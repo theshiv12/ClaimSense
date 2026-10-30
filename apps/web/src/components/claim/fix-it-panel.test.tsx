@@ -71,9 +71,9 @@ describe('What can I do?', () => {
     const { container } = render(<ul><CheckRow result={fail} fix={fix([remedy('r2-fail-plan', 'R2', 'fail', 'Plan non-urgent treatment after the waiting period')])} /></ul>);
     await userEvent.click(screen.getByRole('button', { name: 'What can I do?' }));
     const panel = screen.getByRole('region', { name: /What you can do/ });
-    const advice = panel.textContent!.indexOf('Medical advice comes first');
+    const advice = panel.textContent.indexOf('Medical advice comes first');
     expect(advice).toBeGreaterThanOrEqual(0);
-    expect(advice).toBeLessThan(panel.textContent!.indexOf('Plan non-urgent treatment after the waiting period'));
+    expect(advice).toBeLessThan(panel.textContent.indexOf('Plan non-urgent treatment after the waiting period'));
     expect(panel.textContent).toContain('Insurance Ombudsman');
     expect(panel.textContent).toContain('Estimate, not a guarantee. Only your insurer decides. Not medical or legal advice.');
     expect(container.textContent).not.toMatch(/approved/i);

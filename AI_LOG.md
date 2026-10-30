@@ -35,6 +35,7 @@ doesn't happen again. Newest first. Add an entry every time; small ones count.
 | 2026-10-17 | Define | A widely shared claim, "25% of rejections are waiting-period violations", had no traceable primary source. | Tried to find the original source before citing it; none found. | Only figures with a primary or named source go into docs. |
 | 2026-10-17 | Define | Aggregator sites gave three different FY25 claim settlement ratios for the same insurer (82.31%, 91.3%, 99.06%). | Compared several sources for the same number. | Insurer rejection rates, if used, come only from the insurers' own NL-37 / NL-48 filings. |
 | 2026-10-17 | Define | Sources disagreed on the ombudsman claim cap (Rs 30 lakh vs Rs 50 lakh) and the specific-disease waiting cap (24 vs 36 months). | Cross-checking two or more sources per regulatory fact. | Both marked "verify before use"; ClaimSense reads waiting periods from each plan's wording, not from a general rule. |
+| 2026-10-30 | Build | The AI built "What can I do?" as a `#remedies` link to one sidebar list of every rule's remedies, not the per-check remedies panel + room what-if that docs/one-night-build.md §1 specifies; no test covered the button's behaviour | User: "what can we do is not working" | Inline FixItPanel per check (TC-FIX-01..06, TC-E2E-04); sidebar list removed as a duplicate |
 
 ## Entry template
 

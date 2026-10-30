@@ -7,7 +7,6 @@ import { Disclaimer } from '@/components/claim/disclaimer';
 import { EvidencePanel } from '@/components/claim/evidence-panel';
 import { PayoutBar, type PayoutPart } from '@/components/claim/payout-bar';
 import { RejectionSteps } from '@/components/claim/rejection-steps';
-import { RemediesPanel } from '@/components/claim/remedies-panel';
 import { RoomSimulator } from '@/components/claim/room-simulator';
 import { VerdictHeadline } from '@/components/claim/verdict-headline';
 import { buttonClass } from '@/components/ui/button';
@@ -55,7 +54,15 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
             </div>
             <ul>
               {estimate.results.map((r) => (
-                <CheckRow key={r.ruleId} result={r} actionHref={remedies.some((m) => m.ruleId === r.ruleId) ? '#remedies' : undefined} />
+                <CheckRow
+                  key={r.ruleId}
+                  result={r}
+                  fix={{
+                    claimId: id,
+                    remedies: remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
+                    currentOutOfPocketPaise: estimate.outOfPocketPaise,
+                  }}
+                />
               ))}
             </ul>
           </Card>
@@ -81,11 +88,6 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
               <EvidencePanel result={r} lines={evidence[r.ruleId] ?? []} />
             </Card>
           ))}
-
-          <Card>
-            <h2 id="remedies" className="mb-3 scroll-mt-6 text-lg font-semibold text-ink">What you can do</h2>
-            <RemediesPanel remedies={remedies} />
-          </Card>
 
           <Card>
             <h2 className="mb-3 text-lg font-semibold text-ink">If the claim is rejected later</h2>

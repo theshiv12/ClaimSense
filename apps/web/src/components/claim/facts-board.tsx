@@ -24,6 +24,8 @@ interface Props {
     add: (input: { claimId: string; key: FactKey; head: BillHead; value: FactValue }) => FactResult;
     upload: (form: FormData) => UploadResult;
   };
+  /** From "What can I do?" (`?add=<key>`): open the manual form on this fact. Anything not a FactKey is ignored. */
+  initialAddKey?: string;
 }
 
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -55,14 +57,15 @@ const API_ACTIONS: NonNullable<Props['actions']> = {
   upload: api.uploadAndExtract,
 };
 
-export function FactsBoard({ claimId, initial, actions = API_ACTIONS }: Props) {
+export function FactsBoard({ claimId, initial, actions = API_ACTIONS, initialAddKey }: Props) {
+  const asked = FactKey.safeParse(initialAddKey);
   const id = useId();
   const [facts, setFacts] = useState(initial);
   const [notice, setNotice] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [manual, setManual] = useState(false);
+  const [manual, setManual] = useState(asked.success);
   const [busy, setBusy] = useState(false);
-  const [key, setKey] = useState<FactKey>('sum_insured');
+  const [key, setKey] = useState<FactKey>(asked.success ? asked.data : 'sum_insured');
   const [head, setHead] = useState<BillHead>('room');
   const [text, setText] = useState('');
 
