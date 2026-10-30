@@ -47,7 +47,10 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
             <PayoutBar claimedPaise={estimate.claimedPaise} payablePaise={estimate.payablePaise} breakdown={breakdownOf(estimate)} />
             <div className="flex flex-wrap items-start justify-between gap-3 border-t border-border pt-4">
               <ExplainEstimate claimId={id} />
-              <Link className={buttonClass('ghost')} href={`/claims/${id}/summary`}>Summary to print or save as PDF</Link>
+              <div className="flex flex-wrap gap-2">
+                <Link className={buttonClass('ghost')} href={`/claims/${id}/card`}>Pre-admission card</Link>
+                <Link className={buttonClass('ghost')} href={`/claims/${id}/summary`}>Summary to print or save as PDF</Link>
+              </div>
             </div>
           </Card>
 
