@@ -464,3 +464,20 @@ non-ASCII digit, and any verdict wording, gets the fixed safe reply.
 | ID | Requirement | Given | When | Then | Type |
 |---|---|---|---|---|---|
 | TC-UI-19 | Evidence cards only for checks that cut or fail the claim; an Unknown row already says what is needed | results: R1 unknown, R2 fail, R5 pass, R6 deduction, R7 unknown | `checksWithEvidence(results)` | `['R2', 'R6']` | Unit |
+
+## PRD gaps: what-if, clarifier, explain, evals, summary (*autopilot*, ADR-011)
+
+Hand arithmetic on the real Star FHO config (`config/plans/star-fho.json`) and fixtures/cases:
+
+- **TC-WI-01:** Case B with an accident changes nothing (no waiting rule fails), so it stays ₹2,05,800 (20,580,000 paise).
+- **TC-WI-02:** Case A (inside the 30-day initial wait) with an accident. Accidents are exempt, so R2 passes and the payable is A's payable-if-eligible ₹10,000 (1,000,000).
+- **TC-WI-03:** Case C admitted on 2027-06-01, which is inception 2025-06-01 plus 24 months (inclusive). R3 passes, but R1 fails because the policy ends 2026-05-31, so a renewal is needed. Still at risk.
+- **TC-WI-04:** Case B with SI ₹5 lakh. That tier is category "single" and the room is single, so R6 passes. Payable 24,000,000 − 960,000 = 23,040,000.
+- **TC-WI-05:** an undisclosed PED inside the moratorium fails R5; patched to disclosed, R5 passes.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-WI-01..05 | `simulateFacts` applies one change and re-runs the engine | as above | `simulateFacts(facts, plan, patch)` | as above | Unit |
+| TC-CLAR-01 | At most 2 questions, those that settle the most checks | R1 [policy start, policy end, admission], R2 [inception, admission], R3 [diagnosis], R4 [ped_exists], R6 [bill_line_item], R7 [age], R8 [SI used] | `pickClarifiers` | admission_date (2 checks), then policy_start_date (fixed order among ties); never bill_line_item | Unit |
+| TC-CLAR-02 | A pending document value is confirmed, not asked | same; admission_date pending | `pickClarifiers` | admission_date → confirm, policy_start_date → ask | Unit |
+| TC-CLAR-03 | Nothing to ask when nothing is unknown | Case B results | `pickClarifiers` | `[]` | Unit |
