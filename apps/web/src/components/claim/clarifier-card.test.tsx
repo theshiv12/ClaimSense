@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ClarifierCard } from './clarifier-card';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+const refresh = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
 afterEach(cleanup);
 
 // docs/test-cases.md TC-UI-CLAR-*: FR-6, at most 2 questions, answers saved as user-stated facts.
@@ -33,4 +34,25 @@ describe('ClarifierCard', () => {
     expect(screen.getByRole('link', { name: /Confirm it on the facts page/ }).getAttribute('href')).toBe('/claims/c1/facts');
     expect(screen.queryByLabelText('When is the planned admission?')).toBeNull();
   });
+
+  it('TC-UI-CLAR-03 a partial save still refreshes and says what failed', async () => {
+    refresh.mockClear();
+    const add = vi.fn().mockResolvedValueOnce({ ok: true, data: { fact: {} } }).mockResolvedValueOnce({ ok: false, code: 'VALIDATION_FAILED' });
+    render(
+      <ClarifierCard
+        claimId="c1"
+        clarifiers={[
+          { key: 'admission_date', mode: 'ask', question: 'When is the planned admission?' },
+          { key: 'ped_exists', mode: 'ask', question: 'Did this condition start before the policy was first taken?' },
+        ]}
+        add={add}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText('When is the planned admission?'), { target: { value: '2026-11-18' } });
+    await userEvent.selectOptions(screen.getByLabelText('Did this condition start before the policy was first taken?'), 'yes');
+    await userEvent.click(screen.getByRole('button', { name: 'Save answers' }));
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(refresh).toHaveBeenCalled();
+  });
 });
+

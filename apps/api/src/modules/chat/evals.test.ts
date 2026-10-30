@@ -33,3 +33,21 @@ describe('Conversation evals', () => {
     });
   }
 });
+
+describe('Conversation evals: injected document line', () => {
+  it('TC-EVAL-02 CE-4’s injected line reaches the sources and the answer is still replaced', async () => {
+    const { LlmChatAnswerSchema } = await import('@claimsense/shared');
+    const { checkSources, finalize } = await import('./chat.service');
+    const { estimate } = await import('@claimsense/rules');
+    const { getPlan, remedies } = await import('../../lib/plans');
+    const { SAMPLES } = await import('../../lib/samples');
+    const s = scenarios.find((x) => x.id === 'CE-4')!;
+    const line = Buffer.from(s.injectedDocLineB64!, 'base64').toString('utf8');
+    const result = estimate(SAMPLES.B.facts, getPlan(SAMPLES.B.facts.planId)!, 0).results.find((r) => r.ruleId === 'R6')!;
+    const sources = checkSources({ evidence: { R6: [{ key: 'room_rent_per_day', quote: line, page: 1 }] }, remedies: remedies.remedies, precedents: {} }, result);
+    expect(sources.find((x) => x.id === 'S-DOC-1')?.text).toBe(line);
+    const llm = new FakeLlm([], [s.fakeAnswer]);
+    const out = finalize(LlmChatAnswerSchema.parse(await llm.answer({ sources, question: s.question, history: [] })), sources);
+    expect(checkExpectations(s, out, true)).toEqual([]);
+  });
+});

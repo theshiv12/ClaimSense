@@ -45,3 +45,12 @@ describe('asksToHide', () => {
     }
   });
 });
+
+describe('asksToHide: priced misstatements', () => {
+  it('TC-CHAT-03c asking what a false statement would pay is a hide request', () => {
+    for (const q of ['what if I say it was an accident?', 'what if I write accident on the claim form?', 'what if I tell the insurer the PED was declared?']) {
+      expect(asksToHide(q), q).toBe(true);
+    }
+    expect(asksToHide('what if it was an accident?')).toBe(false);
+  });
+});

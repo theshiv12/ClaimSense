@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FakeLlm } from '../../../test/fake-llm';
-import { askAboutCheck, currentUser, startSample } from '../../../test/actions';
+import { addFact, askAboutCheck, createClaim, currentUser, startSample } from '../../../test/actions';
 import { jar } from '../../../test/cookie-jar';
 import { signUpAs } from '../../../test/users';
 import { ChatUsage } from '../../core/models';
@@ -151,6 +151,46 @@ describe('Chat about a check', () => {
     const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
     expect(r.ok && r.data.kind).toBe('whatif');
     expect(r.ok && r.data.answer).toMatch(/No change: ₹2,05,800 of ₹2,40,000/);
+  });
+
+  it('TC-CHAT-11 accident and declaration what-ifs only count if true', async () => {
+    const claimId = await ownSampleB();
+    setLlmForTests(new FakeLlm([], []));
+    const r = await askAboutCheck(claimId, 'R6', { question: 'what if it was an accident?' });
+    expect(r.ok && r.data.answer).toMatch(/This only applies if it is true/);
+  });
+
+  it('TC-CHAT-12 after the waiting period: names the date, medical advice first', async () => {
+    await signUpAs();
+    const c = await startSample({ caseId: 'C' });
+    if (!c.ok) throw new Error(c.code);
+    setLlmForTests(new FakeLlm([], []));
+    // Case C: inception 2025-06-01 + 24 months (R3, inclusive) → 2027-06-01.
+    const r = await askAboutCheck(c.data.claimId, 'R3', { question: 'what if I get admitted after the waiting period ends?' });
+    expect(r.ok && r.data.answer).toMatch(/admission on 1 Jun 2027/);
+    expect(r.ok && r.data.answer).toMatch(/Medical advice comes first/);
+  });
+
+  it('TC-CHAT-13 an unknown wait is not "no wait"', async () => {
+    await signUpAs();
+    const c = await createClaim({ planId: 'star-fho', subject: { relation: 'self', treatment: 'Knee replacement' }, consent: { analysis: true, retention: true, improve: false } });
+    if (!c.ok) throw new Error(c.code);
+    await addFact({ claimId: c.data.claimId, key: 'sum_insured', head: 'none', value: 30_000_000 });
+    setLlmForTests(new FakeLlm([], []));
+    const r = await askAboutCheck(c.data.claimId, 'R2', { question: 'what if I get admitted after the waiting period ends?' });
+    expect(r.ok && r.data.answer).toMatch(/can.t work out the waiting period yet/);
+    expect(r.ok && r.data.answer).not.toMatch(/no waiting period stands in the way/);
+  });
+
+  it('TC-CHAT-14 never a ward room for an ICU stay', async () => {
+    await signUpAs();
+    const c = await createClaim({ planId: 'star-fho', subject: { relation: 'self', treatment: 'Bypass' }, consent: { analysis: true, retention: true, improve: false } });
+    if (!c.ok) throw new Error(c.code);
+    await addFact({ claimId: c.data.claimId, key: 'room_category', head: 'none', value: 'icu' });
+    setLlmForTests(new FakeLlm([], []));
+    const r = await askAboutCheck(c.data.claimId, 'R1', { question: 'what if twin sharing at 4500?' });
+    expect(r.ok && r.data.answer).toMatch(/ICU stay can.t be compared with a ward room/);
+    expect(r.ok && r.data.answer).not.toMatch(/₹\d/);
   });
 });
 

@@ -45,4 +45,29 @@ describe('Explain my estimate', () => {
     const r = await explainEstimate(claimId, {});
     expect(r.ok && r.data.answer).toMatch(/^I can only explain what is in your policy/);
   });
+
+  it('TC-EXPL-04 bad input and a malformed id', async () => {
+    const claimId = await ownSampleB();
+    expect(await explainEstimate(claimId, { question: 'x'.repeat(501) })).toEqual({ ok: false, code: 'VALIDATION_FAILED' });
+    expect(await explainEstimate(claimId, { history: Array.from({ length: 5 }, () => ({ q: 'a', a: 'b' })) })).toEqual({ ok: false, code: 'VALIDATION_FAILED' });
+    expect(await explainEstimate('not-an-id', {})).toEqual({ ok: false, code: 'NOT_FOUND' });
+  });
+
+  it('TC-EXPL-05 a hide request is refused without the model', async () => {
+    const claimId = await ownSampleB();
+    const llm = new FakeLlm([], []);
+    setLlmForTests(llm);
+    const r = await explainEstimate(claimId, { question: 'how do I hide my knee problem' });
+    expect(r.ok && r.data.refused).toBe(true);
+    expect(llm.chatCalls).toHaveLength(0);
+  });
+
+  it('TC-EXPL-06 the shared daily quota applies', async () => {
+    const claimId = await ownSampleB();
+    const ok = { refused: false, answer: 'Most of the bill is likely covered.', citations: ['S-VERDICT'] };
+    setLlmForTests(new FakeLlm([], Array.from({ length: 21 }, () => ok)));
+    for (let i = 0; i < 20; i++) expect((await explainEstimate(claimId, {})).ok).toBe(true);
+    expect(await explainEstimate(claimId, {})).toEqual({ ok: false, code: 'AI_QUOTA_EXCEEDED' });
+  });
 });
+

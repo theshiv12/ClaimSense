@@ -8,7 +8,8 @@
     "answer": "Your room is over the limit in clause 2(A), so the other charges are cut in the same ratio.",
     "citations": [
       "S-CLAUSE",
-      "S-REASON"
+      "S-REASON",
+      "S-NOPE"
     ]
   },
   "expect": {
@@ -17,6 +18,9 @@
     "modelCalled": true,
     "citesKinds": [
       "clause"
+    ],
+    "notCitedIds": [
+      "S-NOPE"
     ]
   }
 }

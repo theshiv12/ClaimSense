@@ -24,4 +24,13 @@ describe('ExplainEstimate', () => {
     await userEvent.click(button);
     expect(await screen.findByText(/Create an account to get an explanation/)).toBeTruthy();
   });
+
+  it('TC-UI-EXPL-02 the answer is announced', async () => {
+    const explain = vi.fn().mockResolvedValue({ ok: true, data: { refused: false, kind: 'answer', answer: 'Most of the bill is likely covered.', citations: [] } });
+    render(<ExplainEstimate claimId="c1" explain={explain} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Explain my estimate in simple words' }));
+    const answer = await screen.findByText(/Most of the bill is likely covered/);
+    expect(answer.closest('[aria-live="polite"]')).not.toBeNull();
+  });
 });
+

@@ -62,4 +62,16 @@ describe('FactsBoard upload wait', () => {
     expect(screen.queryByText('Document 1')).toBeNull();
     vi.useRealTimers();
   });
+
+  it('TC-UI-UPL-03 leaving the page mid-upload leaves no timers', async () => {
+    vi.useFakeTimers();
+    const upload = vi.fn(() => new Promise<never>(() => {}));
+    const { unmount } = render(<FactsBoard claimId="c1" initial={[]} actions={{ ...actions, upload }} />);
+    fireEvent.change(screen.getByLabelText('Upload a document'), { target: { files: [pdf()] } });
+    await act(() => vi.advanceTimersByTimeAsync(1_000));
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    vi.useRealTimers();
+  });
 });
+

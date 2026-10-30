@@ -501,3 +501,24 @@ A document read is up to two Gemini calls of 60 s each (primary, then fallback) 
 |---|---|---|---|---|---|
 | TC-UI-UPL-01 | The user sees progress and what to expect | an upload that has not answered yet | 30 s pass | status reads "Reading your document… 30 s" and says it can take up to 2 minutes | Component |
 | TC-UI-UPL-02 | The wait has an end, and a way forward | an upload that never answers | 150 s pass | the button is usable again; an alert says it took too long; the manual fact form is open; a late answer is ignored | Component |
+
+### Review fixes (code-reviewer on `feat/prd-gaps`)
+
+A wrong parse is worse than none: the parser returns null on negation, ambiguity or more than one change, and
+the question goes to the grounded answer instead. What-ifs that touch medical facts or dates carry the
+truthfulness and doctor warnings.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-WIP-07 | No guessing | "not an accident", "condition was not declared", "accident nahi tha", "twin sharing for 3 days at 4500", "general ward at 2k", "sum insured 3 lakh 50 thousand", "sum insured 10 lakh and twin sharing at 4500", "why is it cut if the room is single at 7000?", "twin sharing at 50" | `parseWhatIf` | null, except "for 3 days at 4500" → shared ₹4,500 (the price is the number after "at") | Unit |
+| TC-CHAT-03c | Asking what a false statement would pay is a hide request | "what if I say it was an accident?", "what if I write accident on the claim form?", "what if I tell the insurer the PED was declared?" | `asksToHide` | true | Unit |
+| TC-CHAT-11 | Accident and declaration what-ifs say they only count if true | own sample B | "what if it was an accident?" | reply includes "This only applies if it is true" | API |
+| TC-CHAT-12 | "After the waiting period" names the date and puts medical advice first | own sample C (R3 fails, wait ends 2027-06-01) | "what if I get admitted after the waiting period ends?" | "admission on 1 Jun 2027" and "Medical advice comes first" | API |
+| TC-CHAT-13 | An unknown wait is not "no wait" | own claim with only SI (R2–R4 unknown) | same question | "can't work out the waiting period yet" with the missing facts; never "no waiting period stands in the way" | API |
+| TC-CHAT-14 | Never a ward room for an ICU stay | own claim with room type ICU | "what if twin sharing at 4500?" | fixed reply that a ward room cannot be compared with an ICU stay; no amounts | API |
+| TC-CLAR-05 | Any document value makes the clarifier confirm, never ask | two found document facts that disagree on admission date | `pendingDocumentKeys` | contains admission_date | Unit |
+| TC-EXPL-04..06 | Explain: bad input, malformed id, hide guard without the model, quota | own sample B | 501-char question; 5 history turns; `not-an-id`; "how do I hide my knee problem"; 21st call | 400; 400; 404; refusal with no model call; 429 | API |
+| TC-EVAL-02 | CE-4's injected line (stored base64, golden rule 8) is really in the sources the fake model sees, and the answer is still replaced | CE-4 | the pure pipeline (`checkSources` + `finalize`) | the sources hold the decoded line as `S-DOC-1`; the reply is the safe reply | Unit |
+| TC-UI-CLAR-03 | A partial save still refreshes and says so | first answer saves, second fails | Save | refresh called; error shown | Component |
+| TC-UI-EXPL-02 | The answer is announced | explain answers | click | the answer sits inside an `aria-live` region | Component |
+| TC-UI-UPL-03 | Leaving the page mid-upload leaves no timers | upload pending | unmount | no pending timers | Component |

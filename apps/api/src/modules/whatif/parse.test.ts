@@ -31,3 +31,16 @@ describe('parseWhatIf', () => {
     for (const q of ['Why was this cut?', 'Which clause is this?', 'what if I lie about it', 'If the hospital charges more?']) expect(parseWhatIf(q), q).toBeNull();
   });
 });
+
+describe('parseWhatIf review fixes', () => {
+  it('TC-WIP-07 returns null rather than guessing', () => {
+    for (const q of [
+      'what if it was not an accident?', 'what if the condition was not declared?', 'agar accident nahi tha toh?', 'what if general ward at 2k',
+      'what if my sum insured was 3 lakh 50 thousand?', 'what if sum insured is 10 lakh and twin sharing at 4500', 'why is it cut if the room is single at 7000?',
+      'what if twin sharing at 50?',
+    ]) {
+      expect(parseWhatIf(q), q).toBeNull();
+    }
+    expect(parseWhatIf('what if twin sharing for 3 days at 4500?')).toEqual({ label: 'twin sharing at ₹4,500/day', patch: { room: { category: 'shared', rentPerDayPaise: 450_000 } } });
+  });
+});
