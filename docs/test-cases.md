@@ -481,3 +481,14 @@ Hand arithmetic on the real Star FHO config (`config/plans/star-fho.json`) and f
 | TC-CLAR-01 | At most 2 questions, those that settle the most checks | R1 [policy start, policy end, admission], R2 [inception, admission], R3 [diagnosis], R4 [ped_exists], R6 [bill_line_item], R7 [age], R8 [SI used] | `pickClarifiers` | admission_date (2 checks), then policy_start_date (fixed order among ties); never bill_line_item | Unit |
 | TC-CLAR-02 | A pending document value is confirmed, not asked | same; admission_date pending | `pickClarifiers` | admission_date → confirm, policy_start_date → ask | Unit |
 | TC-CLAR-03 | Nothing to ask when nothing is unknown | Case B results | `pickClarifiers` | `[]` | Unit |
+| TC-WIP-01..06 | What-ifs are recognised in code | accident (EN/Hinglish); "twin sharing at 4500"; "general ward at ₹2,000"; "general ward?" (no rent); "admitted on 12/03/2027"; "after the waiting period"; "declared"; "sum insured 5 lakh"; non-what-ifs | `parseWhatIf` | the patch for each; null with no rent and for non-what-ifs | Unit |
+| TC-CHAT-09 | A room what-if is answered by the engine | own sample B | "what if we take twin sharing at 4500?" | kind whatif; "₹2,17,900 of ₹2,27,500", "you pay ₹9,600", "now ₹2,05,800 of ₹2,40,000"; no model call; no quota | API |
+| TC-CHAT-10 | An accident what-if on Case B | own sample B | "what if it was an accident?" | "No change: ₹2,05,800 of ₹2,40,000" | API |
+| TC-EXPL-01..03 | FR-11 explain: rules, grounding, checks | own sample B | POST `/explain` | 401 / 401 guest / 404 foreign; sources S-VERDICT ("₹2,05,800 of ₹2,40,000") + S-CHECK-R1..R8; an invented ₹2,30,000 → safe reply | API |
+| TC-CLAR-04 | FR-6 in the estimate view | own claim with only SI; sample B | GET estimate | 2 clarifiers (admission date, policy start) with their questions; none for B | API |
+| TC-EVAL-01 | FR-18 CE-1..6 in CI | `apps/api/evals/conversations/CE-*.json` | each through the API with FakeLlm | all expectations hold | API |
+| TC-UI-CLAR-01 | Two questions, saved as facts | `ClarifierCard` with admission_date (ask) and ped_exists (ask) | answer 18/11/2026 and Yes, Save | `add` called with `{key:'admission_date', value:'2026-11-18'}` and `{key:'ped_exists', value:true}` | Component |
+| TC-UI-CLAR-02 | Confirm mode points to the facts page | admission_date (confirm) | render | "Confirm it on the facts page" link to `/claims/c1/facts`, no input | Component |
+| TC-UI-EXPL-01 | Explain my estimate | `ExplainEstimate` with a fake `explain` | click | answer and citations shown; quota message on 429; guest prompt on 401 | Component |
+| TC-UI-CHAT-04 | What-if answers are labelled | `CheckChat`, reply kind whatif | ask | "What-if (not saved)" label | Component |
+| TC-UI-SUM-01 | Printable summary | `SummaryView` with Case B's view | render | verdict word, ₹2,05,800 of ₹2,40,000, each check with its clause, remedies, rejection steps, disclaimer, a "Download PDF" button; never "approved" | Component |

@@ -49,5 +49,12 @@ describe('CheckChat', () => {
     expect(await screen.findByText('You asked:')).toBeTruthy();
     expect(screen.getByText('Answer:')).toBeTruthy();
   });
+
+  it('TC-UI-CHAT-04 what-if answers are labelled', async () => {
+    const ask = vi.fn().mockResolvedValue({ ok: true, data: { refused: false, kind: 'whatif', answer: 'What if it was an accident: No change.', citations: [] } });
+    render(<CheckChat claimId="c1" ruleId="R6" outcome="deduction" ask={ask} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Why was this cut?' }));
+    expect(await screen.findByText('What-if (not saved)')).toBeTruthy();
+  });
 });
 
