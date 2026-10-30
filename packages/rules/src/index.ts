@@ -5,8 +5,6 @@ export const RULE_IDS = RuleId.options;
 
 export type { AmountRule, EligibilityRule } from './types';
 export { ENGINE_VERSION, estimate } from './engine';
-export { simulateRoom, type RoomScenario } from './simulate-room';
-export { simulateFacts, type WhatIfPatch } from './what-if';
 export { pickClarifiers, type Clarifier } from './clarifiers';
 export { isUsable, selectedFacts, toClaimFacts } from './to-claim-facts';
 export { addDays, addMonths } from './dates';

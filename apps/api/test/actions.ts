@@ -30,7 +30,6 @@ export const editFact = (input?: unknown) => call<{ fact: WireFact }>('patch', `
 export const addFact = (input?: unknown) => call<{ fact: WireFact }>('post', `/api/claims/${idOf(input, 'claimId')}/facts`, without(input, 'claimId'));
 
 export const runCheck = (input?: unknown) => call<{ estimate: Estimate }>('post', `/api/claims/${idOf(input, 'claimId')}/estimate`, {});
-export const simulateRoom = (input?: unknown) => call<{ estimate: Estimate }>('post', `/api/claims/${idOf(input, 'claimId')}/simulate-room`, without(input, 'claimId'));
 
 /** The upload the facts page sends: FormData with claimId and file, as multipart to the documents endpoint. */
 export const uploadAndExtract = async (form: FormData) => {

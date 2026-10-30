@@ -147,7 +147,7 @@ describe('HTTP boundary review fixes', () => {
 });
 
 describe('Simulation removed', () => {
-  it('TC-SIM-01 there is no simulation endpoint', async () => {
+  it('TC-NOSIM-01 there is no simulation endpoint', async () => {
     await signUpAs();
     const c = await createClaim(claimInput);
     if (!c.ok) throw new Error(c.code);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { jar } from '../../../test/cookie-jar';
 import { actAs, signUpAs } from '../../../test/users';
 import { createClaim, deleteClaim, deleteMe } from '../../../test/actions';
-import { runCheck, simulateRoom } from '../../../test/actions';
+import { runCheck } from '../../../test/actions';
 import { addFact, confirmFact, editFact } from '../../../test/actions';
 import { SESSION_COOKIE } from '../../core/session';
 import { Claim, EstimateModel, ExtractionUsage, FactModel, Session, User } from '../../core/models';
@@ -25,7 +25,6 @@ const someFactId = async (claimId: string) => String((await FactModel.findOne({ 
 // Every action that takes a claim id, called with `claimId`.
 const claimActions = (claimId: string, factId: string) => [
   () => runCheck({ claimId }),
-  () => simulateRoom({ claimId, category: 'shared', rentPerDayPaise: 450_000 }),
   () => confirmFact({ claimId, factId }),
   () => editFact({ claimId, factId, value: '2026-11-19' }),
   () => addFact({ claimId, key: 'diagnosis', head: 'none', value: 'Osteoarthritis' }),

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { signUpAs } from '../../../test/users';
 import { startSample } from '../../../test/actions';
 import { createClaim, deleteClaim } from '../../../test/actions';
-import { runCheck, simulateRoom } from '../../../test/actions';
+import { runCheck } from '../../../test/actions';
 import { addFact, confirmFact, editFact } from '../../../test/actions';
 import { Claim, EstimateModel, FactModel, Session, User } from '../../core/models';
 
@@ -54,16 +54,13 @@ describe('Server actions', () => {
     expect((await Claim.findById(claimId).lean())!.factsVersion).toBe(3);
   });
 
-  it('TC-ACT-04 runCheck saves the estimate; simulateRoom does not', async () => {
+  it('TC-ACT-04 runCheck saves the estimate (the simulateRoom half was removed with simulation, ADR-012)', async () => {
     const s = await startSample({ caseId: 'B' });
     if (!s.ok) throw new Error(s.code);
     const { claimId } = s.data;
     const e = await runCheck({ claimId });
     expect(e.ok && e.data.estimate).toMatchObject({ payablePaise: 20_580_000, claimedPaise: 24_000_000, verdict: 'likely_partial' });
-    const sim = await simulateRoom({ claimId, category: 'shared', rentPerDayPaise: 450_000 });
-    expect(sim.ok && sim.data.estimate).toMatchObject({ payablePaise: 21_790_000, claimedPaise: 22_750_000, outOfPocketPaise: 960_000 });
     expect(await EstimateModel.countDocuments({ claimId })).toBe(1);
-    expect(await simulateRoom({ claimId, category: 'palace', rentPerDayPaise: 1 })).toEqual({ ok: false, code: 'VALIDATION_FAILED' });
   });
 
   it('TC-ACT-05 deleteClaim removes the claim, its facts and estimates only', async () => {

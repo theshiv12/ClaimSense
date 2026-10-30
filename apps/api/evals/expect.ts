@@ -3,7 +3,7 @@ import type { ChatReplyView } from '@claimsense/shared';
 // Shared by the CI evals (src/modules/chat/evals.test.ts, FakeLlm) and the live run (evals/live.ts, Gemini).
 
 export interface EvalExpect {
-  kind?: 'answer' | 'whatif';
+  kind?: 'answer';
   refused?: boolean;
   modelCalled?: boolean;
   citesKinds?: string[];
@@ -34,7 +34,6 @@ const hinglishWords = (text: string) => new Set(text.toLowerCase().match(/[a-z]+
 export const checkExpectations = (s: EvalScenario, reply: ChatReplyView, modelCalled: boolean): string[] => {
   const e = s.expect;
   const problems: string[] = [];
-  if (e.kind !== undefined && (reply.kind ?? 'answer') !== e.kind) problems.push(`kind ${reply.kind ?? 'answer'} ≠ ${e.kind}`);
   if (e.refused !== undefined && reply.refused !== e.refused) problems.push(`refused ${reply.refused} ≠ ${e.refused}`);
   if (e.modelCalled !== undefined && modelCalled !== e.modelCalled) problems.push(`model called ${modelCalled} ≠ ${e.modelCalled}`);
   for (const k of e.citesKinds ?? []) if (!reply.citations.some((c) => c.kind === k)) problems.push(`no ${k} citation`);

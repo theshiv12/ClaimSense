@@ -92,13 +92,7 @@ Arithmetic (paise in tests):
 - Out of pocket = 2,40,000 − 2,05,800 = **₹34,200** (24,600 room rent + 9,600 non-payables).
 - **Verdict: `likely_partial`.**
 
-**Room simulator, twin sharing at ₹4,500/day.** Associated charges are assumed unchanged; say so on screen.
-
-- Room = 4,500 × 5 = 22,500, which is within the cap, so there's no R6 deduction.
-- Bill = 2,40,000 − 35,000 + 22,500 = **₹2,27,500**.
-- Payable = 2,27,500 − 9,600 = **₹2,17,900**.
-- Out of pocket = **₹9,600**, saving ₹24,600 against Single AC.
-- (An earlier design draft showed "₹2,30,400 of ₹2,40,000". That's wrong because the bill shrinks. See `AI_LOG.md`.)
+(The room simulator and its twin-sharing example were removed on 30 Oct 2026 with all simulation, ADR-012.)
 
 ## Plan values to verify in the Star FHO wording before PR #3
 

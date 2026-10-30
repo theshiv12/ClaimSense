@@ -1,16 +1,25 @@
 {
   "id": "CE-2",
-  "title": "A what-if is answered by the engine, not the model",
+  "title": "A what-if is not computed: it is an ordinary grounded question, and an invented amount never reaches the user",
   "ruleId": "R6",
   "question": "what if it was an accident?",
-  "fakeAnswer": null,
-  "expect": {
-    "kind": "whatif",
+  "fakeAnswer": {
     "refused": false,
-    "modelCalled": false,
-    "contains": [
-      "₹2,05,800 of ₹2,40,000"
+    "answer": "If it was an accident you would get ₹2,40,000.",
+    "citations": [
+      "S-REASON"
     ]
   },
-  "_arithmetic": "Case B: no waiting rule fails, so an accident changes nothing: ₹2,05,800 of ₹2,40,000 (docs/rules-spec.md)."
+  "expect": {
+    "kind": "answer",
+    "refused": true,
+    "modelCalled": true,
+    "contains": [
+      "I can only explain what is in your policy"
+    ],
+    "notContains": [
+      "2,40,000"
+    ]
+  },
+  "_note": "Simulation was removed (ADR-012): the engine no longer answers hypotheticals, and the vet.ts allow-list replaces any amount the model invents (₹2,40,000 is not in the trusted sources for R6)."
 }

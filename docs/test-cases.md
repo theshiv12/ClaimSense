@@ -527,11 +527,11 @@ truthfulness and doctor warnings.
 
 The room simulator, the "Try a room within the limit" preset and typed what-ifs (FR-17) were removed, so every
 amount shown is the engine's estimate of the real facts. Removed with the feature (not edited to pass):
-TC-WI-01..05, TC-WIP-01..07, TC-CHAT-09..14, TC-R6-24, TC-UI-05, TC-UI-06, TC-FIX-02, TC-FIX-07, TC-UI-CHAT-04,
+TC-SIM-01..04 (engine room simulator), TC-WI-01..05, TC-WIP-01..07, TC-CHAT-09..14, TC-R6-24, TC-UI-05, TC-UI-06, TC-FIX-02, TC-FIX-07, TC-UI-CHAT-04,
 TC-E2E-04, and the simulation parts of TC-ACT-04, TC-ACT-07, TC-OWN-01, TC-E2E-01 and TC-E2E-06. CE-2 now checks
 that a what-if is not computed. Earlier rows that mention simulation are kept above as history.
 
 | ID | Requirement | Given | When | Then | Type |
 |---|---|---|---|---|---|
-| TC-SIM-01 | There is no simulation endpoint | own claim | POST `/api/claims/:id/simulate-room` | 404 `NOT_FOUND` | API |
-| TC-SIM-02 | A what-if question is an ordinary grounded question | own sample B; FakeLlm answers | "what if it was an accident?" | the model is called once; the reply is a normal answer | API |
+| TC-NOSIM-01 | There is no simulation endpoint | own claim | POST `/api/claims/:id/simulate-room` | 404 `NOT_FOUND` | API |
+| TC-NOSIM-02 | A what-if question is an ordinary grounded question | own sample B; FakeLlm answers | "what if it was an accident?" | the model is called once; the reply is a normal answer | API |

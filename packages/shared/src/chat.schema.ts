@@ -34,8 +34,6 @@ export type LlmChatAnswer = z.infer<typeof LlmChatAnswerSchema>;
 export interface ChatReplyView {
   answer: string;
   refused: boolean;
-  /** 'whatif': amounts from the engine for one hypothetical change (FR-17), computed in code, not by the model. */
-  kind?: 'answer' | 'whatif';
   citations: { id: string; label: string; kind: ChatSource['kind'] }[];
 }
 
