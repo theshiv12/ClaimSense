@@ -544,3 +544,18 @@ simulation are kept above as history.
 | TC-NOSIM-06 | "Explain my estimate" gets the same lines for a what-if | own sample B | question "Suppose I am admitted after the waiting period?" | both lines | API |
 | TC-NOSIM-07 | What-if phrasing is recognised narrowly | — | `asksWhatIf` | true: "what if…", "What happens if…", "Suppose…", "agar accident hota"; false: "Why was this cut?", "What is the cap?", "Is it covered if I wait?" | Unit |
 | TC-E2E-04 | What can I do? on the room-rent cut shows the catalog remedy (the simulator step was removed) | guest sample B in a browser | open "What can I do?" on Room rent limit | "Choose a room within your policy's limit" visible; the page never says "approved" | E2E |
+
+## Pre-admission card (TC-CARD-*)
+
+A printable card to carry to the hospital desk, built by a pure function from the engine's estimate and the
+remedy catalog. Values are hand-worked from docs/rules-spec.md and the fixtures: Case B is
+₹2,05,800 payable of ₹2,40,000 with an R6 cut of 10,00,000 + 14,60,000 = 24,60,000 paise at a ₹5,000/day cap.
+Case C's R3 wait ends 2025-06-01 + 24 months = 2027-06-01; the end date itself is covered.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-CARD-01 | Amounts and room advice come from the engine | Case B | `buildAdmissionCard` | payable 20580000, out of pocket 3420000, cap 500000/day, saving 2460000; no waits | Unit |
+| TC-CARD-02 | Desk questions only from catalog remedies of checks that did not pass, at most 5 | Case B | same | each is the title of a remedy matching a non-pass check; includes "Choose a room within your policy's limit"; ≤ 5 | Unit |
+| TC-CARD-03 | A failed wait shows its end date and clause | Case C | same | waitsEnd has R3, 2027-06-01, the plan's R3 clause id; no room saving | Unit |
+| TC-CARD-04 | Documents to carry: the schedule and estimate, plus one per missing fact | Case B without a diagnosis | same | "Policy schedule", "Hospital estimate", "A document showing: Diagnosis or procedure"; no duplicates | Unit |
+| TC-CARD-05 | The card page is owner-scoped | another user's claim / bad id | GET `/claims/:id/card` | 404 (via `apiPage`, as the summary page) | Manual + E2E-covered pattern |
