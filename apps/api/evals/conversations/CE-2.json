@@ -1,16 +1,22 @@
 {
   "id": "CE-2",
-  "title": "A what-if is answered by the engine, not the model",
+  "title": "A what-if is not computed: an ordinary grounded answer, with the truthfulness and doctor lines added in code",
   "ruleId": "R6",
   "question": "what if it was an accident?",
-  "fakeAnswer": null,
-  "expect": {
-    "kind": "whatif",
+  "fakeAnswer": {
     "refused": false,
-    "modelCalled": false,
-    "contains": [
-      "₹2,05,800 of ₹2,40,000"
+    "answer": "Your room is over the limit in clause 2(A), so the other charges are cut in the same ratio.",
+    "citations": [
+      "S-CLAUSE"
     ]
   },
-  "_arithmetic": "Case B: no waiting rule fails, so an accident changes nothing: ₹2,05,800 of ₹2,40,000 (docs/rules-spec.md)."
+  "expect": {
+    "refused": false,
+    "modelCalled": true,
+    "contains": [
+      "This only applies if it is true",
+      "Medical advice comes first"
+    ]
+  },
+  "_note": "Simulation was removed (ADR-012): the engine no longer answers hypotheticals. The model may only repeat amounts from its trusted sources, and code adds the two warning lines to every what-if."
 }

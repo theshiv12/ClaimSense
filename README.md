@@ -25,14 +25,14 @@ admission, while the patient can still choose a different room or call the insur
 3. **Understand.** A pure rules engine applies R1–R8 from a plan config that cites a clause and a
    verbatim quote for every value (AI-drafted; human check pending, ADR-007): policy
    active, initial wait, specific-disease wait, PED wait, moratorium, room rent with proportionate
-   deduction, co-pay, sum insured. It shows the payout, eight checks with clause quotes, a room
-   simulator, remedies and the complaint path (insurer → Bima Bharosa → Ombudsman).
+   deduction, co-pay, sum insured. It shows the payout, eight checks with clause quotes, remedies, a
+   grounded "Ask about this check" chat and the complaint path (insurer → Bima Bharosa → Ombudsman).
 
 **The model never decides money or verdicts.** Gemini only extracts facts; amounts come from
 `packages/rules`, and every number traces to `config/plans/star-fho.json`.
 
 Worked example (Sample B, knee replacement, Single AC ₹7,000/day): **₹2,05,800 payable of ₹2,40,000,
-you pay ₹34,200**. In twin sharing at ₹4,500/day: **₹2,17,900 of ₹2,27,500, you pay ₹9,600**.
+you pay ₹34,200**.
 The arithmetic is in `docs/rules-spec.md`.
 
 ## Run it

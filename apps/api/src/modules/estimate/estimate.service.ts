@@ -1,5 +1,5 @@
-import { estimate as runEngine, isUsable, pickClarifiers, simulateRoom as simulate, toClaimFacts } from '@claimsense/rules';
-import { CLARIFIER_QUESTIONS, EstimateSchema, FACT_LABELS, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RoomCategory, type RuleId } from '@claimsense/shared';
+import { estimate as runEngine, isUsable, pickClarifiers, toClaimFacts } from '@claimsense/rules';
+import { CLARIFIER_QUESTIONS, EstimateSchema, FACT_LABELS, type Estimate, type EstimateView, type EvidenceLine, type Precedent, type Remedy, type RuleId } from '@claimsense/shared';
 import { fail } from '../../core/errors';
 import { EstimateModel } from '../../core/models';
 import { findClaim, latestEstimate, listFacts } from '../../core/scope';
@@ -20,13 +20,6 @@ export const runCheck = async (userId: string, claimId: string) => {
   const result: Estimate = runEngine(toClaimFacts(await listFacts(userId, claimId), claim.planId), plan, claim.factsVersion);
   await EstimateModel.create({ userId: claim.userId, claimId: claim._id, estimate: result, expiresAt: claim.expiresAt });
   return { estimate: result };
-};
-
-/** Room what-if: same facts, a different room. Not saved. */
-export const simulateRoom = async (userId: string, claimId: string, category: RoomCategory, rentPerDayPaise: number) => {
-  const { claim, plan } = await loadClaim(userId, claimId);
-  const facts = toClaimFacts(await listFacts(userId, claimId), claim.planId);
-  return { estimate: simulate(facts, plan, { category, rentPerDayPaise }, claim.factsVersion) };
 };
 
 /** The estimate page: the saved estimate if the facts have not changed, else a fresh run (saved). */

@@ -17,7 +17,7 @@ deploy, a background job or file storage.
 |---|---|---|
 | NestJS API + Next.js web on two hosts | **One Next.js app.** Server actions and route handlers do the API work. Deploy to **Vercel only**. | One deploy, no cold starts, no CORS, no token passing between web and API. The rules engine stays a separate pure package, so the important boundary survives. |
 | Files stored for 7 days, then swept | **Files are never stored.** Upload → extract → save facts → discard the bytes, all in one request (≤ 4 MB, ≤ 300 s). | Simplest privacy story there is. No sweeper, no blob store. |
-| LLM chat ("What can I do?") | A **remedies panel** from `remedies.json` per failed or deducting rule, plus the **room simulator** what-if | Same user value, zero AI quota. The chat is "future scope". |
+| LLM chat ("What can I do?") | A **remedies panel** from `remedies.json` per failed or deducting rule, (the room simulator was built, then removed: ADR-012) | Same user value, zero AI quota. The chat is "future scope". |
 | Email + password with lockout and reset | Email + password + logout, plus a **guest session** for sample cases. No reset, no lockout (a simple rate limit only). | Auth and authorisation are still real. Time-boxed to 45 min; if it overruns, ship guest-only and say so. |
 | History with tiles, filters, search, summary view | **A plain list** of your claims, with Open and Delete | Covers the journey |
 | Two plans, eight rules, nightly evals | **One plan** (Star FHO), all 8 rules, **one manual eval script** | Rules are the core, so keep all 8 |
@@ -50,7 +50,7 @@ Browser ──► Next.js on Vercel (apps/web)
               │    gemini.ts        the ONLY file that imports @google/genai
               │    quote-verify.ts  exact / fuzzy / none / unverifiable
               │    actions/         createClaim, uploadAndExtract, confirmFact, editFact, addFact,
-              │                     runCheck, simulateRoom, deleteClaim, deleteMe, startSample
+              │                     runCheck, deleteClaim, deleteMe, startSample
               └─ components/ (Figma names: Button, Chip, Card, FactRow, CheckRow, PayoutBar, Quote…)
 packages/rules     pure TypeScript: R1–R8, engine, verdict, toClaimFacts; NO I/O (lint-enforced)
 config/            plans/star-fho.json (+ drafts/), remedies.json   (JSON, reviewed in PRs)
@@ -202,7 +202,7 @@ an image shows "please check".
 Build in this order, and stop at whatever 05:30 allows:
 
 1. **04 Estimate**: payout headline, `PayoutBar`, 8 `CheckRow`s with clause IDs, disclaimer.
-2. **Room simulator**: re-runs the engine; nothing is saved.
+2. ~~Room simulator~~: removed (ADR-012).
 3. **Remedies panel** for R6 and other failing or deducting checks (from `remedies.json`).
 4. **03 Facts**: confirm/edit; manual entry form; "N facts need you" gate.
 5. **02 Setup + consent** (per-purpose toggles; the Gemini free-tier wording from setup guide 3.1 item 5).
@@ -220,7 +220,7 @@ anything with logic (PayoutBar widths, CheckRow states). Keep each commit to one
 ### Phase 7 · 05:30–06:30 · Live check and deploy (PR #7)
 
 - [ ] Merge → Vercel production deploy
-- [ ] Private window: `/sample/B` → estimate **₹2,05,800**, simulator twin sharing ₹4,500/day → **₹2,17,900 payable of ₹2,27,500, you pay ₹9,600**, delete → back home
+- [ ] Private window: `/sample/B` → estimate **₹2,05,800**, delete → back home
 - [ ] Sign up → new claim → upload the synthetic PDFs (**live Gemini call**) → confirm → estimate
 - [ ] A second account can't open the first account's claim URL (404)
 - [ ] Put the live link in the README

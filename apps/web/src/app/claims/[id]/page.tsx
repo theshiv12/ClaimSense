@@ -9,7 +9,6 @@ import { Disclaimer } from '@/components/claim/disclaimer';
 import { EvidencePanel } from '@/components/claim/evidence-panel';
 import { PayoutBar, type PayoutPart } from '@/components/claim/payout-bar';
 import { RejectionSteps } from '@/components/claim/rejection-steps';
-import { RoomSimulator } from '@/components/claim/room-simulator';
 import { VerdictHeadline } from '@/components/claim/verdict-headline';
 import { buttonClass } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -69,7 +68,6 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
                   fix={{
                     claimId: id,
                     remedies: remedies.filter((m) => m.ruleId === r.ruleId && m.outcome === r.outcome),
-                    currentOutOfPocketPaise: estimate.outOfPocketPaise,
                     precedents: precedents[r.ruleId] ?? [],
                   }}
                 />
@@ -87,12 +85,6 @@ export default async function EstimatePage({ params }: PageProps<'/claims/[id]'>
         </div>
 
         <aside className="space-y-5">
-          <Card>
-            <h2 className="mb-1 text-lg font-semibold text-ink">Compare room types</h2>
-            <p className="mb-4 text-sm text-muted">The room changes more than the room charge: other charges are cut in proportion when the room is over the limit.</p>
-            <RoomSimulator claimId={id} currentOutOfPocketPaise={estimate.outOfPocketPaise} />
-          </Card>
-
           {explained.map((r) => (
             <Card key={r.ruleId}>
               <EvidencePanel result={r} lines={evidence[r.ruleId] ?? []} />

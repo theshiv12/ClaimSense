@@ -1,4 +1,4 @@
-import type { ActionResult, ChatReplyView, Estimate, RoomCategory, UploadResultView, WireFact } from '@claimsense/shared';
+import type { ActionResult, ChatReplyView, UploadResultView, WireFact } from '@claimsense/shared';
 
 // The browser's side of the REST API (docs/api.md). Requests go to /api/* on this site; Next rewrites them
 // to the API (ADR-009), so the session cookie stays first-party. Same names and ActionResult as the old
@@ -35,9 +35,6 @@ export const editFact = ({ claimId, factId, value }: { claimId: string; factId: 
   call('PATCH', `/api/claims/${id(claimId)}/facts/${id(factId)}`, { value });
 export const addFact = ({ claimId, ...rest }: { claimId: string; key: string; head: string; value: unknown }): R<{ fact: WireFact }> =>
   call('POST', `/api/claims/${id(claimId)}/facts`, rest);
-
-export const simulateRoom = ({ claimId, ...rest }: { claimId: string; category: RoomCategory; rentPerDayPaise: number }): R<{ estimate: Estimate }> =>
-  call('POST', `/api/claims/${id(claimId)}/simulate-room`, rest);
 
 /** Multipart upload; the bytes are read, extracted and discarded by the API (golden rule 9). */
 export const uploadAndExtract = async (form: FormData): R<UploadResultView> => {

@@ -13,7 +13,6 @@
     ]
   },
   "expect": {
-    "kind": "answer",
     "refused": false,
     "modelCalled": true,
     "citesKinds": [

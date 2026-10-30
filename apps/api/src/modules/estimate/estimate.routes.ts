@@ -1,4 +1,4 @@
-import { ClaimIdInputSchema, SimulateRoomInputSchema } from '@claimsense/shared';
+import { ClaimIdInputSchema } from '@claimsense/shared';
 import { Router } from 'express';
 import { handler, parse } from '../../core/http';
 import { requireUser } from '../../core/session';
@@ -14,10 +14,4 @@ export const estimateRoutes = Router({ mergeParams: true })
   .post('/estimate', handler('runCheck', (req) => {
     const user = requireUser(req);
     return est.runCheck(user.id, claimIdOf(req.params.claimId));
-  }))
-  .post('/simulate-room', handler('simulateRoom', (req) => {
-    const user = requireUser(req);
-    const body = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : {};
-    const i = parse(SimulateRoomInputSchema, { ...body, claimId: req.params.claimId });
-    return est.simulateRoom(user.id, i.claimId, i.category, i.rentPerDayPaise);
   }));

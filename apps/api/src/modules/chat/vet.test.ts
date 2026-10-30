@@ -1,6 +1,6 @@
 import type { ChatSource } from '@claimsense/shared';
 import { describe, expect, it } from 'vitest';
-import { asksToHide, vetAnswer } from './vet';
+import { asksToHide, asksWhatIf, vetAnswer } from './vet';
 
 // docs/test-cases.md TC-CHAT-03b / 04b / 04c / 05b: the in-code checks on the chat (golden rules 1 and 10).
 const sources: ChatSource[] = [
@@ -52,5 +52,14 @@ describe('asksToHide: priced misstatements', () => {
       expect(asksToHide(q), q).toBe(true);
     }
     expect(asksToHide('what if it was an accident?')).toBe(false);
+  });
+});
+
+describe('asksWhatIf', () => {
+  it('TC-NOSIM-07 what-if phrasing is recognised narrowly', () => {
+    for (const q of ['what if it was an accident?', 'What happens if I wait a month?', 'Suppose I am admitted in June', 'agar accident hota to?'])
+      expect(asksWhatIf(q), q).toBe(true);
+    for (const q of ['Why was this cut?', 'What is the cap?', 'Is it covered if I wait?'])
+      expect(asksWhatIf(q), q).toBe(false);
   });
 });

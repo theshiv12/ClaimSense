@@ -11,6 +11,6 @@ answer (`fakeAnswer`), and what the user must finally see (`expect`).
   the same questions to Gemini with sample B's sources (no database) and writes `evals/reports/<date>.json`.
   Model wording varies, so live checks are the `expect` rules, not exact text.
 
-`expect` keys: `kind` (answer | whatif), `refused`, `modelCalled`, `citesKinds`, `contains`, `notContains`,
+`expect` keys: `refused`, `modelCalled`, `citesKinds`, `contains`, `notContains`,
 `hinglish` (at least two common Hinglish words), `notCitedIds`. The live run needs `MONGODB_URI` set to any
 value (the env schema requires it; no database is used).

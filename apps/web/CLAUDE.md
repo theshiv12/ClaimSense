@@ -11,7 +11,7 @@ src/lib/api/server.ts    server components: apiGet / apiPage (401 → /login, 40
 src/lib/api/client.ts    client components: signup, createClaim, addFact, uploadAndExtract… → ActionResult
 src/lib/sample-preview.ts landing card: sample B through the pure rules engine (no API call)
 src/components/ui/       Button, Chip, Card, Field, Toggle, Segmented (no business logic)
-src/components/claim/    FactRow, CheckRow (+ FixItPanel "What can I do?"), PayoutBar, Quote, RoomSimulator, ScenarioResult, RemediesPanel,
+src/components/claim/    FactRow, CheckRow (+ FixItPanel "What can I do?"), PayoutBar, Quote, RemediesPanel,
                          ClaimRow, CheckChat + AnswerBubble, ClarifierCard, ExplainEstimate, SummaryView (/claims/[id]/summary)
 ```
 
@@ -22,7 +22,7 @@ The web app has **no database, no Gemini and no secrets**. Its only setting is `
 
 - **Before creating a component, search `components/`.** Extend with a prop; no near-duplicates.
 - Server components read through `lib/api/server.ts`; client components only for interactive parts
-  (fact edit, room simulator, upload) and call `lib/api/client.ts`. The browser never talks to MongoDB or Gemini.
+  (fact edit, upload, chat) and call `lib/api/client.ts`. The browser never talks to MongoDB or Gemini.
 - Forms validate with the Zod schemas from `@claimsense/shared` (same rules server-side).
 - Session cookie: random 32-byte token, `httpOnly`, `Secure`, `SameSite=Lax`; only its SHA-256 is stored.
 - Uploads: PDF/JPEG/PNG checked by magic bytes, **≤ 4 MB** (Vercel's body limit is 4.5 MB),
@@ -40,6 +40,6 @@ The web app has **no database, no Gemini and no secrets**. Its only setting is `
 ## Tests (written first, see the `tdd` skill)
 
 - Vitest + Testing Library for components with logic (CheckRow states, PayoutBar widths).
-- Client components that call the API take an injectable action prop (`actions`, `simulate`) so tests pass fakes;
+- Client components that call the API take an injectable action prop (`actions`, `ask`) so tests pass fakes;
   the API itself is tested in `apps/api`.
 - Test what the user sees (text, roles), not implementation details.

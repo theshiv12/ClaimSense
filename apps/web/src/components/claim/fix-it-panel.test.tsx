@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import type { Estimate, Remedy, RuleResult } from '@claimsense/shared';
+import type { Remedy, RuleResult } from '@claimsense/shared';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { CheckRow } from './check-row';
 
 afterEach(cleanup);
@@ -28,7 +28,7 @@ const r6Cut = result({
   outcome: 'deduction', reasonCode: 'R6_ROOM_OVER_CAP', deductionPaise: 2_460_000,
   params: { capPerDayPaise: 500_000, rentPerDayPaise: 700_000, days: 5, roomDeductionPaise: 1_000_000, associatedDeductionPaise: 1_460_000 },
 });
-const fix = (remedies: Remedy[], simulate = vi.fn()) => ({ claimId: 'c1', remedies, currentOutOfPocketPaise: 3_420_000, simulate });
+const fix = (remedies: Remedy[]) => ({ claimId: 'c1', remedies });
 
 describe('What can I do?', () => {
   it('TC-FIX-01 the button opens only that check’s remedies', async () => {
@@ -42,20 +42,6 @@ describe('What can I do?', () => {
     expect(screen.queryByText(R7_REMEDY.title)).toBeNull();
     await userEvent.click(button);
     expect(screen.queryByText(R6_REMEDIES[0]!.title)).toBeNull();
-  });
-
-  it('TC-FIX-02 R6 deduction: one-click room within the limit, run by the engine', async () => {
-    // Case B, twin sharing at the ₹5,000 cap: bill 2,30,000, payable 2,20,400, you pay 9,600 (see test-cases.md).
-    const scenario = { claimedPaise: 23_000_000, payablePaise: 22_040_000, outOfPocketPaise: 960_000, verdict: 'likely_partial' } as Estimate;
-    const simulate = vi.fn().mockResolvedValue({ ok: true, data: { estimate: scenario } });
-    render(<ul><CheckRow result={r6Cut} fix={fix(R6_REMEDIES, simulate)} /></ul>);
-    await userEvent.click(screen.getByRole('button', { name: 'What can I do?' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Try a room within the limit' }));
-    expect(simulate).toHaveBeenCalledWith({ claimId: 'c1', category: 'shared', rentPerDayPaise: 500_000 });
-    expect(await screen.findByText('₹2,20,400 of ₹2,30,000')).toBeTruthy();
-    expect(screen.getByText(/you pay ₹9,600/)).toBeTruthy();
-    expect(screen.getByText(/saves ₹24,600/)).toBeTruthy();
-    expect(screen.getByText(/Assumes other charges stay the same/)).toBeTruthy();
   });
 
   it('TC-FIX-03 unknown: links to add each missing fact', async () => {
@@ -89,14 +75,6 @@ describe('What can I do?', () => {
 });
 
 describe('What can I do? (review fixes)', () => {
-  it('TC-FIX-07 never offers a ward room for an ICU stay', async () => {
-    const icuCut = result({ ...r6Cut, params: { ...r6Cut.params, roomHead: 'icu', capPerDayPaise: 800_000 } });
-    render(<ul><CheckRow result={icuCut} fix={fix(R6_REMEDIES)} /></ul>);
-    await userEvent.click(screen.getByRole('button', { name: 'What can I do?' }));
-    expect(screen.getByText(R6_REMEDIES[0]!.title)).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Try a room within the limit' })).toBeNull();
-  });
-
   it('TC-FIX-08 each panel is named after its check; aria-controls points at it only while open', async () => {
     render(<ul><CheckRow result={r6Cut} fix={fix(R6_REMEDIES)} /></ul>);
     const button = screen.getByRole('button', { name: 'What can I do?' });

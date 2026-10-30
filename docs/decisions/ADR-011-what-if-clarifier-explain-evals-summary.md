@@ -5,7 +5,7 @@ their test cases (`docs/test-cases.md`, *autopilot*) were drafted by the AI and 
 
 **Decisions.**
 
-1. **What-ifs are understood in code, answered by the engine (FR-17).** `parseWhatIf` (apps/api) recognises
+1. **(Superseded by ADR-012: removed.)** **What-ifs are understood in code, answered by the engine (FR-17).** `parseWhatIf` (apps/api) recognises
    five kinds of typed "what if…" (accident, room + rent, admission date or "after the waiting period", condition
    declared, sum insured). `simulateFacts` (packages/rules) applies that one change and re-runs `estimate`.
    The reply is fixed text with before/after amounts. The model is never asked, so no AI quota is used and no

@@ -522,3 +522,25 @@ truthfulness and doctor warnings.
 | TC-UI-CLAR-03 | A partial save still refreshes and says so | first answer saves, second fails | Save | refresh called; error shown | Component |
 | TC-UI-EXPL-02 | The answer is announced | explain answers | click | the answer sits inside an `aria-live` region | Component |
 | TC-UI-UPL-03 | Leaving the page mid-upload leaves no timers | upload pending | unmount | no pending timers | Component |
+
+## Simulation removed (30 Oct 2026, at the owner's request; ADR-012)
+
+The room simulator, the "Try a room within the limit" preset and typed what-ifs (FR-17) were removed, so every
+amount shown is the engine's estimate of the real facts. Removed with the feature (not edited to pass):
+TC-SIM-01..04 (engine room simulator), TC-WI-01..05, TC-WIP-01..07, TC-CHAT-09..14, TC-R6-24, TC-UI-05, TC-UI-06, TC-FIX-02, TC-FIX-07, TC-UI-CHAT-04,
+and the simulation parts of TC-ACT-04, TC-ACT-07, TC-OWN-01, TC-OWN-02 (they share `claimActions`), TC-E2E-01 and
+TC-E2E-06. TC-E2E-04 keeps only its non-simulation half (below). TC-FIX-07's "remedies shown for an ICU stay" is
+covered by TC-FIX-01: the panel no longer depends on the room head. CE-2's expectations were replaced: it now checks
+that a what-if is not computed and gets the truthfulness and doctor lines in code. Earlier rows that mention
+simulation are kept above as history.
+
+| ID | Requirement | Given | When | Then | Type |
+|---|---|---|---|---|---|
+| TC-NOSIM-01 | There is no simulation endpoint | own claim | POST `/api/claims/:id/simulate-room` | 404 `NOT_FOUND` | API |
+| TC-NOSIM-02 | A what-if question is an ordinary grounded question | own sample B; FakeLlm answers | "what if it was an accident?" | the model is called once; the reply is a normal answer | API |
+| TC-NOSIM-03 | A what-if gets the truthfulness and doctor lines in code, whoever answers (the old FR-17 guard, kept) | own sample B; FakeLlm answers with trusted text | "what if it was an accident?" | the model's answer, then "This only applies if it is true…" and "Medical advice comes first…", then the disclaimer; one AI try used | API |
+| TC-NOSIM-04 | An ordinary question gets neither line | own sample B | "Why was this cut?" | no "This only applies if it is true", no "Medical advice comes first" | API |
+| TC-NOSIM-05 | The lines stay when the answer is replaced by the safe reply | own sample B; FakeLlm invents ₹2,40,000 | "what if it was an accident?" | safe reply, both lines, disclaimer; no "2,40,000" | API |
+| TC-NOSIM-06 | "Explain my estimate" gets the same lines for a what-if | own sample B | question "Suppose I am admitted after the waiting period?" | both lines | API |
+| TC-NOSIM-07 | What-if phrasing is recognised narrowly | — | `asksWhatIf` | true: "what if…", "What happens if…", "Suppose…", "agar accident hota"; false: "Why was this cut?", "What is the cap?", "Is it covered if I wait?" | Unit |
+| TC-E2E-04 | What can I do? on the room-rent cut shows the catalog remedy (the simulator step was removed) | guest sample B in a browser | open "What can I do?" on Room rent limit | "Choose a room within your policy's limit" visible; the page never says "approved" | E2E |

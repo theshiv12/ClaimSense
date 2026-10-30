@@ -7,7 +7,6 @@ import { r3SpecificDiseaseWait } from './rules/r3-specific-disease-wait';
 import { r4PedWait } from './rules/r4-ped-wait';
 import { r6RoomRent } from './rules/r6-room-rent';
 import { r7CoPay } from './rules/r7-co-pay';
-import { simulateRoom } from './simulate-room';
 
 // Edge cases added after the first green run to reach the coverage gate (docs/test-cases.md).
 const plan = testPlan();
@@ -111,18 +110,5 @@ describe('Amount and engine edge cases', () => {
     const e = estimate({ ...d, bill: { ...d.bill, totalPaise: 8_100_000 } }, plan, 1);
     expect(e.claimedPaise).toBe(8_100_000);
     expect(e.payablePaise).toBe(8_100_000);
-  });
-
-  it('TC-SIM-04 replaces an ICU line, keeps a bill with no room line, and keeps a null total', () => {
-    // ICU 2 days at 2000000 → shared 300000 × 2 = 600000; surgeon 1000000 kept.
-    const icu = facts({
-      room: { category: 'icu', rentPerDayPaise: 2_000_000, days: 2 },
-      bill: { totalPaise: null, lineItems: [{ head: 'icu', amountPaise: 4_000_000 }, { head: 'surgeon', amountPaise: 1_000_000 }] },
-    });
-    expect(simulateRoom(icu, plan, { category: 'shared', rentPerDayPaise: 300_000 }, 1).claimedPaise).toBe(1_600_000);
-
-    // No room line: room 300000 × 2 added to surgeon 1000000 = 1600000; total 1000000 − 0 + 600000.
-    const noRoom = facts({ room: { category: 'shared', rentPerDayPaise: 300_000, days: 2 }, bill: { totalPaise: 1_000_000, lineItems: [{ head: 'surgeon', amountPaise: 1_000_000 }] } });
-    expect(simulateRoom(noRoom, plan, { category: 'icu', rentPerDayPaise: 300_000 }, 1).claimedPaise).toBe(1_600_000);
   });
 });

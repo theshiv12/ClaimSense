@@ -4,7 +4,7 @@ import { jar } from '../../../test/cookie-jar';
 import { actAs, newEmail, PASSWORD, signUpAs } from '../../../test/users';
 import { login, signup, startSample } from '../../../test/actions';
 import { createClaim, deleteClaim } from '../../../test/actions';
-import { runCheck, simulateRoom } from '../../../test/actions';
+import { runCheck } from '../../../test/actions';
 import { addFact, confirmFact, editFact } from '../../../test/actions';
 import { currentUser } from '../../../test/actions';
 import { SESSION_COOKIE } from '../../core/session';
@@ -57,7 +57,6 @@ describe('Backend review fixes', () => {
       () => createClaim(null),
       () => deleteClaim({}),
       () => runCheck(null),
-      () => simulateRoom({ claimId: 'x' }),
       () => confirmFact({ claimId: 'x' }),
       () => editFact({ claimId: 'x', factId: 'y' }),
       () => addFact({ claimId: 'x', key: 'diagnosis', head: 'none', value: 'x'.repeat(501) }),

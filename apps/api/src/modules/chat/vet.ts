@@ -45,3 +45,9 @@ const HIDE_PATTERNS: RegExp[] = [
 ];
 
 export const asksToHide = (question: string): boolean => HIDE_PATTERNS.some((p) => p.test(question));
+
+// A hypothetical ("what if it was an accident?"). Not computed (ADR-012), but whoever answers it, code adds the
+// truthfulness and doctor lines. Narrow on purpose: "is it covered if I wait?" is an ordinary question.
+const WHAT_IF = /\b(what if|what happens if|suppose|supposing|agar)\b/i;
+
+export const asksWhatIf = (question: string): boolean => WHAT_IF.test(question);
