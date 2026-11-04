@@ -61,7 +61,7 @@ jobs:
       # The web server uses an in-memory MongoDB and never calls Gemini, so no secrets are needed.
       - run: pnpm --filter @claimsense/web e2e
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-traces
           path: apps/web/test-results/
